@@ -1,107 +1,225 @@
 import { useState } from 'react';
-import { Wallet as WalletIcon, Plus, TrendingUp, TrendingDown, Star } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart, Wallet as WalletIcon } from 'lucide-react';
+import { walletTransactions, userMetrics } from '../../data/mockData';
 import { Modal } from '../../components/ui/Modal';
-import { userMetrics, walletTransactions } from '../../data/mockData';
 
-const PRESETS = [10, 25, 50, 100];
+const PRESET_AMOUNTS = [50, 100, 200, 500];
 
 export function Wallet() {
   const [balance, setBalance] = useState(userMetrics.walletBalance);
-  const [showModal, setShowModal] = useState(false);
-  const [amount, setAmount] = useState('');
-  const [transactions, setTransactions] = useState(walletTransactions);
+  const [transactions, setTransactions] = useState([...walletTransactions]);
+  const [showDeposit, setShowDeposit] = useState(false);
+  const [showWithdraw, setShowWithdraw] = useState(false);
 
-  const handleAddFunds = () => {
-    const val = parseFloat(amount);
-    if (!val || val <= 0) return;
-    setBalance((b) => b + val);
-    setTransactions((t) => [{ id: Date.now(), type: 'credit', description: 'Funds Added', date: new Date().toISOString().slice(0, 10), amount: val }, ...t]);
-    setAmount('');
-    setShowModal(false);
-  };
+  // Deposit state
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositError, setDepositError] = useState('');
 
-  const points = userMetrics.loyaltyPoints;
-  const nextTier = 5000;
-  const progress = Math.min((points / nextTier) * 100, 100);
+  // Withdraw state
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawError, setWithdrawError] = useState('');
+
+  function handleDeposit() {
+    const amt = parseFloat(depositAmount);
+    if (!amt || amt <= 0) {
+      setDepositError('Please enter a valid amount.');
+      return;
+    }
+    setBalance((b) => b + amt);
+    setTransactions((prev) => [
+      {
+        id: Date.now(),
+        type: 'deposit',
+        description: 'Wallet Deposit',
+        date: new Date().toISOString().slice(0, 10),
+        amount: amt,
+      },
+      ...prev,
+    ]);
+    setDepositAmount('');
+    setDepositError('');
+    setShowDeposit(false);
+  }
+
+  function handleWithdraw() {
+    const amt = parseFloat(withdrawAmount);
+    if (!amt || amt <= 0) {
+      setWithdrawError('Please enter a valid amount.');
+      return;
+    }
+    if (amt > balance) {
+      setWithdrawError('Amount exceeds available balance.');
+      return;
+    }
+    setBalance((b) => b - amt);
+    setTransactions((prev) => [
+      {
+        id: Date.now(),
+        type: 'withdrawal',
+        description: 'Withdrawal to Bank',
+        date: new Date().toISOString().slice(0, 10),
+        amount: -amt,
+      },
+      ...prev,
+    ]);
+    setWithdrawAmount('');
+    setWithdrawError('');
+    setShowWithdraw(false);
+  }
+
+  function getTxIcon(type) {
+    switch (type) {
+      case 'deposit':
+        return <ArrowUpCircle size={20} style={{ color: '#00ff88' }} />;
+      case 'return':
+        return <TrendingUp size={20} style={{ color: '#00ff88' }} />;
+      case 'withdrawal':
+        return <ArrowDownCircle size={20} style={{ color: '#ef4444' }} />;
+      case 'purchase':
+        return <ShoppingCart size={20} style={{ color: '#f59e0b' }} />;
+      default:
+        return <ArrowUpCircle size={20} style={{ color: '#8888aa' }} />;
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="glass-card p-8 text-center" style={{border: '1px solid rgba(0,212,255,0.3)'}}>
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#ff6b35]/10 mb-4">
-          <WalletIcon size={28} className="text-[#ff6b35]" />
+    <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-[#f0f0ff]">Wallet</h1>
+        <p className="text-sm text-[#8888aa] mt-1">Manage your deposits, withdrawals, and balance.</p>
+      </div>
+
+      {/* Balance Card */}
+      <div
+        className="glass-card p-8 text-center"
+        style={{ borderColor: '#00d4ff44' }}
+      >
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <WalletIcon size={20} style={{ color: '#00d4ff' }} />
+          <span className="text-sm text-[#8888aa]">Available Balance</span>
         </div>
-        <p className="text-[#8888aa] text-sm mb-1">Current Balance</p>
-        <p className="text-4xl font-black text-[#f0f0ff] mb-6" style={{textShadow: '0 0 20px rgba(0,212,255,0.3)'}}>
-          ${balance.toFixed(2)}
+        <p
+          className="text-5xl font-black text-[#f0f0ff] mb-6"
+          style={{ textShadow: '0 0 20px #00d4ff' }}
+        >
+          ₵{balance.toLocaleString()}
         </p>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#00d4ff] text-black font-semibold hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all"
-        ><Plus size={18} /> Add Funds</button>
-      </div>
-
-      <div className="glass-card p-5">
-        <h3 className="text-base font-semibold text-[#f0f0ff] mb-4">Recent Transactions</h3>
-        <div className="space-y-3">
-          {transactions.map((t) => (
-            <div key={t.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center ${ t.type === 'credit' ? 'bg-green-900/40' : 'bg-red-900/40'}`}>
-                {t.type === 'credit' ? <TrendingUp size={16} className="text-green-400" /> : <TrendingDown size={16} className="text-red-400" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-[#f0f0ff] truncate">{t.description}</p>
-                <p className="text-xs text-[#8888aa]">{t.date}</p>
-              </div>
-              <span className={`font-semibold text-sm ${t.type === 'credit' ? 'text-green-400' : 'text-red-400'}`}>
-                {t.type === 'credit' ? '+' : ''}${Math.abs(t.amount).toFixed(2)}
-              </span>
-            </div>
-          ))}
+        <div className="flex justify-center gap-3">
+          <button
+            onClick={() => { setShowDeposit(true); setDepositAmount(''); setDepositError(''); }}
+            className="px-6 py-2.5 rounded-lg font-bold text-sm transition-opacity hover:opacity-90"
+            style={{ background: '#00d4ff', color: '#000' }}
+          >
+            Deposit
+          </button>
+          <button
+            onClick={() => { setShowWithdraw(true); setWithdrawAmount(''); setWithdrawError(''); }}
+            className="px-6 py-2.5 rounded-lg font-bold text-sm border transition-colors hover:bg-[#00d4ff]/10"
+            style={{ borderColor: '#00d4ff', color: '#00d4ff' }}
+          >
+            Withdraw
+          </button>
         </div>
       </div>
 
-      <div className="glass-card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-[#f0f0ff]">Loyalty Points</h3>
-          <div className="flex items-center gap-1 text-[#00ff88]"><Star size={16} fill="currentColor" /><span className="font-bold">{points.toLocaleString()}</span></div>
-        </div>
-        <div className="mb-2">
-          <div className="w-full bg-[#2a2a3a] rounded-full h-2">
-            <div className="h-2 rounded-full bg-gradient-to-r from-[#00d4ff] to-[#00ff88] transition-all" style={{ width: `${progress}%` }} />
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[
+          { label: 'Total Invested', value: `₵${userMetrics.totalInvested.toLocaleString()}`, color: '#00d4ff' },
+          { label: 'Total Earned', value: `₵${userMetrics.totalEarned.toLocaleString()}`, color: '#00ff88' },
+          { label: 'Available Balance', value: `₵${balance.toLocaleString()}`, color: '#f59e0b' },
+        ].map((stat) => (
+          <div key={stat.label} className="glass-card p-4 text-center">
+            <p className="text-xs text-[#8888aa] mb-1">{stat.label}</p>
+            <p className="text-xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
           </div>
-        </div>
-        <div className="flex justify-between text-xs text-[#8888aa]">
-          <span>{points.toLocaleString()} pts</span>
-          <span>{nextTier.toLocaleString()} pts (Gold Tier)</span>
-        </div>
-        <p className="text-xs text-[#8888aa] mt-2">{nextTier - points} points to next reward tier</p>
+        ))}
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add Funds">
+      {/* Transaction History */}
+      <div className="glass-card p-5">
+        <h2 className="text-base font-semibold text-[#f0f0ff] mb-4">Transaction History</h2>
+        <div className="space-y-3">
+          {transactions.map((tx) => {
+            const isPositive = tx.amount > 0;
+            return (
+              <div key={tx.id} className="flex items-center gap-3 py-2 border-b border-[#2a2a38] last:border-0">
+                {getTxIcon(tx.type)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-[#f0f0ff] truncate">{tx.description}</p>
+                  <p className="text-xs text-[#8888aa]">{tx.date}</p>
+                </div>
+                <span
+                  className="text-sm font-semibold"
+                  style={{ color: isPositive ? '#00ff88' : '#ef4444' }}
+                >
+                  {isPositive ? '+' : '-'}₵{Math.abs(tx.amount)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Deposit Modal */}
+      <Modal isOpen={showDeposit} onClose={() => setShowDeposit(false)} title="Deposit Funds">
         <div className="space-y-4">
-          <p className="text-sm text-[#8888aa]">Select an amount or enter a custom value:</p>
+          <p className="text-sm text-[#8888aa]">Select a preset amount or enter a custom value.</p>
           <div className="grid grid-cols-4 gap-2">
-            {PRESETS.map((p) => (
+            {PRESET_AMOUNTS.map((amt) => (
               <button
-                key={p}
-                onClick={() => setAmount(p.toString())}
-                className={`py-2 rounded-lg text-sm font-medium border transition-all ${
-                  amount === p.toString() ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]' : 'border-[#2a2a3a] text-[#8888aa] hover:text-[#f0f0ff]'
-                }`}
-              >${p}</button>
+                key={amt}
+                onClick={() => setDepositAmount(String(amt))}
+                className="py-2 rounded-lg text-sm font-semibold border transition-colors"
+                style={{
+                  borderColor: depositAmount === String(amt) ? '#00d4ff' : '#2a2a38',
+                  color: depositAmount === String(amt) ? '#00d4ff' : '#8888aa',
+                  background: depositAmount === String(amt) ? '#00d4ff11' : 'transparent',
+                }}
+              >
+                ₵{amt}
+              </button>
             ))}
           </div>
           <input
             type="number"
-            placeholder="Custom amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-[#111118] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-colors"
+            placeholder="Custom amount (₵)"
+            value={depositAmount}
+            onChange={(e) => setDepositAmount(e.target.value)}
+            className="w-full bg-[#0a0a0f] border border-[#2a2a38] rounded-lg px-4 py-2.5 text-sm text-[#f0f0ff] placeholder-[#8888aa] outline-none focus:border-[#00d4ff] transition-colors"
           />
+          {depositError && <p className="text-red-400 text-sm">{depositError}</p>}
           <button
-            onClick={handleAddFunds}
-            className="w-full py-3 rounded-lg bg-[#00d4ff] text-black font-semibold text-sm hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all"
-          >Confirm Add Funds</button>
+            onClick={handleDeposit}
+            className="w-full py-2.5 rounded-lg font-bold text-sm"
+            style={{ background: '#00d4ff', color: '#000' }}
+          >
+            Confirm Deposit
+          </button>
+        </div>
+      </Modal>
+
+      {/* Withdraw Modal */}
+      <Modal isOpen={showWithdraw} onClose={() => setShowWithdraw(false)} title="Withdraw Funds">
+        <div className="space-y-4">
+          <p className="text-sm text-[#8888aa]">
+            Available balance: <span className="text-[#f0f0ff] font-semibold">₵{balance.toLocaleString()}</span>
+          </p>
+          <input
+            type="number"
+            placeholder="Amount to withdraw (₵)"
+            value={withdrawAmount}
+            onChange={(e) => setWithdrawAmount(e.target.value)}
+            className="w-full bg-[#0a0a0f] border border-[#2a2a38] rounded-lg px-4 py-2.5 text-sm text-[#f0f0ff] placeholder-[#8888aa] outline-none focus:border-[#00d4ff] transition-colors"
+          />
+          {withdrawError && <p className="text-red-400 text-sm">{withdrawError}</p>}
+          <button
+            onClick={handleWithdraw}
+            className="w-full py-2.5 rounded-lg font-bold text-sm"
+            style={{ background: '#00d4ff', color: '#000' }}
+          >
+            Confirm Withdrawal
+          </button>
         </div>
       </Modal>
     </div>

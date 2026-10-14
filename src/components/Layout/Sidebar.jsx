@@ -1,19 +1,16 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Gamepad2, ShoppingBag, Wallet, BarChart3, Package, ClipboardList, Settings, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Wallet, BarChart3, Package, LogOut, Zap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const userNav = [
   { to: '/user/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/user/catalog', icon: Gamepad2, label: 'Catalog' },
-  { to: '/user/orders', icon: ShoppingBag, label: 'My Orders' },
+  { to: '/user/catalog', icon: ShoppingBag, label: 'Store' },
   { to: '/user/wallet', icon: Wallet, label: 'Wallet' },
 ];
 
 const adminNav = [
   { to: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
-  { to: '/admin/inventory', icon: Package, label: 'Inventory' },
-  { to: '/admin/orders', icon: ClipboardList, label: 'Order Fulfillment' },
-  { to: '#', icon: Settings, label: 'Settings' },
+  { to: '/admin/inventory', icon: Package, label: 'Products' },
 ];
 
 export function Sidebar({ isOpen, onClose }) {
@@ -43,7 +40,7 @@ export function Sidebar({ isOpen, onClose }) {
               NEXUS<span className="text-[#00d4ff]">GG</span>
             </span>
           </div>
-          <p className="text-xs text-[#8888aa] mt-1 ml-10">Your Ultimate Gaming Hub</p>
+          <p className="text-xs text-[#8888aa] mt-1 ml-10">Game. Invest. Earn.</p>
         </div>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {nav.map(({ to, icon: Icon, label }) => (

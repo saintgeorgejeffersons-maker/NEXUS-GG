@@ -3,11 +3,9 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { UserDashboard } from './pages/user/UserDashboard';
 import { Catalog } from './pages/user/Catalog';
-import { Orders } from './pages/user/Orders';
 import { Wallet } from './pages/user/Wallet';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Inventory } from './pages/admin/Inventory';
-import { OrderFulfillment } from './pages/admin/OrderFulfillment';
 import { Layout } from './components/Layout/Layout';
 
 function ProtectedRoute({ children, role }) {
@@ -26,11 +24,9 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/user/dashboard" element={<ProtectedRoute role="user"><UserDashboard /></ProtectedRoute>} />
       <Route path="/user/catalog" element={<ProtectedRoute role="user"><Catalog /></ProtectedRoute>} />
-      <Route path="/user/orders" element={<ProtectedRoute role="user"><Orders /></ProtectedRoute>} />
       <Route path="/user/wallet" element={<ProtectedRoute role="user"><Wallet /></ProtectedRoute>} />
       <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/inventory" element={<ProtectedRoute role="admin"><Inventory /></ProtectedRoute>} />
-      <Route path="/admin/orders" element={<ProtectedRoute role="admin"><OrderFulfillment /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

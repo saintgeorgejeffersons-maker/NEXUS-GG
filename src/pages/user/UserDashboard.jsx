@@ -1,69 +1,125 @@
-import { ShoppingCart, Clock, Star, Wallet } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Wallet, TrendingUp, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { userMetrics, userInvestments, walletTransactions } from '../../data/mockData';
 import { StatCard } from '../../components/ui/StatCard';
-import { Badge } from '../../components/ui/Badge';
-import { SpendingChart } from '../../components/charts/SpendingChart';
-import { userMetrics, userOrders } from '../../data/mockData';
-import { useNavigate } from 'react-router-dom';
-
-function statusVariant(s) {
-  return s.toLowerCase().replace(' ', '') || 'default';
-}
 
 export function UserDashboard() {
-  const navigate = useNavigate();
-  const recent = userOrders.slice(0, 4);
+  const recentTx = [...walletTransactions].slice(0, 4);
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard icon={ShoppingCart} label="Total Orders" value={userMetrics.totalOrders} accent="#00d4ff" trend={12} />
-        <StatCard icon={Clock} label="Active Pre-orders" value={userMetrics.activePreorders} accent="#7c3aed" trend={0} />
-        <StatCard icon={Star} label="Loyalty Points" value={userMetrics.loyaltyPoints.toLocaleString()} accent="#00ff88" trend={8} />
-        <StatCard icon={Wallet} label="Wallet Balance" value={`$${userMetrics.walletBalance.toFixed(2)}`} accent="#ff6b35" trend={-5} />
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-[#f0f0ff]">Dashboard</h1>
+        <p className="text-sm text-[#8888aa] mt-1">Welcome back. Here's your investment overview.</p>
       </div>
 
-      <SpendingChart />
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <StatCard
+          icon={Wallet}
+          label="Wallet Balance"
+          value={`₵${userMetrics.walletBalance.toLocaleString()}`}
+          accent="#f59e0b"
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="Total Earned"
+          value={`₵${userMetrics.totalEarned.toLocaleString()}`}
+          accent="#00ff88"
+        />
+      </div>
 
+      {/* Active Investments */}
       <div className="glass-card p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-[#f0f0ff]">Recent Orders</h3>
-          <button onClick={() => navigate('/user/orders')} className="text-sm text-[#00d4ff] hover:underline">View All</button>
+          <h2 className="text-base font-semibold text-[#f0f0ff]">My Active Investments</h2>
+          <Link
+            to="/user/catalog"
+            className="text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors hover:bg-[#00d4ff]/10"
+            style={{ borderColor: '#00d4ff', color: '#00d4ff' }}
+          >
+            Browse Products
+          </Link>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-[#8888aa] border-b border-[#2a2a3a]">
-                <th className="pb-3 pr-4">Order #</th>
-                <th className="pb-3 pr-4">Product</th>
-                <th className="pb-3 pr-4 hidden sm:table-cell">Date</th>
-                <th className="pb-3 pr-4">Amount</th>
-                <th className="pb-3">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#2a2a3a]">
-              {recent.map((order) => (
-                <tr key={order.id} className="hover:bg-white/5 transition-colors">
-                  <td className="py-3 pr-4 font-mono text-[#00d4ff] text-xs">{order.orderNumber}</td>
-                  <td className="py-3 pr-4 text-[#f0f0ff] max-w-[160px] truncate">{order.product}</td>
-                  <td className="py-3 pr-4 text-[#8888aa] hidden sm:table-cell">{order.date}</td>
-                  <td className="py-3 pr-4 font-medium">${order.amount.toFixed(2)}</td>
-                  <td className="py-3"><Badge variant={statusVariant(order.status)}>{order.status}</Badge></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+
+        {userInvestments.length === 0 ? (
+          <p className="text-sm text-[#8888aa] text-center py-4">
+            No active investments. Browse the store to get started.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {userInvestments.map((inv) => {
+              const daysDone = inv.durationDays - inv.daysRemaining;
+              const progress = (daysDone / inv.durationDays) * 100;
+              return (
+                <div
+                  key={inv.id}
+                  className="rounded-xl p-4"
+                  style={{ background: '#1a1a24', border: '1px solid #2a2a38' }}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{inv.image || '🎮'}</span>
+                      <span className="font-bold text-[#f0f0ff] text-sm">{inv.productName}</span>
+                    </div>
+                    <span
+                      className="text-xs font-semibold px-2 py-1 rounded-full"
+                      style={{ background: '#00ff8820', color: '#00ff88' }}
+                    >
+                      Daily Return: ₵{inv.dailyReturn}
+                    </span>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="rounded-full overflow-hidden mb-1" style={{ background: '#0a0a0f', height: 8 }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${progress}%`,
+                        background: 'linear-gradient(to right, #00d4ff, #7c3aed)',
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-[#8888aa] mb-2">
+                    Day {daysDone} of {inv.durationDays}
+                  </p>
+
+                  <div className="flex gap-4 text-xs text-[#8888aa]">
+                    <span>Earned: <span style={{ color: '#00ff88' }}>₵{inv.totalEarned}</span></span>
+                    <span>Days left: <span className="text-[#f0f0ff]">{inv.daysRemaining}</span></span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <button
-          onClick={() => navigate('/user/catalog')}
-          className="px-6 py-2.5 rounded-lg text-sm font-medium bg-[#00d4ff] text-black hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all"
-        >Browse Catalog</button>
-        <button
-          onClick={() => navigate('/user/wallet')}
-          className="px-6 py-2.5 rounded-lg text-sm font-medium border border-[#00d4ff] text-[#00d4ff] hover:bg-[#00d4ff]/10 transition-all"
-        >Add Funds</button>
+      {/* Recent Transactions */}
+      <div className="glass-card p-5">
+        <h2 className="text-base font-semibold text-[#f0f0ff] mb-4">Recent Transactions</h2>
+        <div className="space-y-3">
+          {recentTx.map((tx) => {
+            const isPositive = tx.amount > 0;
+            const Icon = isPositive ? ArrowUpCircle : ArrowDownCircle;
+            const iconColor = isPositive ? '#00ff88' : '#ef4444';
+            return (
+              <div key={tx.id} className="flex items-center gap-3">
+                <Icon size={20} style={{ color: iconColor, flexShrink: 0 }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-[#f0f0ff] truncate">{tx.description}</p>
+                  <p className="text-xs text-[#8888aa]">{tx.date}</p>
+                </div>
+                <span
+                  className="text-sm font-semibold"
+                  style={{ color: isPositive ? '#00ff88' : '#ef4444' }}
+                >
+                  {isPositive ? '+' : ''}₵{Math.abs(tx.amount)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
