@@ -1,11 +1,11 @@
 // Products: gaming hardware users can "invest" in for daily returns
 export const products = [
-  { id: 1, name: 'PlayStation 5 Pro', price: 500, dailyReturn: 20, durationDays: 30, image: '🎮', description: 'High-performance gaming console with top-tier daily yields.', active: true },
-  { id: 2, name: 'Xbox Series X Cyber', price: 350, dailyReturn: 13, durationDays: 30, image: '🕹️', description: 'Next-gen Xbox with steady daily returns for investors.', active: true },
-  { id: 3, name: 'Nintendo Switch OLED', price: 200, dailyReturn: 7, durationDays: 30, image: '🃏', description: 'Portable gaming investment with consistent yields.', active: true },
-  { id: 4, name: 'Steam Deck OLED 1TB', price: 450, dailyReturn: 17, durationDays: 30, image: '💻', description: 'PC handheld powerhouse delivering strong daily returns.', active: true },
-  { id: 5, name: 'Asus ROG Ally X', price: 650, dailyReturn: 26, durationDays: 30, image: '🖥️', description: 'Premium ROG gaming rig with the highest daily payout.', active: true },
-  { id: 6, name: 'PS5 Digital Slim', price: 280, dailyReturn: 10, durationDays: 30, image: '🎮', description: 'Sleek entry-level PS5 for consistent earners.', active: true },
+  { id: 1, name: 'PlayStation 5 Pro', price: 500, dailyReturn: 20, durationDays: 30, imageUrl: '', description: 'High-performance gaming console with top-tier daily yields.', active: true },
+  { id: 2, name: 'Xbox Series X Cyber', price: 350, dailyReturn: 13, durationDays: 30, imageUrl: '', description: 'Next-gen Xbox with steady daily returns for investors.', active: true },
+  { id: 3, name: 'Nintendo Switch OLED', price: 200, dailyReturn: 7, durationDays: 30, imageUrl: '', description: 'Portable gaming investment with consistent yields.', active: true },
+  { id: 4, name: 'Steam Deck OLED 1TB', price: 450, dailyReturn: 17, durationDays: 30, imageUrl: '', description: 'PC handheld powerhouse delivering strong daily returns.', active: true },
+  { id: 5, name: 'Asus ROG Ally X', price: 650, dailyReturn: 26, durationDays: 30, imageUrl: '', description: 'Premium ROG gaming rig with the highest daily payout.', active: true },
+  { id: 6, name: 'PS5 Digital Slim', price: 280, dailyReturn: 10, durationDays: 30, imageUrl: '', description: 'Sleek entry-level PS5 for consistent earners.', active: true },
 ]
 
 // User's active investments (products they have purchased)

@@ -106,8 +106,12 @@ export function Catalog() {
               )}
 
               <div className="p-5 flex flex-col flex-1">
-                {/* Emoji */}
-                <div className="text-5xl text-center mb-3">{product.image}</div>
+                {/* Product Image */}
+                {product.imageUrl && (
+                  <div className="w-full h-36 rounded-lg overflow-hidden mb-4 bg-[#0a0a0f]">
+                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                  </div>
+                )}
 
                 {/* Name & Description */}
                 <h3 className="text-base font-bold text-[#f0f0ff] text-center mb-1">{product.name}</h3>
@@ -159,7 +163,11 @@ export function Catalog() {
         <Modal isOpen={!!selectedProduct} onClose={closeModal} title="Confirm Investment">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <span className="text-4xl">{selectedProduct.image}</span>
+              {selectedProduct.imageUrl ? (
+                <img src={selectedProduct.imageUrl} alt={selectedProduct.name} className="w-14 h-14 rounded-lg object-cover bg-[#0a0a0f]" />
+              ) : (
+                <div className="w-14 h-14 rounded-lg bg-[#2a2a38]" />
+              )}
               <div>
                 <p className="font-bold text-[#f0f0ff]">{selectedProduct.name}</p>
                 <p className="text-sm text-[#8888aa]">Price: ₵{selectedProduct.price}</p>

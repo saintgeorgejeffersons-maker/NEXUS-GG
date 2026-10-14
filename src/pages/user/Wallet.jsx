@@ -100,7 +100,7 @@ export function Wallet() {
         </div>
         <p
           className="text-5xl font-black text-[#f0f0ff] mb-6"
-          style={{ textShadow: '0 0 20px #00d4ff' }}
+
         >
           ₵{balance.toLocaleString()}
         </p>

@@ -9,6 +9,7 @@ const EMPTY_FORM = {
   dailyReturn: '',
   durationDays: 30,
   description: '',
+  imageUrl: '',
   active: true,
 };
 
@@ -42,6 +43,7 @@ export function Inventory() {
       dailyReturn: product.dailyReturn,
       durationDays: product.durationDays,
       description: product.description,
+      imageUrl: product.imageUrl || '',
       active: product.active,
     });
     setShowModal(true);
@@ -62,7 +64,7 @@ export function Inventory() {
       setProductList((prev) =>
         prev.map((p) =>
           p.id === editingProduct.id
-            ? { ...p, ...form, price: Number(form.price), dailyReturn: Number(form.dailyReturn), durationDays: Number(form.durationDays) }
+            ? { ...p, ...form, price: Number(form.price), dailyReturn: Number(form.dailyReturn), durationDays: Number(form.durationDays), imageUrl: form.imageUrl || '' }
             : p
         )
       );
@@ -72,7 +74,7 @@ export function Inventory() {
         ...prev,
         {
           id: newId,
-          image: '🎮',
+          imageUrl: form.imageUrl || '',
           name: form.name,
           price: Number(form.price),
           dailyReturn: Number(form.dailyReturn),
@@ -164,8 +166,14 @@ export function Inventory() {
                 <tr key={product.id} style={{ borderBottom: '1px solid #2a2a38' }}>
                   {/* Product */}
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{product.image}</span>
+                    <div className="flex items-center gap-3">
+                      {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-[#0a0a0f]" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-[#2a2a38] flex items-center justify-center flex-shrink-0">
+                          <span className="text-[#8888aa] text-xs">No img</span>
+                        </div>
+                      )}
                       <span className="font-medium text-[#f0f0ff] whitespace-nowrap">{product.name}</span>
                     </div>
                   </td>
@@ -308,6 +316,21 @@ export function Inventory() {
               placeholder="Product name"
               className="w-full bg-[#0a0a0f] border border-[#2a2a38] rounded-lg px-3 py-2 text-sm text-[#f0f0ff] placeholder-[#8888aa] outline-none focus:border-[#00d4ff] transition-colors"
             />
+          </div>
+
+          {/* Image URL */}
+          <div>
+            <label className="block text-xs text-[#8888aa] mb-1">Image URL</label>
+            <input
+              type="url"
+              value={form.imageUrl}
+              onChange={(e) => handleFormChange('imageUrl', e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              className="w-full bg-[#0a0a0f] border border-[#2a2a38] rounded-lg px-3 py-2 text-sm text-[#f0f0ff] placeholder-[#8888aa] outline-none focus:border-[#00d4ff] transition-colors"
+            />
+            {form.imageUrl && (
+              <img src={form.imageUrl} alt="Preview" className="mt-2 w-full h-32 object-cover rounded-lg bg-[#0a0a0f]" onError={(e) => { e.target.style.display = 'none'; }} />
+            )}
           </div>
 
           {/* Price + Daily Return */}

@@ -3,8 +3,8 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const AuthContext = createContext(null);
 
 const MOCK_USERS = [
-  { id: 1, name: 'Admin Nexus', email: 'admin@nexus.gg', password: 'admin123', role: 'admin' },
-  { id: 2, name: 'Player One', email: 'player@nexus.gg', password: 'player123', role: 'user' },
+  { id: 1, name: 'Admin Nexus', email: 'admin@nexus.gg', mobile: '0200000001', password: 'admin123', role: 'admin' },
+  { id: 2, name: 'Player One', email: 'player@nexus.gg', mobile: '0200000002', password: 'player123', role: 'user' },
 ];
 
 export function AuthProvider({ children }) {
@@ -20,9 +20,10 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = (email, password, role) => {
+  const login = (identifier, password, role) => {
+    // identifier can be email or mobile number
     const found = MOCK_USERS.find(
-      (u) => u.email === email && u.password === password && u.role === role
+      (u) => (u.email === identifier || u.mobile === identifier) && u.password === password && u.role === role
     );
     if (found) {
       const { password: _, ...safeUser } = found;
@@ -34,10 +35,11 @@ export function AuthProvider({ children }) {
     return { success: false, error: 'Invalid credentials or wrong role selected.' };
   };
 
-  const register = (name, email, password, role) => {
-    const existing = MOCK_USERS.find((u) => u.email === email);
-    if (existing) return { success: false, error: 'Email already registered.' };
-    const newUser = { id: Date.now(), name, email, role: 'user' };
+  const register = (name, email, mobile, password, role) => {
+    const existing = MOCK_USERS.find((u) => u.email === email || u.mobile === mobile);
+    if (existing) return { success: false, error: 'Email or mobile number already registered.' };
+    const newUser = { id: Date.now(), name, email, mobile, role: 'user' };
+    MOCK_USERS.push({ id: Date.now(), name, email, mobile, password, role: 'user' });
     setUser(newUser);
     setIsAuthenticated(true);
     localStorage.setItem('nexus_user', JSON.stringify(newUser));

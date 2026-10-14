@@ -16,7 +16,7 @@ const CustomPieTooltip = ({ active, payload }) => {
   return (
     <div className="bg-[#1a1a24] border border-[#2a2a3a] rounded-lg p-3 text-sm">
       <p style={{color: payload[0].payload.color}}>{payload[0].name}</p>
-      <p className="text-[#f0f0ff] font-semibold">${(payload[0].value / 1000).toFixed(0)}K</p>
+      <p className="text-[#f0f0ff] font-semibold">₵{(payload[0].value / 1000).toFixed(0)}K</p>
     </div>
   );
 };
