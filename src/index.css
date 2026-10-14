@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0a0a0f;
+  color: #f0f0ff;
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: #111118; }
+::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #00d4ff; }
+
+.neon-border {
+  border: 1px solid #00d4ff;
+  box-shadow: 0 0 10px rgba(0,212,255,0.2), inset 0 0 10px rgba(0,212,255,0.05);
+}
+
+.neon-glow {
+  box-shadow: 0 0 20px rgba(0,212,255,0.4);
+}
+
+.glass-card {
+  background: #1a1a24;
+  border: 1px solid #2a2a3a;
+  border-radius: 12px;
+}
+
+.sidebar-link.active {
+  border-left: 3px solid #00d4ff;
+  background: rgba(0,212,255,0.08);
+  color: #00d4ff;
+}
+
+@layer utilities {
+  .text-neon { color: #00d4ff; }
+  .text-neon-purple { color: #7c3aed; }
+  .text-neon-green { color: #00ff88; }
+  .bg-card { background-color: #1a1a24; }
+  .bg-surface { background-color: #111118; }
+  .bg-base { background-color: #0a0a0f; }
+  .border-card { border-color: #2a2a3a; }
+}
