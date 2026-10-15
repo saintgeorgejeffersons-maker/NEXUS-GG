@@ -25,35 +25,40 @@ export function Header({ title, onMenuToggle, menuOpen }) {
     if (!profile?.id) return;
 
     async function loadNotifications() {
-      if (role === 'admin') {
-        const requests = await getAllDepositRequests();
-        const pending = requests.filter((r) => r.status === 'pending');
-        setNotifications(
-          pending.map((r) => ({
-            id: r.id,
-            icon: Clock,
-            iconColor: '#facc15',
-            title: `Deposit request — ₵${Number(r.amount).toFixed(2)}`,
-            subtitle: `${r.profiles?.full_name ?? 'User'} · ${new Date(r.created_at).toLocaleDateString()}`,
-          }))
-        );
-      } else {
-        const requests = await getUserDepositRequests(profile.id);
-        const recent = requests.slice(0, 10);
-        setNotifications(
-          recent.map((r) => ({
-            id: r.id,
-            icon: r.status === 'approved' ? CheckCircle : r.status === 'rejected' ? XCircle : Clock,
-            iconColor: r.status === 'approved' ? '#00ff88' : r.status === 'rejected' ? '#ef4444' : '#facc15',
-            title: `Deposit ₵${Number(r.amount).toFixed(2)} — ${r.status}`,
-            subtitle: new Date(r.created_at).toLocaleDateString(),
-          }))
-        );
+      try {
+        if (role === 'admin') {
+          const requests = await getAllDepositRequests();
+          const pending = requests.filter((r) => r.status === 'pending');
+          setNotifications(
+            pending.map((r) => ({
+              id: r.id,
+              icon: Clock,
+              iconColor: '#facc15',
+              title: `Deposit request — ₵${Number(r.amount).toFixed(2)}`,
+              subtitle: `${r.profiles?.full_name ?? 'User'} · ${new Date(r.created_at).toLocaleDateString()}`,
+            }))
+          );
+        } else {
+          const requests = await getUserDepositRequests(profile.id);
+          const recent = requests.slice(0, 10);
+          setNotifications(
+            recent.map((r) => ({
+              id: r.id,
+              icon: r.status === 'approved' ? CheckCircle : r.status === 'rejected' ? XCircle : Clock,
+              iconColor: r.status === 'approved' ? '#00ff88' : r.status === 'rejected' ? '#ef4444' : '#facc15',
+              title: `Deposit ₵${Number(r.amount).toFixed(2)} — ${r.status}`,
+              subtitle: new Date(r.created_at).toLocaleDateString(),
+            }))
+          );
+        }
+      } catch (e) {
+        console.error('Failed to load notifications:', e);
+        setNotifications([]);
       }
     }
 
     loadNotifications();
-  }, [profile?.id, role, open]);
+  }, [profile?.id, role]);
 
   // Close on outside click
   useEffect(() => {
