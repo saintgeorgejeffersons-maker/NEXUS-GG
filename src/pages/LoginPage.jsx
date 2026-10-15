@@ -23,7 +23,7 @@ export function LoginPage() {
     setForm({ name: '', email: '', mobile: '', password: '' });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -32,7 +32,7 @@ export function LoginPage() {
       if (!form.email.trim())  { setError('Email address is required.'); return; }
       if (!form.mobile.trim()) { setError('Mobile number is required.'); return; }
       if (!form.password)      { setError('Password is required.'); return; }
-      const res = register(form.name, form.email, form.mobile, form.password, 'user');
+      const res = await register(form.name, form.email, form.mobile, form.password, 'user');
       if (res.success) navigate('/user/dashboard');
       else setError(res.error);
     } else {
@@ -42,7 +42,7 @@ export function LoginPage() {
         return;
       }
       if (!form.password) { setError('Password is required.'); return; }
-      const res = login(identifier, form.password, 'user');
+      const res = await login(identifier, form.password, 'user');
       if (res.success) navigate('/user/dashboard');
       else setError(res.error);
     }
