@@ -12,6 +12,7 @@ const PAGE_TITLES = {
   '/admin/users': 'Users',
   '/admin/deposits':    'Deposit Requests',
   '/admin/withdrawals': 'Withdrawal Requests',
+  '/admin/transactions': 'Transactions',
   '/admin/settings':    'Settings',
 };
 

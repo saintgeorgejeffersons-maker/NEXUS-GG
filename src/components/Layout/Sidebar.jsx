@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Wallet, BarChart3, Package, Users, ArrowDownCircle, ArrowUpCircle, Settings, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Wallet, BarChart3, Package, Users, ArrowDownCircle, ArrowUpCircle, List, Settings, LogOut, Zap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const userNav = [
@@ -9,12 +9,13 @@ const userNav = [
 ];
 
 const adminNav = [
-  { to: '/admin/dashboard',   icon: BarChart3,       label: 'Dashboard'   },
-  { to: '/admin/inventory',   icon: Package,         label: 'Products'    },
-  { to: '/admin/users',       icon: Users,           label: 'Users'       },
-  { to: '/admin/deposits',    icon: ArrowDownCircle, label: 'Deposits'    },
-  { to: '/admin/withdrawals', icon: ArrowUpCircle,   label: 'Withdrawals' },
-  { to: '/admin/settings',    icon: Settings,        label: 'Settings'    },
+  { to: '/admin/dashboard',    icon: BarChart3,       label: 'Dashboard'    },
+  { to: '/admin/inventory',    icon: Package,         label: 'Products'     },
+  { to: '/admin/users',        icon: Users,           label: 'Users'        },
+  { to: '/admin/deposits',     icon: ArrowDownCircle, label: 'Deposits'     },
+  { to: '/admin/withdrawals',  icon: ArrowUpCircle,   label: 'Withdrawals'  },
+  { to: '/admin/transactions', icon: List,            label: 'Transactions' },
+  { to: '/admin/settings',     icon: Settings,        label: 'Settings'     },
 ];
 
 export function Sidebar({ isOpen, onClose }) {

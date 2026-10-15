@@ -246,3 +246,9 @@ export async function updateWithdrawalRequestStatus(id, status) {
   if (error) throw error;
   return data;
 }
+
+// ── DELETE TRANSACTION ────────────────────────────────────
+export async function deleteTransaction(id) {
+  const { error } = await supabase.from('transactions').delete().eq('id', id);
+  if (error) throw error;
+}
