@@ -66,7 +66,7 @@ export function AdminDashboard() {
                   <tr key={p.id} className="hover:bg-white/5 transition-colors">
                     <td className="py-3 pr-4 text-[#f0f0ff] font-medium truncate max-w-[120px]">{p.name}</td>
                     <td className="py-3 pr-4 text-[#8888aa]">₵{p.price}</td>
-                    <td className="py-3 pr-4" style={{ color: '#00ff88' }}>+₵{p.daily_return}</td>
+                    <td className="py-3 pr-4" style={{ color: '#00ff88' }}>+₵{Math.abs(Number(p.daily_return))}</td>
                     <td className="py-3">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                         p.active

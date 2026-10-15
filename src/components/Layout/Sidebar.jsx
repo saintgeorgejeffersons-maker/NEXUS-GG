@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Wallet, BarChart3, Package, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Wallet, BarChart3, Package, Users, LogOut, Zap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const userNav = [
@@ -11,6 +11,7 @@ const userNav = [
 const adminNav = [
   { to: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
   { to: '/admin/inventory', icon: Package, label: 'Products' },
+  { to: '/admin/users', icon: Users, label: 'Users' },
 ];
 
 export function Sidebar({ isOpen, onClose }) {

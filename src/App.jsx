@@ -7,6 +7,7 @@ import { Catalog } from './pages/user/Catalog';
 import { Wallet } from './pages/user/Wallet';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Inventory } from './pages/admin/Inventory';
+import { Users } from './pages/admin/Users';
 import { Layout } from './components/Layout/Layout';
 
 function ProtectedRoute({ children, role }) {
@@ -35,6 +36,7 @@ function AppRoutes() {
       {/* Admin routes */}
       <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/inventory" element={<ProtectedRoute role="admin"><Inventory /></ProtectedRoute>} />
+      <Route path="/admin/users"     element={<ProtectedRoute role="admin"><Users /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
