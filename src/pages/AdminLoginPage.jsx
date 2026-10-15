@@ -15,14 +15,14 @@ export function AdminLoginPage() {
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!form.email.trim()) { setError('Email address is required.'); return; }
     if (!form.password)     { setError('Password is required.'); return; }
-    const res = login(form.email, form.password, 'admin');
+    const res = await login(form.email, form.password, 'admin');
     if (res.success) navigate('/admin/dashboard');
-    else setError('Invalid admin credentials.');
+    else setError(res.error || 'Invalid admin credentials.');
   };
 
   return (
@@ -79,11 +79,6 @@ export function AdminLoginPage() {
               Login as Admin
             </button>
           </form>
-
-          <div className="mt-4 p-3 rounded-lg bg-white/5 border border-[#2a2a3a]">
-            <p className="text-xs text-[#8888aa] font-medium mb-1">Demo Credentials:</p>
-            <p className="text-xs text-[#8888aa]">admin@nexus.gg / admin123</p>
-          </div>
 
           <p className="text-center text-xs text-[#8888aa] mt-4">
             Not an admin?{' '}
