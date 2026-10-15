@@ -150,12 +150,7 @@ export function LoginPage() {
             </button>
           </form>
 
-          {mode === 'login' && (
-            <div className="mt-4 p-3 rounded-lg bg-white/5 border border-[#2a2a3a]">
-              <p className="text-xs text-[#8888aa] font-medium mb-1">Demo Account:</p>
-              <p className="text-xs text-[#8888aa]">player@nexus.gg or 0200000002 / player123</p>
-            </div>
-          )}
+
         </div>
       </div>
     </div>
