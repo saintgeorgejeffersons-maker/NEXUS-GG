@@ -59,6 +59,14 @@ export function AuthProvider({ children }) {
       },
     });
     if (error) return { success: false, error: error.message };
+
+    // If email confirmation is off, signUp returns a session immediately
+    if (data.session) {
+      setUser(data.session.user);
+      await fetchProfile(data.session.user.id);
+      setIsAuthenticated(true);
+    }
+
     return { success: true, role: 'user' };
   }
 
