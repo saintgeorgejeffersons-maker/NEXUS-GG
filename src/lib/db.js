@@ -132,8 +132,8 @@ export async function getAdminMetrics() {
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const totalPaidOut = txs
-    .filter((t) => t.type === 'return')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
+    .filter((t) => t.type === 'return' || t.type === 'withdrawal')
+    .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
 
   return { totalUsers, activeInvestments, totalDeposits, totalPaidOut };
 }
