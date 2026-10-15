@@ -1,8 +1,71 @@
-import { Bell, Menu, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Bell, Menu, X, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { getAllDepositRequests, getUserDepositRequests } from '../../lib/db';
+
+function NotificationItem({ icon: Icon, iconColor, title, subtitle }) {
+  return (
+    <div className="flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+      <Icon size={16} style={{ color: iconColor }} className="flex-shrink-0 mt-0.5" />
+      <div className="min-w-0">
+        <p className="text-sm text-[#f0f0ff] leading-snug">{title}</p>
+        <p className="text-xs text-[#8888aa] mt-0.5">{subtitle}</p>
+      </div>
+    </div>
+  );
+}
 
 export function Header({ title, onMenuToggle, menuOpen }) {
-  const { user } = useAuth();
+  const { user, profile, role } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    async function loadNotifications() {
+      if (role === 'admin') {
+        const requests = await getAllDepositRequests();
+        const pending = requests.filter((r) => r.status === 'pending');
+        setNotifications(
+          pending.map((r) => ({
+            id: r.id,
+            icon: Clock,
+            iconColor: '#facc15',
+            title: `Deposit request — ₵${Number(r.amount).toFixed(2)}`,
+            subtitle: `${r.profiles?.full_name ?? 'User'} · ${new Date(r.created_at).toLocaleDateString()}`,
+          }))
+        );
+      } else {
+        const requests = await getUserDepositRequests(profile.id);
+        const recent = requests.slice(0, 10);
+        setNotifications(
+          recent.map((r) => ({
+            id: r.id,
+            icon: r.status === 'approved' ? CheckCircle : r.status === 'rejected' ? XCircle : Clock,
+            iconColor: r.status === 'approved' ? '#00ff88' : r.status === 'rejected' ? '#ef4444' : '#facc15',
+            title: `Deposit ₵${Number(r.amount).toFixed(2)} — ${r.status}`,
+            subtitle: new Date(r.created_at).toLocaleDateString(),
+          }))
+        );
+      }
+    }
+
+    loadNotifications();
+  }, [profile?.id, role, open]);
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const unread = notifications.length;
+
   return (
     <header className="h-16 bg-[#111118] border-b border-[#2a2a3a] flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10">
       <div className="flex items-center gap-3">
@@ -14,16 +77,51 @@ export function Header({ title, onMenuToggle, menuOpen }) {
         </button>
         <h1 className="text-lg font-semibold text-[#f0f0ff]">{title}</h1>
       </div>
+
       <div className="flex items-center gap-3">
-        <button className="relative text-[#8888aa] hover:text-[#f0f0ff] transition-colors">
-          <Bell size={20} />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#00d4ff] rounded-full text-xs text-black font-bold flex items-center justify-center">3</span>
-        </button>
+        {/* Notification Bell */}
+        <div className="relative" ref={ref}>
+          <button
+            onClick={() => setOpen((o) => !o)}
+            className="relative text-[#8888aa] hover:text-[#f0f0ff] transition-colors"
+          >
+            <Bell size={20} />
+            {unread > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#00d4ff] rounded-full text-xs text-black font-bold flex items-center justify-center">
+                {unread > 9 ? '9+' : unread}
+              </span>
+            )}
+          </button>
+
+          {open && (
+            <div className="absolute right-0 top-10 w-80 bg-[#1a1a24] border border-[#2a2a3a] rounded-xl shadow-2xl overflow-hidden z-50">
+              <div className="px-4 py-3 border-b border-[#2a2a3a] flex items-center justify-between">
+                <p className="text-sm font-semibold text-[#f0f0ff]">Notifications</p>
+                {unread > 0 && (
+                  <span className="text-xs text-[#8888aa]">{unread} new</span>
+                )}
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <p className="text-sm text-[#8888aa] text-center py-8">No notifications</p>
+                ) : (
+                  notifications.map((n) => (
+                    <NotificationItem key={n.id} {...n} />
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User Avatar */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-[#7c3aed]/30 flex items-center justify-center text-xs font-bold text-[#7c3aed]">
-            {user?.name?.charAt(0).toUpperCase()}
+            {(profile?.full_name ?? user?.email ?? '?').charAt(0).toUpperCase()}
           </div>
-          <span className="hidden sm:block text-sm text-[#f0f0ff]">{user?.name}</span>
+          <span className="hidden sm:block text-sm text-[#f0f0ff]">
+            {profile?.full_name ?? user?.email}
+          </span>
         </div>
       </div>
     </header>

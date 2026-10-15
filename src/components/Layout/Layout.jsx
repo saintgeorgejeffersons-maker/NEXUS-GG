@@ -6,11 +6,11 @@ import { useLocation } from 'react-router-dom';
 const PAGE_TITLES = {
   '/user/dashboard': 'Dashboard',
   '/user/catalog': 'Gaming Catalog',
-  '/user/orders': 'My Orders',
   '/user/wallet': 'Wallet',
   '/admin/dashboard': 'Admin Dashboard',
-  '/admin/inventory': 'Inventory Management',
-  '/admin/orders': 'Order Fulfillment',
+  '/admin/inventory': 'Products',
+  '/admin/users': 'Users',
+  '/admin/deposits': 'Deposit Requests',
 };
 
 export function Layout({ children }) {
