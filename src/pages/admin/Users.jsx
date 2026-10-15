@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Users as UsersIcon, Search, Wallet, TrendingUp } from 'lucide-react';
-import { getAllProfiles, getAllInvestments } from '../../lib/db';
+import { Search, Wallet, TrendingUp, Trash2 } from 'lucide-react';
+import { getAllProfiles, getAllInvestments, deleteUserAccount } from '../../lib/db';
 
 export function Users() {
   const [users, setUsers] = useState([]);
   const [investments, setInvestments] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [confirmId, setConfirmId] = useState(null);
+  const [deleting, setDeleting] = useState(null);
 
-  useEffect(() => {
-    Promise.all([getAllProfiles(), getAllInvestments()]).then(([profiles, invs]) => {
-      // exclude admins
-      setUsers(profiles.filter((p) => p.role === 'user'));
-      setInvestments(invs);
-      setLoading(false);
-    });
-  }, []);
+  async function load() {
+    const [profiles, invs] = await Promise.all([getAllProfiles(), getAllInvestments()]);
+    setUsers(profiles.filter((p) => p.role === 'user'));
+    setInvestments(invs);
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, []);
 
   const filtered = users.filter(
     (u) =>
@@ -26,6 +28,18 @@ export function Users() {
 
   function activeInvestmentsCount(userId) {
     return investments.filter((i) => i.user_id === userId && i.active).length;
+  }
+
+  async function handleDelete(userId) {
+    setDeleting(userId);
+    try {
+      await deleteUserAccount(userId);
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+    } catch (e) {
+      console.error('Failed to delete user:', e);
+    }
+    setDeleting(null);
+    setConfirmId(null);
   }
 
   if (loading)
@@ -39,7 +53,6 @@ export function Users() {
           <h2 className="text-xl font-bold text-[#f0f0ff]">Users</h2>
           <p className="text-sm text-[#8888aa]">{users.length} registered player{users.length !== 1 ? 's' : ''}</p>
         </div>
-        {/* Search */}
         <div className="relative w-full sm:w-64">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8888aa]" />
           <input
@@ -68,12 +81,13 @@ export function Users() {
                   <span className="flex items-center gap-1"><TrendingUp size={13} /> Investments</span>
                 </th>
                 <th className="px-5 py-3">Joined</th>
+                <th className="px-5 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2a2a3a]">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-[#8888aa]">
+                  <td colSpan={7} className="px-5 py-10 text-center text-[#8888aa]">
                     {search ? 'No users match your search.' : 'No users yet.'}
                   </td>
                 </tr>
@@ -104,6 +118,29 @@ export function Users() {
                     </td>
                     <td className="px-5 py-3 text-[#8888aa]">
                       {new Date(u.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-5 py-3">
+                      {confirmId === u.id ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleDelete(u.id)}
+                            disabled={deleting === u.id}
+                            className="px-2 py-1 rounded text-xs font-medium bg-red-900/30 text-red-400 border border-red-700/30 hover:bg-red-900/50 transition-all disabled:opacity-50">
+                            {deleting === u.id ? 'Deleting…' : 'Confirm'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmId(null)}
+                            className="px-2 py-1 rounded text-xs text-[#8888aa] hover:text-[#f0f0ff] transition-all">
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmId(u.id)}
+                          className="p-1.5 rounded-lg text-[#8888aa] hover:text-red-400 hover:bg-red-900/20 transition-all">
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))

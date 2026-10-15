@@ -252,3 +252,9 @@ export async function deleteTransaction(id) {
   const { error } = await supabase.from('transactions').delete().eq('id', id);
   if (error) throw error;
 }
+
+// ── DELETE USER ACCOUNT ───────────────────────────────────
+export async function deleteUserAccount(userId) {
+  const { error } = await supabase.rpc('delete_user_account', { target_user_id: userId });
+  if (error) throw error;
+}
