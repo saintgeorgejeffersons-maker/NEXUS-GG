@@ -10,8 +10,9 @@ const PAGE_TITLES = {
   '/admin/dashboard': 'Admin Dashboard',
   '/admin/inventory': 'Products',
   '/admin/users': 'Users',
-  '/admin/deposits': 'Deposit Requests',
-  '/admin/settings': 'Settings',
+  '/admin/deposits':    'Deposit Requests',
+  '/admin/withdrawals': 'Withdrawal Requests',
+  '/admin/settings':    'Settings',
 };
 
 export function Layout({ children }) {

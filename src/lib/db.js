@@ -205,3 +205,44 @@ export async function upsertSetting(key, value) {
     .upsert({ key, value, updated_at: new Date().toISOString() });
   if (error) throw error;
 }
+
+// ── WITHDRAWAL REQUESTS ───────────────────────────────────
+export async function createWithdrawalRequest(userId, amount) {
+  const { data, error } = await supabase
+    .from('withdrawal_requests')
+    .insert({ user_id: userId, amount, status: 'pending' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getUserWithdrawalRequests(userId) {
+  const { data, error } = await supabase
+    .from('withdrawal_requests')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function getAllWithdrawalRequests() {
+  const { data, error } = await supabase
+    .from('withdrawal_requests')
+    .select('*, profiles(full_name, email)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function updateWithdrawalRequestStatus(id, status) {
+  const { data, error } = await supabase
+    .from('withdrawal_requests')
+    .update({ status, reviewed_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}

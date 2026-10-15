@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Menu, X, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getAllDepositRequests, getUserDepositRequests } from '../../lib/db';
+import { getAllDepositRequests, getUserDepositRequests, getAllWithdrawalRequests, getUserWithdrawalRequests } from '../../lib/db';
 
 function NotificationItem({ icon: Icon, iconColor, title, subtitle }) {
   return (
@@ -27,29 +27,49 @@ export function Header({ title, onMenuToggle, menuOpen }) {
     async function loadNotifications() {
       try {
         if (role === 'admin') {
-          const requests = await getAllDepositRequests();
-          const pending = requests.filter((r) => r.status === 'pending');
-          setNotifications(
-            pending.map((r) => ({
-              id: r.id,
+          const [deposits, withdrawals] = await Promise.all([
+            getAllDepositRequests(),
+            getAllWithdrawalRequests(),
+          ]);
+          const pendingDeposits = deposits.filter((r) => r.status === 'pending');
+          const pendingWithdrawals = withdrawals.filter((r) => r.status === 'pending');
+          setNotifications([
+            ...pendingDeposits.map((r) => ({
+              id: `d-${r.id}`,
               icon: Clock,
               iconColor: '#facc15',
               title: `Deposit request — ₵${Number(r.amount).toFixed(2)}`,
               subtitle: `${r.profiles?.full_name ?? 'User'} · ${new Date(r.created_at).toLocaleDateString()}`,
-            }))
-          );
+            })),
+            ...pendingWithdrawals.map((r) => ({
+              id: `w-${r.id}`,
+              icon: Clock,
+              iconColor: '#fb923c',
+              title: `Withdrawal request — ₵${Number(r.amount).toFixed(2)}`,
+              subtitle: `${r.profiles?.full_name ?? 'User'} · ${new Date(r.created_at).toLocaleDateString()}`,
+            })),
+          ]);
         } else {
-          const requests = await getUserDepositRequests(profile.id);
-          const recent = requests.slice(0, 10);
-          setNotifications(
-            recent.map((r) => ({
-              id: r.id,
+          const [deposits, withdrawals] = await Promise.all([
+            getUserDepositRequests(profile.id),
+            getUserWithdrawalRequests(profile.id),
+          ]);
+          setNotifications([
+            ...deposits.slice(0, 5).map((r) => ({
+              id: `d-${r.id}`,
               icon: r.status === 'approved' ? CheckCircle : r.status === 'rejected' ? XCircle : Clock,
               iconColor: r.status === 'approved' ? '#00ff88' : r.status === 'rejected' ? '#ef4444' : '#facc15',
               title: `Deposit ₵${Number(r.amount).toFixed(2)} — ${r.status}`,
               subtitle: new Date(r.created_at).toLocaleDateString(),
-            }))
-          );
+            })),
+            ...withdrawals.slice(0, 5).map((r) => ({
+              id: `w-${r.id}`,
+              icon: r.status === 'approved' ? CheckCircle : r.status === 'rejected' ? XCircle : Clock,
+              iconColor: r.status === 'approved' ? '#00ff88' : r.status === 'rejected' ? '#ef4444' : '#fb923c',
+              title: `Withdrawal ₵${Number(r.amount).toFixed(2)} — ${r.status}`,
+              subtitle: new Date(r.created_at).toLocaleDateString(),
+            })),
+          ]);
         }
       } catch (e) {
         console.error('Failed to load notifications:', e);

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   getUserTransactions, createTransaction, updateWalletBalance,
   createDepositRequest, getUserDepositRequests, getSettings,
+  createWithdrawalRequest, getUserWithdrawalRequests,
 } from '../../lib/db';
 
 const DEPOSIT_PRESETS = [50, 100, 200, 500];
@@ -27,6 +28,7 @@ export function Wallet() {
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [depositRequests, setDepositRequests] = useState([]);
+  const [withdrawalRequests, setWithdrawalRequests] = useState([]);
   const [momoSettings, setMomoSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,10 +51,12 @@ export function Wallet() {
     Promise.all([
       getUserTransactions(profile.id),
       getUserDepositRequests(profile.id),
+      getUserWithdrawalRequests(profile.id),
       getSettings(),
-    ]).then(([txs, reqs, settings]) => {
+    ]).then(([txs, reqs, wreqs, settings]) => {
       setTransactions(txs);
       setDepositRequests(reqs);
+      setWithdrawalRequests(wreqs);
       setMomoSettings(settings);
       setLoading(false);
     });
@@ -67,6 +71,10 @@ export function Wallet() {
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
   const pendingDeposits = depositRequests
+    .filter((r) => r.status === 'pending')
+    .reduce((sum, r) => sum + Number(r.amount), 0);
+
+  const pendingWithdrawals = withdrawalRequests
     .filter((r) => r.status === 'pending')
     .reduce((sum, r) => sum + Number(r.amount), 0);
 
@@ -91,21 +99,16 @@ export function Wallet() {
     if (!val || val <= 0) { setTxError('Enter a valid amount.'); return; }
     if (val > balance) { setTxError('Insufficient balance.'); return; }
     setTxError('');
-    const newBalance = balance - val;
-    await updateWalletBalance(profile.id, newBalance);
-    await createTransaction({
-      user_id: profile.id,
-      type: 'withdrawal',
-      description: 'Withdrawal to Bank',
-      amount: -val,
-    });
-    setBalance(newBalance);
-    await refreshProfile();
-    const txs = await getUserTransactions(profile.id);
-    setTransactions(txs);
-    setTxSuccess(`₵${val.toFixed(2)} withdrawn successfully.`);
-    setAmount('');
-    setTimeout(() => { setTxSuccess(''); setShowWithdraw(false); }, 1500);
+    try {
+      await createWithdrawalRequest(profile.id, val);
+      const wreqs = await getUserWithdrawalRequests(profile.id);
+      setWithdrawalRequests(wreqs);
+      setTxSuccess(`Withdrawal request for ₵${val.toFixed(2)} submitted. Awaiting admin approval.`);
+      setAmount('');
+      setTimeout(() => { setTxSuccess(''); setShowWithdraw(false); }, 2500);
+    } catch (e) {
+      setTxError('Failed to submit withdrawal request. Please try again.');
+    }
   }
 
   function openDeposit() { setAmount(''); setTxError(''); setTxSuccess(''); setReference(generateReference()); setCopied(false); setShowDeposit(true); }
@@ -131,8 +134,13 @@ export function Wallet() {
         <p className="text-[#8888aa] text-sm mb-1">Available Balance</p>
         <p className="text-5xl font-black text-[#f0f0ff] mb-2">₵{balance.toLocaleString()}</p>
         {pendingDeposits > 0 && (
-          <p className="text-xs text-yellow-400 mb-4 flex items-center justify-center gap-1">
-            <Clock size={12} /> ₵{pendingDeposits.toFixed(2)} pending approval
+          <p className="text-xs text-yellow-400 mb-1 flex items-center justify-center gap-1">
+            <Clock size={12} /> ₵{pendingDeposits.toFixed(2)} deposit pending approval
+          </p>
+        )}
+        {pendingWithdrawals > 0 && (
+          <p className="text-xs text-orange-400 mb-4 flex items-center justify-center gap-1">
+            <Clock size={12} /> ₵{pendingWithdrawals.toFixed(2)} withdrawal pending approval
           </p>
         )}
         <div className="flex gap-3 justify-center mt-4">
@@ -169,6 +177,28 @@ export function Wallet() {
           </h3>
           <div className="space-y-2">
             {depositRequests.map((req) => (
+              <div key={req.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                <div>
+                  <p className="text-sm text-[#f0f0ff] font-medium">₵{Number(req.amount).toFixed(2)}</p>
+                  <p className="text-xs text-[#8888aa]">{new Date(req.created_at).toLocaleDateString()}</p>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${STATUS_STYLE[req.status]}`}>
+                  {req.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Withdrawal Requests */}
+      {withdrawalRequests.length > 0 && (
+        <div className="glass-card p-5">
+          <h3 className="text-base font-semibold text-[#f0f0ff] mb-4 flex items-center gap-2">
+            <Clock size={16} className="text-orange-400" /> Withdrawal Requests
+          </h3>
+          <div className="space-y-2">
+            {withdrawalRequests.map((req) => (
               <div key={req.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
                 <div>
                   <p className="text-sm text-[#f0f0ff] font-medium">₵{Number(req.amount).toFixed(2)}</p>
@@ -277,6 +307,7 @@ export function Wallet() {
       <Modal isOpen={showWithdraw} onClose={() => setShowWithdraw(false)} title="Withdraw Funds">
         <div className="space-y-4">
           <p className="text-sm text-[#8888aa]">Available balance: <span className="text-[#f0f0ff] font-semibold">₵{balance.toFixed(2)}</span></p>
+          <p className="text-xs text-[#8888aa]">Your withdrawal will be reviewed by an admin before being processed.</p>
           <input type="number" placeholder="Amount to withdraw" value={amount}
             onChange={(e) => setAmount(e.target.value)} className={inputClass} />
           {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{txError}</p>}
@@ -284,7 +315,7 @@ export function Wallet() {
           {!txSuccess && (
             <button onClick={handleWithdraw}
               className="w-full py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all">
-              Confirm Withdrawal
+              Submit Withdrawal Request
             </button>
           )}
         </div>
