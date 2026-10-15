@@ -147,3 +147,44 @@ export async function getAllProfiles() {
   if (error) throw error;
   return data;
 }
+
+// ── DEPOSIT REQUESTS ──────────────────────────────────────
+export async function createDepositRequest(userId, amount) {
+  const { data, error } = await supabase
+    .from('deposit_requests')
+    .insert({ user_id: userId, amount, status: 'pending' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getUserDepositRequests(userId) {
+  const { data, error } = await supabase
+    .from('deposit_requests')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function getAllDepositRequests() {
+  const { data, error } = await supabase
+    .from('deposit_requests')
+    .select('*, profiles(full_name, email)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function updateDepositRequestStatus(id, status) {
+  const { data, error } = await supabase
+    .from('deposit_requests')
+    .update({ status, reviewed_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}

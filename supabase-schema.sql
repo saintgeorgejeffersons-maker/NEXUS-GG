@@ -165,3 +165,35 @@ insert into public.products (name, description, price, daily_return, duration_da
   ('Asus ROG Ally X',       'Premium ROG gaming rig with the highest daily payout.',           650, 26, 30, '', true),
   ('PS5 Digital Slim',      'Sleek entry-level PS5 for consistent earners.',                   280, 10, 30, '', true)
 on conflict do nothing;
+
+-- ============================================================
+-- DEPOSIT REQUESTS
+-- Run this if you already applied the schema above
+-- ============================================================
+create table if not exists public.deposit_requests (
+  id bigserial primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  amount numeric(12,2) not null,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  reviewed_at timestamptz,
+  created_at timestamptz default now()
+);
+
+alter table public.deposit_requests enable row level security;
+
+create policy "Users can view own deposit requests"
+  on public.deposit_requests for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own deposit requests"
+  on public.deposit_requests for insert
+  with check (auth.uid() = user_id);
+
+create policy "Admins can manage all deposit requests"
+  on public.deposit_requests for all
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin'
+    )
+  );
