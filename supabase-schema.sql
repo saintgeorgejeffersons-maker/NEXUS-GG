@@ -197,3 +197,68 @@ create policy "Admins can manage all deposit requests"
       where id = auth.uid() and role = 'admin'
     )
   );
+
+-- ============================================================
+-- ADDITIONAL POLICIES (run these if not already applied)
+-- ============================================================
+
+-- Allow admins to update any profile (e.g. wallet balance)
+create policy if not exists "Admins can update all profiles"
+  on public.profiles for update
+  using (public.is_admin());
+
+-- Allow admins to insert transactions for any user
+create policy if not exists "Admins can insert transactions for all users"
+  on public.transactions for insert
+  with check (public.is_admin());
+
+-- ============================================================
+-- WITHDRAWAL REQUESTS
+-- ============================================================
+create table if not exists public.withdrawal_requests (
+  id bigserial primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  amount numeric(12,2) not null,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  reviewed_at timestamptz,
+  created_at timestamptz default now()
+);
+
+alter table public.withdrawal_requests enable row level security;
+
+create policy "Users can view own withdrawal requests"
+  on public.withdrawal_requests for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own withdrawal requests"
+  on public.withdrawal_requests for insert
+  with check (auth.uid() = user_id);
+
+create policy "Admins can manage all withdrawal requests"
+  on public.withdrawal_requests for all
+  using (public.is_admin());
+
+-- ============================================================
+-- SETTINGS
+-- ============================================================
+create table if not exists public.settings (
+  key text primary key,
+  value text not null,
+  updated_at timestamptz default now()
+);
+
+alter table public.settings enable row level security;
+
+create policy "Anyone authenticated can read settings"
+  on public.settings for select
+  using (auth.role() = 'authenticated');
+
+create policy "Admins can manage settings"
+  on public.settings for all
+  using (public.is_admin());
+
+insert into public.settings (key, value) values
+  ('momo_number', '0200000000'),
+  ('momo_name', 'Nexus GG'),
+  ('momo_network', 'MTN')
+on conflict do nothing;
