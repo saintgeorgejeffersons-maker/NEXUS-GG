@@ -1,60 +1,122 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
-const MOCK_USERS = [
-  { id: 1, name: 'Admin Nexus', email: 'admin@nexus.gg', mobile: '0200000001', password: 'admin123', role: 'admin' },
-  { id: 2, name: 'Player One', email: 'player@nexus.gg', mobile: '0200000002', password: 'player123', role: 'user' },
-];
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('nexus_user');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setUser(parsed);
-      setIsAuthenticated(true);
+  // Fetch profile from DB
+  async function fetchProfile(userId) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    if (!error && data) {
+      setProfile(data);
+      return data;
     }
+    return null;
+  }
+
+  // Listen to Supabase auth state
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        await fetchProfile(session.user.id);
+        setIsAuthenticated(true);
+      }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        await fetchProfile(session.user.id);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setProfile(null);
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (identifier, password, role) => {
-    // identifier can be email or mobile number
-    const found = MOCK_USERS.find(
-      (u) => (u.email === identifier || u.mobile === identifier) && u.password === password && u.role === role
-    );
-    if (found) {
-      const { password: _, ...safeUser } = found;
-      setUser(safeUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('nexus_user', JSON.stringify(safeUser));
-      return { success: true, role: safeUser.role };
-    }
-    return { success: false, error: 'Invalid credentials or wrong role selected.' };
-  };
-
-  const register = (name, email, mobile, password, role) => {
-    const existing = MOCK_USERS.find((u) => u.email === email || u.mobile === mobile);
-    if (existing) return { success: false, error: 'Email or mobile number already registered.' };
-    const newUser = { id: Date.now(), name, email, mobile, role: 'user' };
-    MOCK_USERS.push({ id: Date.now(), name, email, mobile, password, role: 'user' });
-    setUser(newUser);
-    setIsAuthenticated(true);
-    localStorage.setItem('nexus_user', JSON.stringify(newUser));
+  // Register new user (players only)
+  async function register(fullName, email, mobile, password) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName, mobile, role: 'user' },
+      },
+    });
+    if (error) return { success: false, error: error.message };
     return { success: true, role: 'user' };
-  };
+  }
 
-  const logout = () => {
+  // Login with email OR mobile
+  async function login(identifier, password, role) {
+    // If identifier looks like a phone number, look up the email first
+    let email = identifier;
+
+    if (!identifier.includes('@')) {
+      // It's a mobile number — find the matching email in profiles
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('mobile', identifier)
+        .single();
+      if (error || !data) return { success: false, error: 'No account found with that mobile number.' };
+      email = data.email;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { success: false, error: 'Invalid credentials.' };
+
+    // Verify the role matches
+    const prof = await fetchProfile(data.user.id);
+    if (prof?.role !== role) {
+      await supabase.auth.signOut();
+      setUser(null); setProfile(null); setIsAuthenticated(false);
+      return { success: false, error: `This account is not a ${role} account.` };
+    }
+
+    return { success: true, role: prof.role };
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
     setUser(null);
+    setProfile(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('nexus_user');
-  };
+  }
+
+  // Refresh profile (e.g. after wallet update)
+  async function refreshProfile() {
+    if (user?.id) await fetchProfile(user.id);
+  }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, role: user?.role, login, logout, register }}>
-      {children}
+    <AuthContext.Provider value={{
+      user,
+      profile,
+      isAuthenticated,
+      loading,
+      role: profile?.role,
+      login,
+      logout,
+      register,
+      refreshProfile,
+    }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 }

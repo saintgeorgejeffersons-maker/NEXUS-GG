@@ -1,0 +1,149 @@
+import { supabase } from './supabase';
+
+// ── PRODUCTS ──────────────────────────────────────────────
+export async function getProducts(activeOnly = false) {
+  let query = supabase.from('products').select('*').order('created_at', { ascending: true });
+  if (activeOnly) query = query.eq('active', true);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+
+export async function upsertProduct(product) {
+  const { data, error } = await supabase
+    .from('products')
+    .upsert(product)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteProduct(id) {
+  const { error } = await supabase.from('products').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function updateProduct(id, updates) {
+  const { data, error } = await supabase
+    .from('products')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// ── PROFILE / WALLET ──────────────────────────────────────
+export async function getProfile(userId) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateWalletBalance(userId, newBalance) {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ wallet_balance: newBalance })
+    .eq('id', userId);
+  if (error) throw error;
+}
+
+// ── INVESTMENTS ───────────────────────────────────────────
+export async function getUserInvestments(userId) {
+  const { data, error } = await supabase
+    .from('investments')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('active', true)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createInvestment(investment) {
+  const { data, error } = await supabase
+    .from('investments')
+    .insert(investment)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getAllInvestments() {
+  const { data, error } = await supabase
+    .from('investments')
+    .select('*, profiles(full_name, email)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+// ── TRANSACTIONS ──────────────────────────────────────────
+export async function getUserTransactions(userId) {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function createTransaction(tx) {
+  const { data, error } = await supabase
+    .from('transactions')
+    .insert(tx)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getAllTransactions() {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*, profiles(full_name, email)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+// ── ADMIN METRICS ─────────────────────────────────────────
+export async function getAdminMetrics() {
+  const [profilesRes, investmentsRes, transactionsRes] = await Promise.all([
+    supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'user'),
+    supabase.from('investments').select('id', { count: 'exact' }).eq('active', true),
+    supabase.from('transactions').select('amount, type'),
+  ]);
+
+  const totalUsers = profilesRes.count ?? 0;
+  const activeInvestments = investmentsRes.count ?? 0;
+  const txs = transactionsRes.data ?? [];
+
+  const totalDeposits = txs
+    .filter((t) => t.type === 'deposit')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const totalPaidOut = txs
+    .filter((t) => t.type === 'return')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  return { totalUsers, activeInvestments, totalDeposits, totalPaidOut };
+}
+
+// ── ALL PROFILES (admin) ──────────────────────────────────
+export async function getAllProfiles() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
