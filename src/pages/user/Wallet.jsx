@@ -8,7 +8,7 @@ import {
   createWithdrawalRequest, getUserWithdrawalRequests,
 } from '../../lib/db';
 
-const DEPOSIT_PRESETS = [50, 100, 200, 500];
+const DEPOSIT_PRESETS = [120, 200, 500, 1000];
 
 const TX_META = {
   deposit:    { icon: ArrowUpCircle,   color: '#00ff88', label: 'Deposit'    },
@@ -81,6 +81,7 @@ export function Wallet() {
   async function handleDeposit() {
     const val = parseFloat(amount);
     if (!val || val <= 0) { setTxError('Enter a valid amount.'); return; }
+    if (val < 120) { setTxError('Minimum deposit amount is ₵120.'); return; }
     setTxError('');
     try {
       await createDepositRequest(profile.id, val, reference);
