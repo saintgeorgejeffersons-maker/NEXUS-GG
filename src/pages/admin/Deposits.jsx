@@ -105,6 +105,7 @@ export function Deposits() {
               <tr className="text-left text-[#8888aa] border-b border-[#2a2a3a]">
                 <th className="px-5 py-3">User</th>
                 <th className="px-5 py-3">Amount</th>
+                <th className="px-5 py-3">Reference</th>
                 <th className="px-5 py-3">Requested</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3">Actions</th>
@@ -133,6 +134,11 @@ export function Deposits() {
                     </td>
                     <td className="px-5 py-3 font-bold text-[#00ff88]">
                       ₵{Number(req.amount).toFixed(2)}
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className="font-mono text-sm text-[#a78bfa] bg-[#7c3aed]/10 px-2 py-1 rounded-lg">
+                        {req.reference ?? '—'}
+                      </span>
                     </td>
                     <td className="px-5 py-3 text-[#8888aa]">
                       {new Date(req.created_at).toLocaleDateString()}{' '}

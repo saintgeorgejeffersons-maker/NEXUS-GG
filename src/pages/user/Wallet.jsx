@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Wallet as WalletIcon, ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Wallet as WalletIcon, ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart, Clock, Copy, Check } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -33,9 +33,16 @@ export function Wallet() {
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [amount, setAmount] = useState('');
+  const [reference, setReference] = useState('');
+  const [copied, setCopied] = useState(false);
   const [txError, setTxError] = useState('');
   const [txSuccess, setTxSuccess] = useState('');
 
+  function generateReference() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const rand = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    return `NXS-${rand}`;
+  }
   useEffect(() => {
     if (!profile?.id) return;
     setBalance(Number(profile.wallet_balance));
@@ -68,7 +75,7 @@ export function Wallet() {
     if (!val || val <= 0) { setTxError('Enter a valid amount.'); return; }
     setTxError('');
     try {
-      await createDepositRequest(profile.id, val);
+      await createDepositRequest(profile.id, val, reference);
       const reqs = await getUserDepositRequests(profile.id);
       setDepositRequests(reqs);
       setTxSuccess(`Deposit request for ₵${val.toFixed(2)} submitted. Awaiting admin approval.`);
@@ -101,8 +108,14 @@ export function Wallet() {
     setTimeout(() => { setTxSuccess(''); setShowWithdraw(false); }, 1500);
   }
 
-  function openDeposit() { setAmount(''); setTxError(''); setTxSuccess(''); setShowDeposit(true); }
+  function openDeposit() { setAmount(''); setTxError(''); setTxSuccess(''); setReference(generateReference()); setCopied(false); setShowDeposit(true); }
   function openWithdraw() { setAmount(''); setTxError(''); setTxSuccess(''); setShowWithdraw(true); }
+
+  function handleCopy() {
+    navigator.clipboard.writeText(reference);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   const inputClass = 'w-full bg-[#111118] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-colors';
 
@@ -222,6 +235,19 @@ export function Wallet() {
               <p className="text-xs text-[#8888aa] pt-1">After sending, submit your request below for admin confirmation.</p>
             </div>
           )}
+
+          {/* Reference */}
+          <div className="p-3 rounded-lg bg-[#7c3aed]/10 border border-[#7c3aed]/30">
+            <p className="text-xs text-[#8888aa] mb-1.5">Your payment reference — use this when sending</p>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-base font-mono font-bold text-[#a78bfa] tracking-widest">{reference}</span>
+              <button onClick={handleCopy}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#7c3aed]/20 text-[#a78bfa] hover:bg-[#7c3aed]/30 transition-all flex-shrink-0">
+                {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-4 gap-2">
             {DEPOSIT_PRESETS.map((p) => (
               <button key={p} onClick={() => setAmount(p.toString())}

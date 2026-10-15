@@ -149,10 +149,10 @@ export async function getAllProfiles() {
 }
 
 // ── DEPOSIT REQUESTS ──────────────────────────────────────
-export async function createDepositRequest(userId, amount) {
+export async function createDepositRequest(userId, amount, reference) {
   const { data, error } = await supabase
     .from('deposit_requests')
-    .insert({ user_id: userId, amount, status: 'pending' })
+    .insert({ user_id: userId, amount, status: 'pending', reference })
     .select()
     .single();
   if (error) throw error;
