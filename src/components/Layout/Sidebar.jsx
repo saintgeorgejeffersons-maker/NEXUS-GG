@@ -1,18 +1,19 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Wallet, BarChart3, Package, Users, ArrowDownCircle, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Wallet, BarChart3, Package, Users, ArrowDownCircle, Settings, LogOut, Zap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const userNav = [
   { to: '/user/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/user/catalog', icon: ShoppingBag, label: 'Store' },
-  { to: '/user/wallet', icon: Wallet, label: 'Wallet' },
+  { to: '/user/catalog',   icon: ShoppingBag,     label: 'Store'     },
+  { to: '/user/wallet',    icon: Wallet,           label: 'Wallet'    },
 ];
 
 const adminNav = [
-  { to: '/admin/dashboard', icon: BarChart3, label: 'Dashboard' },
-  { to: '/admin/inventory', icon: Package, label: 'Products' },
-  { to: '/admin/users', icon: Users, label: 'Users' },
-  { to: '/admin/deposits', icon: ArrowDownCircle, label: 'Deposits' },
+  { to: '/admin/dashboard', icon: BarChart3,        label: 'Dashboard' },
+  { to: '/admin/inventory', icon: Package,          label: 'Products'  },
+  { to: '/admin/users',     icon: Users,            label: 'Users'     },
+  { to: '/admin/deposits',  icon: ArrowDownCircle,  label: 'Deposits'  },
+  { to: '/admin/settings',  icon: Settings,         label: 'Settings'  },
 ];
 
 export function Sidebar({ isOpen, onClose }) {

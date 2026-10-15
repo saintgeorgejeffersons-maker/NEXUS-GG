@@ -188,3 +188,20 @@ export async function updateDepositRequestStatus(id, status) {
   if (error) throw error;
   return data;
 }
+
+// ── SETTINGS ──────────────────────────────────────────────
+export async function getSettings() {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('key, value');
+  if (error) throw error;
+  // Return as a plain object { momo_number: '...', momo_name: '...', ... }
+  return Object.fromEntries(data.map((row) => [row.key, row.value]));
+}
+
+export async function upsertSetting(key, value) {
+  const { error } = await supabase
+    .from('settings')
+    .upsert({ key, value, updated_at: new Date().toISOString() });
+  if (error) throw error;
+}

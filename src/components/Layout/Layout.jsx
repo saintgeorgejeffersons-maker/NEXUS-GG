@@ -11,6 +11,7 @@ const PAGE_TITLES = {
   '/admin/inventory': 'Products',
   '/admin/users': 'Users',
   '/admin/deposits': 'Deposit Requests',
+  '/admin/settings': 'Settings',
 };
 
 export function Layout({ children }) {

@@ -4,7 +4,7 @@ import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import {
   getUserTransactions, createTransaction, updateWalletBalance,
-  createDepositRequest, getUserDepositRequests,
+  createDepositRequest, getUserDepositRequests, getSettings,
 } from '../../lib/db';
 
 const DEPOSIT_PRESETS = [50, 100, 200, 500];
@@ -27,6 +27,7 @@ export function Wallet() {
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [depositRequests, setDepositRequests] = useState([]);
+  const [momoSettings, setMomoSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [showDeposit, setShowDeposit] = useState(false);
@@ -41,9 +42,11 @@ export function Wallet() {
     Promise.all([
       getUserTransactions(profile.id),
       getUserDepositRequests(profile.id),
-    ]).then(([txs, reqs]) => {
+      getSettings(),
+    ]).then(([txs, reqs, settings]) => {
       setTransactions(txs);
       setDepositRequests(reqs);
+      setMomoSettings(settings);
       setLoading(false);
     });
   }, [profile?.id, profile?.wallet_balance]);
@@ -198,7 +201,27 @@ export function Wallet() {
       {/* Deposit Modal */}
       <Modal isOpen={showDeposit} onClose={() => setShowDeposit(false)} title="Request Deposit">
         <div className="space-y-4">
-          <p className="text-sm text-[#8888aa]">Your deposit will be reviewed by an admin before being credited to your account.</p>
+          {/* Momo Payment Details */}
+          {momoSettings && (
+            <div className="p-4 rounded-lg bg-[#00d4ff]/5 border border-[#00d4ff]/20 space-y-2">
+              <p className="text-xs font-semibold text-[#00d4ff] uppercase tracking-wide mb-2">Send payment to</p>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-xs text-[#8888aa]">Network</p>
+                  <p className="text-[#f0f0ff] font-semibold">{momoSettings.momo_network}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-[#8888aa]">Number</p>
+                  <p className="text-[#f0f0ff] font-semibold">{momoSettings.momo_number}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-[#8888aa]">Account Name</p>
+                  <p className="text-[#f0f0ff] font-semibold">{momoSettings.momo_name}</p>
+                </div>
+              </div>
+              <p className="text-xs text-[#8888aa] pt-1">After sending, submit your request below for admin confirmation.</p>
+            </div>
+          )}
           <div className="grid grid-cols-4 gap-2">
             {DEPOSIT_PRESETS.map((p) => (
               <button key={p} onClick={() => setAmount(p.toString())}

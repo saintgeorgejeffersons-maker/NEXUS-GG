@@ -9,6 +9,7 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Inventory } from './pages/admin/Inventory';
 import { Users } from './pages/admin/Users';
 import { Deposits } from './pages/admin/Deposits';
+import { Settings } from './pages/admin/Settings';
 import { Layout } from './components/Layout/Layout';
 
 function ProtectedRoute({ children, role }) {
@@ -39,6 +40,7 @@ function AppRoutes() {
       <Route path="/admin/inventory" element={<ProtectedRoute role="admin"><Inventory /></ProtectedRoute>} />
       <Route path="/admin/users"     element={<ProtectedRoute role="admin"><Users /></ProtectedRoute>} />
       <Route path="/admin/deposits"  element={<ProtectedRoute role="admin"><Deposits /></ProtectedRoute>} />
+      <Route path="/admin/settings"  element={<ProtectedRoute role="admin"><Settings /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
