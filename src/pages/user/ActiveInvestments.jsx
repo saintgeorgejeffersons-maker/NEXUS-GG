@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { TrendingUp, ShoppingCart, CheckCircle } from 'lucide-react';
+import { TrendingUp, ShoppingCart, CheckCircle, Coins, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getUserInvestments, claimDailyReturn } from '../../lib/db';
@@ -160,7 +160,7 @@ export function ActiveInvestments() {
                       bg-gradient-to-r from-[#00d4ff] to-[#00ff88] text-black
                       hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {isClaiming ? 'Claiming…' : '💰 Claim Daily Earnings'}
+                    {isClaiming ? 'Claiming…' : <><Coins size={15} className="inline mr-1.5 -mt-0.5" />Claim Daily Earnings</>}
                   </button>
                 ) : (
                   <button
@@ -168,7 +168,7 @@ export function ActiveInvestments() {
                     className="w-full py-2.5 rounded-lg text-sm font-medium transition-all
                       bg-[#2a2a3a] text-[#8888aa] border border-[#2a2a3a] cursor-not-allowed"
                   >
-                    ⏳ {countdown}
+                    <Clock size={14} className="inline mr-1.5 -mt-0.5" />{countdown}
                   </button>
                 )}
               </div>
