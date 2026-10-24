@@ -247,6 +247,17 @@ export async function updateWithdrawalRequestStatus(id, status) {
   return data;
 }
 
+// ── ACTIVE INVESTMENT PRODUCT IDS ────────────────────────
+export async function getUserActiveInvestmentIds(userId) {
+  const { data, error } = await supabase
+    .from('investments')
+    .select('product_id')
+    .eq('user_id', userId)
+    .eq('active', true);
+  if (error) throw error;
+  return data.map((row) => row.product_id);
+}
+
 // ── CLAIM DAILY RETURN ────────────────────────────────────
 export async function claimDailyReturn(investment, userId) {
   // Check 24-hour gate

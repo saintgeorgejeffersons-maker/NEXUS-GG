@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getProducts, createInvestment, createTransaction, updateWalletBalance } from '../../lib/db';
+import { getProducts, createInvestment, createTransaction, updateWalletBalance, getUserActiveInvestmentIds } from '../../lib/db';
 import { Modal } from '../../components/ui/Modal';
 
 const ACCENT_COLORS = ['#00d4ff', '#7c3aed', '#00ff88', '#ff6b35', '#f59e0b', '#ec4899'];
@@ -16,13 +16,19 @@ export function Catalog() {
   const [modalMsg, setModalMsg] = useState('');
   const [modalError, setModalError] = useState('');
   const [confirming, setConfirming] = useState(false);
+  const [ownedProductIds, setOwnedProductIds] = useState(new Set());
 
   useEffect(() => {
     getProducts(true).then((data) => { setProducts(data); setLoading(false); });
   }, []);
 
   useEffect(() => {
-    if (profile) setWalletBalance(Number(profile.wallet_balance));
+    if (profile) {
+      setWalletBalance(Number(profile.wallet_balance));
+      getUserActiveInvestmentIds(profile.id)
+        .then((ids) => setOwnedProductIds(new Set(ids)))
+        .catch(() => {});
+    }
   }, [profile]);
 
   const filtered = products.filter((p) =>
@@ -43,6 +49,10 @@ export function Catalog() {
 
   async function handleConfirm() {
     if (!selectedProduct || confirming) return;
+    if (ownedProductIds.has(selectedProduct.id)) {
+      setModalError('You already have an active investment in this product.');
+      return;
+    }
     if (walletBalance < selectedProduct.price) {
       setModalError('Insufficient balance. Please deposit funds.');
       return;
@@ -75,6 +85,7 @@ export function Catalog() {
       });
       setWalletBalance(newBalance);
       await refreshProfile();
+      setOwnedProductIds((prev) => new Set([...prev, selectedProduct.id]));
       setModalMsg(`Investment successful! ₵${selectedProduct.price} deducted from wallet.`);
     } catch (err) {
       setModalError('Something went wrong. Please try again.');
@@ -156,15 +167,15 @@ export function Catalog() {
                   </p>
 
                   <button
-                    onClick={() => product.active && openModal(product)}
-                    disabled={!product.active}
+                    onClick={() => product.active && !ownedProductIds.has(product.id) && openModal(product)}
+                    disabled={!product.active || ownedProductIds.has(product.id)}
                     className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity mt-auto"
                     style={{
-                      background: product.active ? '#00d4ff' : '#2a2a38',
-                      color: product.active ? '#000' : '#8888aa',
-                      cursor: product.active ? 'pointer' : 'not-allowed',
+                      background: product.active && !ownedProductIds.has(product.id) ? '#00d4ff' : '#2a2a38',
+                      color: product.active && !ownedProductIds.has(product.id) ? '#000' : '#8888aa',
+                      cursor: product.active && !ownedProductIds.has(product.id) ? 'pointer' : 'not-allowed',
                     }}>
-                    {product.active ? 'Invest Now' : 'Unavailable'}
+                    {ownedProductIds.has(product.id) ? 'Already Invested' : product.active ? 'Invest Now' : 'Unavailable'}
                   </button>
                 </div>
               </div>
