@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { TrendingUp, ShoppingCart, CheckCircle, Coins, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getUserInvestments, claimDailyReturn } from '../../lib/db';
+import { getUserInvestments, claimDailyReturn, payReferralCommission } from '../../lib/db';
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
@@ -52,6 +52,7 @@ export function ActiveInvestments() {
     setError(null);
     try {
       await claimDailyReturn(investment, profile.id);
+      try { await payReferralCommission(profile.id, investment.daily_return); } catch (_) {}
       await fetchInvestments();
       if (refreshProfile) await refreshProfile();
     } catch (err) {

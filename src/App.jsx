@@ -6,6 +6,7 @@ import { UserDashboard } from './pages/user/UserDashboard';
 import { Catalog } from './pages/user/Catalog';
 import { Wallet } from './pages/user/Wallet';
 import { ActiveInvestments } from './pages/user/ActiveInvestments';
+import { Referral } from './pages/user/Referral';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Inventory } from './pages/admin/Inventory';
 import { Users } from './pages/admin/Users';
@@ -37,6 +38,7 @@ function AppRoutes() {
       <Route path="/user/dashboard"   element={<ProtectedRoute role="user"><UserDashboard /></ProtectedRoute>} />
       <Route path="/user/catalog"     element={<ProtectedRoute role="user"><Catalog /></ProtectedRoute>} />
       <Route path="/user/investments" element={<ProtectedRoute role="user"><ActiveInvestments /></ProtectedRoute>} />
+      <Route path="/user/referrals"   element={<ProtectedRoute role="user"><Referral /></ProtectedRoute>} />
       <Route path="/user/wallet"      element={<ProtectedRoute role="user"><Wallet /></ProtectedRoute>} />
 
       {/* Admin routes */}

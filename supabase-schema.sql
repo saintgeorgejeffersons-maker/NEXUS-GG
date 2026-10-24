@@ -303,3 +303,43 @@ create policy "Admins can manage all notifications"
 
 -- MIGRATION: add is_read to notifications (run if table already exists without this column)
 ALTER TABLE public.notifications ADD COLUMN IF NOT EXISTS is_read boolean not null default false;
+
+-- ============================================================
+-- REFERRAL SYSTEM MIGRATION
+-- ============================================================
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS referral_code text unique;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS referred_by uuid references public.profiles(id) on delete set null;
+
+CREATE TABLE IF NOT EXISTS public.referrals (
+  id bigserial primary key,
+  referrer_id uuid references public.profiles(id) on delete cascade not null,
+  referred_id uuid references public.profiles(id) on delete cascade not null,
+  bonus_paid boolean not null default false,
+  created_at timestamptz default now(),
+  CONSTRAINT referrals_referred_id_key UNIQUE(referred_id)
+);
+
+ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY IF NOT EXISTS "Users can view own referral rows"
+  ON public.referrals FOR SELECT
+  USING (auth.uid() = referrer_id OR auth.uid() = referred_id);
+
+CREATE POLICY IF NOT EXISTS "Admins can manage all referral rows"
+  ON public.referrals FOR ALL
+  USING (public.is_admin());
+
+CREATE POLICY IF NOT EXISTS "Authenticated users can insert referral rows"
+  ON public.referrals FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+-- Extend transactions.type to include referral_commission
+ALTER TABLE public.transactions DROP CONSTRAINT IF EXISTS transactions_type_check;
+ALTER TABLE public.transactions ADD CONSTRAINT transactions_type_check
+  CHECK (type IN ('deposit', 'withdrawal', 'purchase', 'return', 'referral_commission'));
+
+-- Seed referral settings
+INSERT INTO public.settings (key, value) VALUES
+  ('referral_commission_pct', '10'),
+  ('referral_bonus_amount',   '50')
+ON CONFLICT DO NOTHING;

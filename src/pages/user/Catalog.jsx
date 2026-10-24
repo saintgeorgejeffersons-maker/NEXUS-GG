@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getProducts, createInvestment, createTransaction, updateWalletBalance, getUserActiveInvestmentIds } from '../../lib/db';
+import { getProducts, createInvestment, createTransaction, updateWalletBalance, getUserActiveInvestmentIds, applyReferralBonus } from '../../lib/db';
 import { Modal } from '../../components/ui/Modal';
 
 const ACCENT_COLORS = ['#00d4ff', '#7c3aed', '#00ff88', '#ff6b35', '#f59e0b', '#ec4899'];
@@ -86,6 +86,7 @@ export function Catalog() {
       setWalletBalance(newBalance);
       await refreshProfile();
       setOwnedProductIds((prev) => new Set([...prev, selectedProduct.id]));
+      try { await applyReferralBonus(profile.id); } catch (_) {}
       setModalMsg(`Investment successful! ₵${selectedProduct.price} deducted from wallet.`);
     } catch (err) {
       setModalError('Something went wrong. Please try again.');

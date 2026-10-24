@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Gamepad2, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -9,7 +9,7 @@ const inputClass =
 export function LoginPage() {
   const [mode, setMode] = useState('login');
   const [loginMethod, setLoginMethod] = useState('email');
-  const [form, setForm] = useState({ name: '', email: '', mobile: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', mobile: '', password: '', referralCode: '' });
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const { login, register } = useAuth();
@@ -17,10 +17,15 @@ export function LoginPage() {
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref');
+    if (ref) set('referralCode', ref);
+  }, []);
+
   const switchMode = (m) => {
     setMode(m);
     setError('');
-    setForm({ name: '', email: '', mobile: '', password: '' });
+    setForm({ name: '', email: '', mobile: '', password: '', referralCode: '' });
   };
 
   const handleSubmit = async (e) => {
@@ -32,7 +37,7 @@ export function LoginPage() {
       if (!form.email.trim())  { setError('Email address is required.'); return; }
       if (!form.mobile.trim()) { setError('Mobile number is required.'); return; }
       if (!form.password)      { setError('Password is required.'); return; }
-      const res = await register(form.name, form.email, form.mobile, form.password, 'user');
+      const res = await register(form.name, form.email, form.mobile, form.password, form.referralCode);
       if (res.success) navigate('/user/dashboard');
       else setError(res.error);
     } else {
@@ -93,6 +98,8 @@ export function LoginPage() {
                   value={form.email} onChange={(e) => set('email', e.target.value)} />
                 <input className={inputClass} type="tel" placeholder="Mobile number"
                   value={form.mobile} onChange={(e) => set('mobile', e.target.value)} />
+                <input className={inputClass} type="text" placeholder="Referral code (optional)"
+                  value={form.referralCode} onChange={(e) => set('referralCode', e.target.value)} />
               </>
             )}
 

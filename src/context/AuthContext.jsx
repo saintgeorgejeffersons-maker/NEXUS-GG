@@ -50,7 +50,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Register new user (players only)
-  async function register(fullName, email, mobile, password) {
+  async function register(fullName, email, mobile, password, referralCode = '') {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -65,6 +65,29 @@ export function AuthProvider({ children }) {
       setUser(data.session.user);
       await fetchProfile(data.session.user.id);
       setIsAuthenticated(true);
+    }
+
+    // Link referral if a code was provided
+    const newUserId = data.session?.user?.id ?? data.user?.id;
+    if (referralCode && referralCode.trim() && newUserId) {
+      try {
+        const { data: refData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('referral_code', referralCode.trim().toUpperCase())
+          .maybeSingle();
+        if (refData?.id) {
+          await supabase
+            .from('profiles')
+            .update({ referred_by: refData.id })
+            .eq('id', newUserId);
+          await supabase
+            .from('referrals')
+            .insert({ referrer_id: refData.id, referred_id: newUserId, bonus_paid: false });
+        }
+      } catch (_) {
+        // Swallow silently — referral linkage failure must never block registration
+      }
     }
 
     return { success: true, role: 'user' };

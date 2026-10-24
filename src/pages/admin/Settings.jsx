@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Save, Smartphone } from 'lucide-react';
+import { Save, Smartphone, Percent } from 'lucide-react';
 import { getSettings, upsertSetting } from '../../lib/db';
 
 const NETWORKS = ['MTN', 'Vodafone', 'AirtelTigo'];
@@ -8,7 +8,13 @@ const inputClass =
   'w-full bg-[#1a1a24] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-all';
 
 export function Settings() {
-  const [form, setForm] = useState({ momo_number: '', momo_name: '', momo_network: 'MTN' });
+  const [form, setForm] = useState({
+    momo_number: '',
+    momo_name: '',
+    momo_network: 'MTN',
+    referral_commission_pct: '',
+    referral_bonus_amount: '',
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
@@ -20,6 +26,8 @@ export function Settings() {
         momo_number:  s.momo_number  ?? '',
         momo_name:    s.momo_name    ?? '',
         momo_network: s.momo_network ?? 'MTN',
+        referral_commission_pct: s.referral_commission_pct ?? '10',
+        referral_bonus_amount:   s.referral_bonus_amount   ?? '50',
       });
       setLoading(false);
     });
@@ -28,6 +36,12 @@ export function Settings() {
   async function handleSave() {
     if (!form.momo_number.trim()) { setError('Mobile money number is required.'); return; }
     if (!form.momo_name.trim())   { setError('Account name is required.'); return; }
+    if (Number(form.referral_commission_pct) < 0 || Number(form.referral_commission_pct) > 100) {
+      setError('Commission must be between 0 and 100%.'); return;
+    }
+    if (Number(form.referral_bonus_amount) < 0) {
+      setError('Bonus amount must be 0 or more.'); return;
+    }
     setError('');
     setSaving(true);
     try {
@@ -35,8 +49,10 @@ export function Settings() {
         upsertSetting('momo_number',  form.momo_number.trim()),
         upsertSetting('momo_name',    form.momo_name.trim()),
         upsertSetting('momo_network', form.momo_network),
+        upsertSetting('referral_commission_pct', String(form.referral_commission_pct)),
+        upsertSetting('referral_bonus_amount',   String(form.referral_bonus_amount)),
       ]);
-      setSuccess('Payment details saved successfully.');
+      setSuccess('Settings saved successfully.');
       setTimeout(() => setSuccess(''), 3000);
     } catch (e) {
       setError('Failed to save settings. Please try again.');
@@ -111,6 +127,49 @@ export function Settings() {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
           <Save size={16} />
           {saving ? 'Saving...' : 'Save Payment Details'}
+        </button>
+      </div>
+
+      {/* Referral Settings */}
+      <div className="glass-card p-6 space-y-5">
+        <div className="flex items-center gap-2 mb-2">
+          <Percent size={18} className="text-[#00d4ff]" />
+          <h3 className="text-base font-semibold text-[#f0f0ff]">Referral Settings</h3>
+        </div>
+
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Commission % (0–100)</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            placeholder="e.g. 10"
+            value={form.referral_commission_pct}
+            onChange={(e) => setForm((f) => ({ ...f, referral_commission_pct: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">Percentage of daily earnings paid to the referrer on each claim.</p>
+        </div>
+
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Signup Bonus Amount (₵)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="e.g. 50"
+            value={form.referral_bonus_amount}
+            onChange={(e) => setForm((f) => ({ ...f, referral_bonus_amount: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">One-time bonus credited to the referred user on their first investment.</p>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+          <Save size={16} />
+          {saving ? 'Saving...' : 'Save Referral Settings'}
         </button>
       </div>
 

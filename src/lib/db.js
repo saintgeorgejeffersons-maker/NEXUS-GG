@@ -54,6 +54,124 @@ export async function updateWalletBalance(userId, newBalance) {
   if (error) throw error;
 }
 
+// ── REFERRAL HELPERS ──────────────────────────────────────
+export async function generateReferralCode(userId) {
+  const code = userId.replace(/-/g, '').slice(0, 8).toUpperCase();
+  const { error } = await supabase
+    .from('profiles')
+    .update({ referral_code: code })
+    .eq('id', userId);
+  if (error) throw error;
+  return code;
+}
+
+export async function updateReferralCode(userId, newCode) {
+  if (!/^[a-zA-Z0-9]{4,16}$/.test(newCode)) {
+    return { success: false, error: 'Code must be 4–16 alphanumeric characters.' };
+  }
+  const upper = newCode.toUpperCase();
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('referral_code', upper)
+    .neq('id', userId)
+    .maybeSingle();
+  if (existing) {
+    return { success: false, error: 'Code already taken.' };
+  }
+  const { error } = await supabase
+    .from('profiles')
+    .update({ referral_code: upper })
+    .eq('id', userId);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function getReferralStats(userId) {
+  const { data: referrals, error: refError } = await supabase
+    .from('referrals')
+    .select('*, referred:profiles!referred_id(full_name, email, created_at)')
+    .eq('referrer_id', userId);
+  if (refError) throw refError;
+
+  const { data: commTxs, error: txError } = await supabase
+    .from('transactions')
+    .select('amount')
+    .eq('user_id', userId)
+    .eq('type', 'referral_commission');
+  if (txError) throw txError;
+
+  const totalEarned = (commTxs ?? []).reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const referredIds = (referrals ?? []).map((r) => r.referred_id);
+  let activeCount = 0;
+  if (referredIds.length > 0) {
+    const { data: activeInv } = await supabase
+      .from('investments')
+      .select('user_id')
+      .in('user_id', referredIds)
+      .eq('active', true);
+    const distinctUsers = new Set((activeInv ?? []).map((r) => r.user_id));
+    activeCount = distinctUsers.size;
+  }
+
+  return { referrals: referrals ?? [], totalEarned, activeCount };
+}
+
+export async function applyReferralBonus(referredUserId) {
+  const { data: referralRow } = await supabase
+    .from('referrals')
+    .select('id')
+    .eq('referred_id', referredUserId)
+    .eq('bonus_paid', false)
+    .maybeSingle();
+  if (!referralRow) return;
+
+  const settings = await getSettings();
+  const bonusAmount = Number(settings.referral_bonus_amount ?? 50);
+
+  const referred = await getProfile(referredUserId);
+  const newBalance = Number(referred.wallet_balance) + bonusAmount;
+  await updateWalletBalance(referredUserId, newBalance);
+
+  await createTransaction({
+    user_id: referredUserId,
+    type: 'return',
+    description: 'Referral signup bonus',
+    amount: bonusAmount,
+  });
+
+  await supabase
+    .from('referrals')
+    .update({ bonus_paid: true })
+    .eq('referred_id', referredUserId);
+}
+
+export async function payReferralCommission(referredUserId, dailyReturn) {
+  const { data: referralRow } = await supabase
+    .from('referrals')
+    .select('referrer_id')
+    .eq('referred_id', referredUserId)
+    .maybeSingle();
+  if (!referralRow) return;
+
+  const settings = await getSettings();
+  const pct = Number(settings.referral_commission_pct ?? 10);
+  const commission = Math.round((dailyReturn * pct / 100) * 100) / 100;
+  if (commission <= 0) return;
+
+  const referrerId = referralRow.referrer_id;
+  const referrer = await getProfile(referrerId);
+  await updateWalletBalance(referrerId, Number(referrer.wallet_balance) + commission);
+
+  await createTransaction({
+    user_id: referrerId,
+    type: 'referral_commission',
+    description: `Referral commission from user`,
+    amount: commission,
+  });
+}
+
 // ── INVESTMENTS ───────────────────────────────────────────
 export async function getUserInvestments(userId) {
   const { data, error } = await supabase
