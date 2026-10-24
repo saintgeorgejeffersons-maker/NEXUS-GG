@@ -40,6 +40,7 @@ create table if not exists public.investments (
   total_earned numeric(12,2) not null default 0,
   purchase_date date not null default current_date,
   active boolean not null default true,
+  last_claimed_at timestamptz default null,
   created_at timestamptz default now()
 );
 
@@ -262,3 +263,8 @@ insert into public.settings (key, value) values
   ('momo_name', 'Nexus GG'),
   ('momo_network', 'MTN')
 on conflict do nothing;
+
+-- ============================================================
+-- MIGRATION: run this if the investments table already exists
+-- ============================================================
+ALTER TABLE public.investments ADD COLUMN IF NOT EXISTS last_claimed_at timestamptz default null;

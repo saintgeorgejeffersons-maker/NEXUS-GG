@@ -247,6 +247,52 @@ export async function updateWithdrawalRequestStatus(id, status) {
   return data;
 }
 
+// ── CLAIM DAILY RETURN ────────────────────────────────────
+export async function claimDailyReturn(investment, userId) {
+  // Check 24-hour gate
+  if (investment.last_claimed_at) {
+    const msElapsed = Date.now() - new Date(investment.last_claimed_at).getTime();
+    if (msElapsed < 24 * 60 * 60 * 1000) {
+      throw new Error('Daily return already claimed. Please wait 24 hours.');
+    }
+  }
+
+  // Fetch current wallet balance
+  const profile = await getProfile(userId);
+  const newBalance = Number(profile.wallet_balance) + Number(investment.daily_return);
+
+  // Credit wallet
+  await updateWalletBalance(userId, newBalance);
+
+  // Determine updated investment fields
+  const newDaysRemaining = investment.days_remaining - 1;
+  const updates = {
+    total_earned: Number(investment.total_earned) + Number(investment.daily_return),
+    days_remaining: newDaysRemaining,
+    last_claimed_at: new Date().toISOString(),
+    active: newDaysRemaining > 0,
+  };
+
+  // Update the investment row
+  const { data: updatedInvestment, error: invError } = await supabase
+    .from('investments')
+    .update(updates)
+    .eq('id', investment.id)
+    .select()
+    .single();
+  if (invError) throw invError;
+
+  // Insert return transaction
+  await createTransaction({
+    user_id: userId,
+    type: 'return',
+    description: `Daily return: ${investment.product_name}`,
+    amount: investment.daily_return,
+  });
+
+  return updatedInvestment;
+}
+
 // ── DELETE TRANSACTION ────────────────────────────────────
 export async function deleteTransaction(id) {
   const { error } = await supabase.from('transactions').delete().eq('id', id);
