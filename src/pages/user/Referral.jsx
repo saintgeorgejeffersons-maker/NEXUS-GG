@@ -82,7 +82,7 @@ export function Referral() {
   }
 
   async function handleCopyLink() {
-    const link = `https://nexusgg.vercel.app/signup?ref=${referralCode}`;
+    const link = `https://nexus-gg.ciscoivf.online/signup?ref=${referralCode}`;
     try {
       await navigator.clipboard.writeText(link);
       setCopying(true);
@@ -96,7 +96,7 @@ export function Referral() {
     return <div className="flex items-center justify-center h-64 text-[#8888aa]">Loading...</div>;
   }
 
-  const referralLink = `https://nexusgg.vercel.app/signup?ref=${referralCode}`;
+  const referralLink = `https://nexus-gg.ciscoivf.online/signup?ref=${referralCode}`;
 
   return (
     <div className="space-y-6 max-w-2xl">
