@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Wallet, BarChart3, Package, Users, ArrowDownCircle, ArrowUpCircle, List, Settings, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Wallet, TrendingUp, BarChart3, Package, Users, ArrowDownCircle, ArrowUpCircle, List, Settings, LogOut, Zap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const userNav = [
-  { to: '/user/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/user/catalog',   icon: ShoppingBag,     label: 'Store'     },
-  { to: '/user/wallet',    icon: Wallet,           label: 'Wallet'    },
+  { to: '/user/dashboard',    icon: LayoutDashboard, label: 'Dashboard'          },
+  { to: '/user/catalog',      icon: ShoppingBag,     label: 'Store'              },
+  { to: '/user/investments',  icon: TrendingUp,      label: 'Active Investments' },
+  { to: '/user/wallet',       icon: Wallet,          label: 'Wallet'             },
 ];
 
 const adminNav = [
