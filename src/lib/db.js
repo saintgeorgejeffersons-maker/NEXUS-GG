@@ -304,6 +304,24 @@ export async function claimDailyReturn(investment, userId) {
   return updatedInvestment;
 }
 
+// ── NOTIFICATIONS ─────────────────────────────────────────
+export async function markNotificationRead(notificationId) {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('id', notificationId);
+  if (error) throw error;
+}
+
+export async function markAllNotificationsRead(userId) {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+  if (error) throw error;
+}
+
 // ── DELETE TRANSACTION ────────────────────────────────────
 export async function deleteTransaction(id) {
   const { error } = await supabase.from('transactions').delete().eq('id', id);

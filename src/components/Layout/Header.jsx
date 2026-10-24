@@ -3,14 +3,25 @@ import { Bell, Menu, X, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getAllDepositRequests, getUserDepositRequests, getAllWithdrawalRequests, getUserWithdrawalRequests } from '../../lib/db';
 
-function NotificationItem({ icon: Icon, iconColor, title, subtitle }) {
+// Note: read state is tracked locally via readIds. For persistence across
+// sessions, a DB notifications table with is_read is required (see supabase-schema.sql).
+
+function NotificationItem({ id, icon: Icon, iconColor, title, subtitle, isRead, onMarkRead }) {
   return (
-    <div className="flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition-colors">
+    <div
+      className={`flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer ${
+        isRead ? 'opacity-50 hover:bg-white/3' : 'hover:bg-white/5'
+      }`}
+      onClick={() => !isRead && onMarkRead(id)}
+    >
       <Icon size={16} style={{ color: iconColor }} className="flex-shrink-0 mt-0.5" />
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-sm text-[#f0f0ff] leading-snug">{title}</p>
         <p className="text-xs text-[#8888aa] mt-0.5">{subtitle}</p>
       </div>
+      {!isRead && (
+        <span className="flex-shrink-0 w-2 h-2 rounded-full bg-[#00d4ff] mt-1.5" aria-label="Unread" />
+      )}
     </div>
   );
 }
@@ -19,6 +30,8 @@ export function Header({ title, onMenuToggle, menuOpen }) {
   const { user, profile, role } = useAuth();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  // Track read notification IDs locally. For DB persistence see markNotificationRead / markAllNotificationsRead in db.js.
+  const [readIds, setReadIds] = useState(() => new Set());
   const ref = useRef(null);
 
   useEffect(() => {
@@ -80,6 +93,11 @@ export function Header({ title, onMenuToggle, menuOpen }) {
     loadNotifications();
   }, [profile?.id, role]);
 
+  // Reset read state when new notifications load
+  useEffect(() => {
+    setReadIds(new Set());
+  }, [notifications]);
+
   // Close on outside click
   useEffect(() => {
     function handleClick(e) {
@@ -89,7 +107,15 @@ export function Header({ title, onMenuToggle, menuOpen }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const unread = notifications.length;
+  function handleMarkRead(id) {
+    setReadIds((prev) => new Set([...prev, id]));
+  }
+
+  function handleMarkAllRead() {
+    setReadIds(new Set(notifications.map((n) => n.id)));
+  }
+
+  const unread = notifications.filter((n) => !readIds.has(n.id)).length;
 
   return (
     <header className="h-16 bg-[#111118] border-b border-[#2a2a3a] flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10">
@@ -122,16 +148,31 @@ export function Header({ title, onMenuToggle, menuOpen }) {
             <div className="absolute right-0 top-10 w-80 bg-[#1a1a24] border border-[#2a2a3a] rounded-xl shadow-2xl overflow-hidden z-50">
               <div className="px-4 py-3 border-b border-[#2a2a3a] flex items-center justify-between">
                 <p className="text-sm font-semibold text-[#f0f0ff]">Notifications</p>
-                {unread > 0 && (
-                  <span className="text-xs text-[#8888aa]">{unread} new</span>
-                )}
+                <div className="flex items-center gap-3">
+                  {unread > 0 && (
+                    <>
+                      <span className="text-xs text-[#8888aa]">{unread} new</span>
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-xs text-[#8888aa] hover:text-[#00d4ff] transition-colors"
+                      >
+                        Mark all as read
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="max-h-72 overflow-y-auto">
                 {notifications.length === 0 ? (
                   <p className="text-sm text-[#8888aa] text-center py-8">No notifications</p>
                 ) : (
                   notifications.map((n) => (
-                    <NotificationItem key={n.id} {...n} />
+                    <NotificationItem
+                      key={n.id}
+                      {...n}
+                      isRead={readIds.has(n.id)}
+                      onMarkRead={handleMarkRead}
+                    />
                   ))
                 )}
               </div>
