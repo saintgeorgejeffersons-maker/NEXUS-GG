@@ -40,6 +40,8 @@ export function Wallet() {
   const [depositRequests, setDepositRequests] = useState([]);
   const [withdrawalRequests, setWithdrawalRequests] = useState([]);
   const [momoSettings, setMomoSettings] = useState(null);
+  const [minDeposit, setMinDeposit] = useState(120);
+  const [minWithdrawal, setMinWithdrawal] = useState(50);
   const [loading, setLoading] = useState(true);
 
   const [showDeposit, setShowDeposit] = useState(false);
@@ -69,6 +71,8 @@ export function Wallet() {
       setDepositRequests(reqs);
       setWithdrawalRequests(wreqs);
       setMomoSettings(settings);
+      setMinDeposit(Number(settings.min_deposit_amount ?? 120));
+      setMinWithdrawal(Number(settings.min_withdrawal_amount ?? 50));
       setLoading(false);
     });
   }, [profile?.id, profile?.wallet_balance]);
@@ -92,7 +96,7 @@ export function Wallet() {
   async function handleDeposit() {
     const val = parseFloat(amount);
     if (!val || val <= 0) { setTxError('Enter a valid amount.'); return; }
-    if (val < 120) { setTxError('Minimum deposit amount is ₵120.'); return; }
+    if (val < minDeposit) { setTxError(`Minimum deposit amount is ₵${minDeposit}.`); return; }
     setTxError('');
     try {
       await createDepositRequest(profile.id, val, reference);
@@ -109,6 +113,7 @@ export function Wallet() {
   async function handleWithdraw() {
     const val = parseFloat(amount);
     if (!val || val <= 0) { setTxError('Enter a valid amount.'); return; }
+    if (val < minWithdrawal) { setTxError(`Minimum withdrawal amount is ₵${minWithdrawal}.`); return; }
     if (val > balance) { setTxError('Insufficient balance.'); return; }
     setTxError('');
     try {
@@ -339,6 +344,7 @@ export function Wallet() {
           </div>
           <input type="number" placeholder="Custom amount" value={amount}
             onChange={(e) => setAmount(e.target.value)} className={inputClass} />
+          <p className="text-xs text-[#8888aa] mt-1">Minimum deposit: ₵{minDeposit}</p>
           {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{txError}</p>}
           {txSuccess && <p className="text-yellow-400 text-sm bg-yellow-900/20 rounded-lg px-3 py-2">{txSuccess}</p>}
           {!txSuccess && (
@@ -354,7 +360,7 @@ export function Wallet() {
       <Modal isOpen={showWithdraw} onClose={() => setShowWithdraw(false)} title="Withdraw Funds">
         <div className="space-y-4">
           <p className="text-sm text-[#8888aa]">Available balance: <span className="text-[#f0f0ff] font-semibold">₵{balance.toFixed(2)}</span></p>
-          <p className="text-xs text-[#8888aa]">Your withdrawal will be reviewed by an admin before being processed.</p>
+          <p className="text-xs text-[#8888aa]">Minimum withdrawal: ₵{minWithdrawal}. Your request will be reviewed by an admin before being processed.</p>
           <input type="number" placeholder="Amount to withdraw" value={amount}
             onChange={(e) => setAmount(e.target.value)} className={inputClass} />
           {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{txError}</p>}

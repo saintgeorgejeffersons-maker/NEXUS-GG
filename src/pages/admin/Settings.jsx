@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Save, Smartphone, Percent } from 'lucide-react';
+import { Save, Smartphone, Percent, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import { getSettings, upsertSetting } from '../../lib/db';
 
 const NETWORKS = ['MTN', 'Vodafone', 'AirtelTigo'];
@@ -15,6 +15,8 @@ export function Settings() {
     referral_commission_pct: '',
     referral_bonus_amount: '',
     missed_earnings_pct: '',
+    min_deposit_amount: '',
+    min_withdrawal_amount: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,6 +32,8 @@ export function Settings() {
         referral_commission_pct: s.referral_commission_pct ?? '10',
         referral_bonus_amount:   s.referral_bonus_amount   ?? '50',
         missed_earnings_pct:     s.missed_earnings_pct     ?? '50',
+        min_deposit_amount:      s.min_deposit_amount      ?? '120',
+        min_withdrawal_amount:   s.min_withdrawal_amount   ?? '50',
       });
       setLoading(false);
     });
@@ -47,6 +51,12 @@ export function Settings() {
     if (Number(form.missed_earnings_pct) < 0 || Number(form.missed_earnings_pct) > 100) {
       setError('Missed earnings % must be between 0 and 100%.'); return;
     }
+    if (Number(form.min_deposit_amount) < 0) {
+      setError('Minimum deposit must be 0 or more.'); return;
+    }
+    if (Number(form.min_withdrawal_amount) < 0) {
+      setError('Minimum withdrawal must be 0 or more.'); return;
+    }
     setError('');
     setSaving(true);
     try {
@@ -57,6 +67,8 @@ export function Settings() {
         upsertSetting('referral_commission_pct', String(form.referral_commission_pct)),
         upsertSetting('referral_bonus_amount',   String(form.referral_bonus_amount)),
         upsertSetting('missed_earnings_pct',     String(form.missed_earnings_pct)),
+        upsertSetting('min_deposit_amount',      String(form.min_deposit_amount)),
+        upsertSetting('min_withdrawal_amount',   String(form.min_withdrawal_amount)),
       ]);
       setSuccess('Settings saved successfully.');
       setTimeout(() => setSuccess(''), 3000);
@@ -190,6 +202,48 @@ export function Settings() {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
           <Save size={16} />
           {saving ? 'Saving...' : 'Save Referral Settings'}
+        </button>
+      </div>
+
+      {/* Transaction Limits */}
+      <div className="glass-card p-6 space-y-5">
+        <div className="flex items-center gap-2 mb-2">
+          <ArrowUpCircle size={18} className="text-[#00d4ff]" />
+          <h3 className="text-base font-semibold text-[#f0f0ff]">Transaction Limits</h3>
+        </div>
+
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Minimum Deposit Amount (₵)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="e.g. 120"
+            value={form.min_deposit_amount}
+            onChange={(e) => setForm((f) => ({ ...f, min_deposit_amount: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">Users cannot submit a deposit request below this amount.</p>
+        </div>
+
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Minimum Withdrawal Amount (₵)</label>
+          <input
+            type="number"
+            min="0"
+            placeholder="e.g. 50"
+            value={form.min_withdrawal_amount}
+            onChange={(e) => setForm((f) => ({ ...f, min_withdrawal_amount: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">Users cannot submit a withdrawal request below this amount.</p>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+          <Save size={16} />
+          {saving ? 'Saving...' : 'Save Limits'}
         </button>
       </div>
 
