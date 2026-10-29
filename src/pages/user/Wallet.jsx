@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Wallet as WalletIcon, ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart, Clock, Copy, Check } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart, Clock, Copy, Check, Users } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -11,11 +11,21 @@ import {
 const DEPOSIT_PRESETS = [120, 200, 500, 1000];
 
 const TX_META = {
-  deposit:    { icon: ArrowUpCircle,   color: '#00ff88', label: 'Deposit'    },
-  return:     { icon: TrendingUp,      color: '#00d4ff', label: 'Return'     },
-  purchase:   { icon: ShoppingCart,    color: '#ff6b35', label: 'Purchase'   },
-  withdrawal: { icon: ArrowDownCircle, color: '#ef4444', label: 'Withdrawal' },
+  deposit:             { icon: ArrowUpCircle,   color: '#00ff88', label: 'Deposit'    },
+  return:              { icon: TrendingUp,       color: '#00d4ff', label: 'Return'     },
+  purchase:            { icon: ShoppingCart,     color: '#ff6b35', label: 'Purchase'   },
+  withdrawal:          { icon: ArrowDownCircle,  color: '#ef4444', label: 'Withdrawal' },
+  referral_commission: { icon: Users,            color: '#a78bfa', label: 'Referral'   },
 };
+
+const TX_FILTERS = [
+  { key: 'all',                label: 'All'        },
+  { key: 'return',             label: 'Returns'    },
+  { key: 'deposit',            label: 'Deposits'   },
+  { key: 'purchase',           label: 'Purchases'  },
+  { key: 'withdrawal',         label: 'Withdrawals'},
+  { key: 'referral_commission',label: 'Referrals'  },
+];
 
 const STATUS_STYLE = {
   pending:  'bg-yellow-900/20 text-yellow-400 border border-yellow-700/30',
@@ -34,6 +44,7 @@ export function Wallet() {
 
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
+  const [txFilter, setTxFilter] = useState('all');
   const [amount, setAmount] = useState('');
   const [reference, setReference] = useState('');
   const [copied, setCopied] = useState(false);
@@ -217,29 +228,64 @@ export function Wallet() {
       {/* Transaction History */}
       <div className="glass-card p-5">
         <h3 className="text-base font-semibold text-[#f0f0ff] mb-4">Transaction History</h3>
-        {transactions.length === 0 ? (
-          <p className="text-sm text-[#8888aa] text-center py-6">No transactions yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {transactions.map((tx) => {
-              const meta = TX_META[tx.type] || { icon: ArrowUpCircle, color: '#8888aa' };
-              const Icon = meta.icon;
-              const isCredit = Number(tx.amount) > 0;
-              return (
-                <div key={tx.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                  <Icon size={20} style={{ color: meta.color }} className="flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#f0f0ff] truncate">{tx.description}</p>
-                    <p className="text-xs text-[#8888aa]">{new Date(tx.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <span className="text-sm font-semibold" style={{ color: meta.color }}>
-                    {isCredit ? '+' : ''}₵{Math.abs(Number(tx.amount)).toFixed(2)}
+
+        {/* Filter tabs */}
+        {transactions.length > 0 && (
+          <div className="flex gap-2 flex-wrap mb-4">
+            {TX_FILTERS.filter(({ key }) => {
+              if (key === 'all') return true;
+              return transactions.some((tx) => tx.type === key);
+            }).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setTxFilter(key)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  txFilter === key
+                    ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]'
+                    : 'border-[#2a2a3a] text-[#8888aa] hover:text-[#f0f0ff] hover:border-[#8888aa]'
+                }`}
+              >
+                {label}
+                {key !== 'all' && (
+                  <span className="ml-1 opacity-60">
+                    ({transactions.filter((tx) => tx.type === key).length})
                   </span>
-                </div>
-              );
-            })}
+                )}
+              </button>
+            ))}
           </div>
         )}
+
+        {transactions.length === 0 ? (
+          <p className="text-sm text-[#8888aa] text-center py-6">No transactions yet.</p>
+        ) : (() => {
+          const filtered = txFilter === 'all'
+            ? transactions
+            : transactions.filter((tx) => tx.type === txFilter);
+          return filtered.length === 0 ? (
+            <p className="text-sm text-[#8888aa] text-center py-6">No {txFilter} transactions yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map((tx) => {
+                const meta = TX_META[tx.type] || { icon: ArrowUpCircle, color: '#8888aa' };
+                const Icon = meta.icon;
+                const isCredit = Number(tx.amount) > 0;
+                return (
+                  <div key={tx.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                    <Icon size={20} style={{ color: meta.color }} className="flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-[#f0f0ff] truncate">{tx.description}</p>
+                      <p className="text-xs text-[#8888aa]">{new Date(tx.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <span className="text-sm font-semibold" style={{ color: meta.color }}>
+                      {isCredit ? '+' : ''}₵{Math.abs(Number(tx.amount)).toFixed(2)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Deposit Modal */}
