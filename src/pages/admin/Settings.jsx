@@ -14,6 +14,7 @@ export function Settings() {
     momo_network: 'MTN',
     referral_commission_pct: '',
     referral_bonus_amount: '',
+    missed_earnings_pct: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,6 +29,7 @@ export function Settings() {
         momo_network: s.momo_network ?? 'MTN',
         referral_commission_pct: s.referral_commission_pct ?? '10',
         referral_bonus_amount:   s.referral_bonus_amount   ?? '50',
+        missed_earnings_pct:     s.missed_earnings_pct     ?? '50',
       });
       setLoading(false);
     });
@@ -42,6 +44,9 @@ export function Settings() {
     if (Number(form.referral_bonus_amount) < 0) {
       setError('Bonus amount must be 0 or more.'); return;
     }
+    if (Number(form.missed_earnings_pct) < 0 || Number(form.missed_earnings_pct) > 100) {
+      setError('Missed earnings % must be between 0 and 100%.'); return;
+    }
     setError('');
     setSaving(true);
     try {
@@ -51,6 +56,7 @@ export function Settings() {
         upsertSetting('momo_network', form.momo_network),
         upsertSetting('referral_commission_pct', String(form.referral_commission_pct)),
         upsertSetting('referral_bonus_amount',   String(form.referral_bonus_amount)),
+        upsertSetting('missed_earnings_pct',     String(form.missed_earnings_pct)),
       ]);
       setSuccess('Settings saved successfully.');
       setTimeout(() => setSuccess(''), 3000);
@@ -162,6 +168,20 @@ export function Settings() {
             className={inputClass}
           />
           <p className="text-xs text-[#8888aa] mt-1">One-time bonus credited to the referred user on their first investment.</p>
+        </div>
+
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Missed Earnings % (0–100)</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            placeholder="e.g. 50"
+            value={form.missed_earnings_pct}
+            onChange={(e) => setForm((f) => ({ ...f, missed_earnings_pct: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">Percentage of daily earnings paid when a user claims missed days.</p>
         </div>
 
         <button

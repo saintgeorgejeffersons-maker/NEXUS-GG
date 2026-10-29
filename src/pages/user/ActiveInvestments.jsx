@@ -1,16 +1,25 @@
 import { useEffect, useState, useCallback } from 'react';
-import { TrendingUp, ShoppingCart, CheckCircle, Coins, Clock } from 'lucide-react';
+import { TrendingUp, ShoppingCart, CheckCircle, Coins, Clock, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getUserInvestments, claimDailyReturn, payReferralCommission } from '../../lib/db';
-
-const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+import { getUserInvestments, claimDailyReturn, payReferralCommission, claimMissedEarnings, getMissedDays, getSettings } from '../../lib/db';
 
 function getClaimStatus(lastClaimedAt) {
+  // Get today's midnight (start of current day) in local time
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+  // No claim yet → always claimable
   if (!lastClaimedAt) return { canClaim: true, countdown: null };
-  const msElapsed = Date.now() - new Date(lastClaimedAt).getTime();
-  if (msElapsed >= TWENTY_FOUR_HOURS_MS) return { canClaim: true, countdown: null };
-  const msLeft = TWENTY_FOUR_HOURS_MS - msElapsed;
+
+  const lastClaimed = new Date(lastClaimedAt);
+
+  // If the last claim happened before today's midnight, it's a new day → claimable
+  if (lastClaimed < todayMidnight) return { canClaim: true, countdown: null };
+
+  // Already claimed today → show countdown to next midnight
+  const nextMidnight = new Date(todayMidnight.getTime() + 24 * 60 * 60 * 1000);
+  const msLeft = nextMidnight.getTime() - now.getTime();
   const hoursLeft = Math.floor(msLeft / (60 * 60 * 1000));
   const minutesLeft = Math.floor((msLeft % (60 * 60 * 1000)) / (60 * 1000));
   return { canClaim: false, countdown: `Available in ${hoursLeft}h ${minutesLeft}m` };
@@ -22,6 +31,8 @@ export function ActiveInvestments() {
   const [investments, setInvestments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState({});
+  const [claimingMissed, setClaimingMissed] = useState({});
+  const [missedEarningsPct, setMissedEarningsPct] = useState(50);
   const [error, setError] = useState(null);
   const [, setTick] = useState(0);
 
@@ -39,6 +50,7 @@ export function ActiveInvestments() {
 
   useEffect(() => {
     fetchInvestments();
+    getSettings().then((s) => setMissedEarningsPct(Number(s.missed_earnings_pct ?? 50)));
   }, [fetchInvestments]);
 
   // Re-render every minute so countdown timers stay accurate
@@ -59,6 +71,20 @@ export function ActiveInvestments() {
       setError(err.message);
     } finally {
       setClaiming((prev) => ({ ...prev, [investment.id]: false }));
+    }
+  }
+
+  async function handleClaimMissed(investment) {
+    setClaimingMissed((prev) => ({ ...prev, [investment.id]: true }));
+    setError(null);
+    try {
+      await claimMissedEarnings(investment, profile.id);
+      await fetchInvestments();
+      if (refreshProfile) await refreshProfile();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setClaimingMissed((prev) => ({ ...prev, [investment.id]: false }));
     }
   }
 
@@ -109,7 +135,9 @@ export function ActiveInvestments() {
             const progress = Math.round((elapsed / inv.duration_days) * 100);
             const { canClaim, countdown } = getClaimStatus(inv.last_claimed_at);
             const isClaiming = claiming[inv.id] === true;
+            const isClaimingMissed = claimingMissed[inv.id] === true;
             const isComplete = inv.days_remaining === 0;
+            const missedDays = getMissedDays(inv);
 
             return (
               <div
@@ -170,6 +198,24 @@ export function ActiveInvestments() {
                       bg-[#2a2a3a] text-[#8888aa] border border-[#2a2a3a] cursor-not-allowed"
                   >
                     <Clock size={14} className="inline mr-1.5 -mt-0.5" />{countdown}
+                  </button>
+                )}
+
+                {/* Missed earnings button — shown when user missed 1+ days */}
+                {!isComplete && missedDays > 0 && (
+                  <button
+                    onClick={() => handleClaimMissed(inv)}
+                    disabled={isClaimingMissed}
+                    className="w-full mt-2 py-2.5 rounded-lg text-sm font-semibold transition-all
+                      bg-[#ff9900]/10 border border-[#ff9900]/30 text-[#ff9900]
+                      hover:bg-[#ff9900]/20 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isClaimingMissed
+                      ? 'Claiming…'
+                      : <><AlertTriangle size={14} className="inline mr-1.5 -mt-0.5" />
+                          Claim Missed Earnings ({missedDays}d × {missedEarningsPct}%)
+                        </>
+                    }
                   </button>
                 )}
               </div>

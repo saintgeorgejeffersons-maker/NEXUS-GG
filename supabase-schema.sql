@@ -341,5 +341,6 @@ ALTER TABLE public.transactions ADD CONSTRAINT transactions_type_check
 -- Seed referral settings
 INSERT INTO public.settings (key, value) VALUES
   ('referral_commission_pct', '10'),
-  ('referral_bonus_amount',   '50')
+  ('referral_bonus_amount',   '50'),
+  ('missed_earnings_pct',     '50')
 ON CONFLICT DO NOTHING;

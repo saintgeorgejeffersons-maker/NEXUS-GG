@@ -378,11 +378,13 @@ export async function getUserActiveInvestmentIds(userId) {
 
 // ── CLAIM DAILY RETURN ────────────────────────────────────
 export async function claimDailyReturn(investment, userId) {
-  // Check 24-hour gate
+  // Check midnight-based gate: only one claim per calendar day
   if (investment.last_claimed_at) {
-    const msElapsed = Date.now() - new Date(investment.last_claimed_at).getTime();
-    if (msElapsed < 24 * 60 * 60 * 1000) {
-      throw new Error('Daily return already claimed. Please wait 24 hours.');
+    const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const lastClaimed = new Date(investment.last_claimed_at);
+    if (lastClaimed >= todayMidnight) {
+      throw new Error('Daily return already claimed today. Come back after midnight.');
     }
   }
 
@@ -420,6 +422,78 @@ export async function claimDailyReturn(investment, userId) {
   });
 
   return updatedInvestment;
+}
+
+// ── CLAIM MISSED EARNINGS ─────────────────────────────────
+// Returns the number of missed days (calendar days since last claim / purchase
+// that had no claim, excluding today).
+export function getMissedDays(investment) {
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+  // Reference point: last claimed date or purchase date
+  const refDate = investment.last_claimed_at
+    ? new Date(investment.last_claimed_at)
+    : new Date(investment.purchase_date);
+
+  // Midnight at the end of the reference day
+  const refMidnight = new Date(
+    refDate.getFullYear(),
+    refDate.getMonth(),
+    refDate.getDate(),
+    0, 0, 0, 0
+  );
+
+  // Days between reference midnight and today's midnight (exclude today — user
+  // can still claim today normally)
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const missed = Math.floor((todayMidnight - refMidnight) / msPerDay);
+
+  // At least 1 missed day means refMidnight < todayMidnight, and the user
+  // hasn't claimed today yet. Return 0 if nothing was missed.
+  return Math.max(0, missed - (investment.last_claimed_at ? 1 : 0));
+}
+
+export async function claimMissedEarnings(investment, userId) {
+  const missedDays = getMissedDays(investment);
+  if (missedDays <= 0) throw new Error('No missed earnings to claim.');
+
+  const settings = await getSettings();
+  const pct = Number(settings.missed_earnings_pct ?? 50);
+  const missedAmount = Math.round(Number(investment.daily_return) * missedDays * (pct / 100) * 100) / 100;
+
+  if (missedAmount <= 0) throw new Error('Missed earnings amount is zero.');
+
+  // Credit wallet
+  const profile = await getProfile(userId);
+  await updateWalletBalance(userId, Number(profile.wallet_balance) + missedAmount);
+
+  // Update investment: deduct the missed days from days_remaining, update total_earned
+  // Do NOT update last_claimed_at — the user still needs to claim today's full earnings
+  const newDaysRemaining = Math.max(0, investment.days_remaining - missedDays);
+  const updates = {
+    total_earned: Number(investment.total_earned) + missedAmount,
+    days_remaining: newDaysRemaining,
+    active: newDaysRemaining > 0,
+  };
+
+  const { data: updatedInvestment, error: invError } = await supabase
+    .from('investments')
+    .update(updates)
+    .eq('id', investment.id)
+    .select()
+    .single();
+  if (invError) throw invError;
+
+  // Record transaction
+  await createTransaction({
+    user_id: userId,
+    type: 'return',
+    description: `Missed earnings (${missedDays}d × ${pct}%): ${investment.product_name}`,
+    amount: missedAmount,
+  });
+
+  return { updatedInvestment, missedDays, missedAmount, pct };
 }
 
 // ── NOTIFICATIONS ─────────────────────────────────────────
