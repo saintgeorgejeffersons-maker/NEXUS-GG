@@ -7,8 +7,6 @@ import {
 import { Modal } from '../../components/ui/Modal';
 import { Search, CheckCircle } from 'lucide-react';
 
-const ACCENT_COLORS = ['#00d4ff', '#7c3aed', '#00ff88', '#ff6b35', '#f59e0b', '#ec4899'];
-
 export function Catalog() {
   const { profile, refreshProfile } = useAuth();
   const [products, setProducts] = useState([]);
@@ -88,7 +86,7 @@ export function Catalog() {
       setOwnedProductIds((prev) => new Set([...prev, selectedProduct.id]));
       try { await applyReferralBonus(profile.id); } catch (_) {}
       setModalMsg(`Investment successful! ₵${selectedProduct.price} deducted.`);
-    } catch (err) {
+    } catch (_) {
       setModalError('Something went wrong. Please try again.');
     } finally {
       setConfirming(false);
@@ -101,7 +99,7 @@ export function Catalog() {
 
   return (
     <div className="space-y-4">
-      {/* Balance pill */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <p className="text-lg font-black text-[#f0f0ff]">Investment Store</p>
@@ -130,8 +128,7 @@ export function Catalog() {
         <p className="text-center text-[#8888aa] py-10 text-sm">No products found.</p>
       ) : (
         <div className="space-y-3">
-          {filtered.map((product, idx) => {
-            const accent = ACCENT_COLORS[idx % ACCENT_COLORS.length];
+          {filtered.map((product) => {
             const totalReturn = product.daily_return * product.duration_days;
             const owned = ownedProductIds.has(product.id);
             return (
@@ -140,24 +137,20 @@ export function Catalog() {
                 className="rounded-2xl overflow-hidden"
                 style={{ background: '#1a1a24', border: '1px solid #2a2a3a' }}
               >
-                {/* Accent bar */}
-                <div style={{ height: 3, background: accent }} />
+                {/* Subtle top line */}
+                <div className="h-[3px] w-full bg-[#00d4ff]/30" />
 
                 <div className="p-4">
-                  {/* Image */}
                   {product.image_url && (
                     <div className="w-full h-32 rounded-xl overflow-hidden mb-3 bg-[#0a0a0f]">
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                     </div>
                   )}
 
-                  {/* Name + daily return */}
+                  {/* Name + daily badge */}
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <p className="text-base font-bold text-[#f0f0ff] flex-1">{product.name}</p>
-                    <span
-                      className="text-xs font-bold px-2 py-1 rounded-full flex-shrink-0"
-                      style={{ background: `${accent}15`, color: accent }}
-                    >
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/20">
                       +₵{product.daily_return}/day
                     </span>
                   </div>
@@ -166,7 +159,7 @@ export function Catalog() {
                     <p className="text-xs text-[#8888aa] mb-3">{product.description}</p>
                   )}
 
-                  {/* Stats row */}
+                  {/* Stats */}
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="bg-[#0a0a0f] rounded-xl p-2 text-center">
                       <p className="text-xs text-[#8888aa]">Price</p>
@@ -186,13 +179,13 @@ export function Catalog() {
                   <button
                     onClick={() => product.active && !owned && openModal(product)}
                     disabled={!product.active || owned}
-                    className="w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
-                    style={{
-                      background: owned ? 'transparent' : product.active ? accent : '#2a2a3a',
-                      color: owned ? accent : product.active ? (accent === '#f0f0ff' ? '#000' : '#000') : '#8888aa',
-                      border: owned ? `1px solid ${accent}40` : 'none',
-                      cursor: owned || !product.active ? 'not-allowed' : 'pointer',
-                    }}
+                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98] ${
+                      owned
+                        ? 'border border-[#2a2a3a] text-[#8888aa] cursor-not-allowed'
+                        : product.active
+                        ? 'bg-[#00d4ff] text-black hover:opacity-90'
+                        : 'bg-[#2a2a3a] text-[#8888aa] cursor-not-allowed'
+                    }`}
                   >
                     {owned ? (
                       <span className="flex items-center justify-center gap-1.5">
@@ -226,11 +219,11 @@ export function Catalog() {
 
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Price',        value: `₵${selectedProduct.price}`,                              color: '#f0f0ff' },
-                { label: 'Daily Return', value: `+₵${selectedProduct.daily_return}/day`,                  color: '#00ff88' },
-                { label: 'Duration',     value: `${selectedProduct.duration_days} days`,                   color: '#f0f0ff' },
-                { label: 'Total Return', value: `₵${selectedProduct.daily_return * selectedProduct.duration_days}`, color: '#00ff88' },
-                { label: 'Balance After',value: `₵${(walletBalance - selectedProduct.price).toFixed(2)}`, color: '#f0f0ff' },
+                { label: 'Price',         value: `₵${selectedProduct.price}`,                                       color: '#f0f0ff' },
+                { label: 'Daily Return',  value: `+₵${selectedProduct.daily_return}/day`,                           color: '#00ff88' },
+                { label: 'Duration',      value: `${selectedProduct.duration_days} days`,                            color: '#f0f0ff' },
+                { label: 'Total Return',  value: `₵${selectedProduct.daily_return * selectedProduct.duration_days}`, color: '#00ff88' },
+                { label: 'Balance After', value: `₵${(walletBalance - selectedProduct.price).toFixed(2)}`,           color: '#f0f0ff' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="bg-[#0a0a0f] rounded-xl p-3">
                   <p className="text-xs text-[#8888aa]">{label}</p>
@@ -250,7 +243,7 @@ export function Catalog() {
               <button
                 onClick={handleConfirm}
                 disabled={confirming}
-                className="w-full py-3 rounded-xl font-bold text-sm bg-[#00d4ff] text-black hover:opacity-90 transition-all disabled:opacity-50"
+                className="w-full py-3 rounded-xl font-bold text-sm bg-[#00d4ff] text-black hover:opacity-90 disabled:opacity-50"
               >
                 {confirming ? 'Processing...' : 'Confirm Investment'}
               </button>
