@@ -7,6 +7,9 @@ import {
 import { Modal } from '../../components/ui/Modal';
 import { Search, CheckCircle } from 'lucide-react';
 
+// Muted accent palette — varied but not neon
+const ACCENT_COLORS = ['#4da6c8', '#7c6aad', '#3db87a', '#c97a4a', '#c4963a', '#b85c8a'];
+
 export function Catalog() {
   const { profile, refreshProfile } = useAuth();
   const [products, setProducts] = useState([]);
@@ -128,17 +131,18 @@ export function Catalog() {
         <p className="text-center text-[#8888aa] py-10 text-sm">No products found.</p>
       ) : (
         <div className="space-y-3">
-          {filtered.map((product) => {
+          {filtered.map((product, idx) => {
             const totalReturn = product.daily_return * product.duration_days;
             const owned = ownedProductIds.has(product.id);
+            const accent = ACCENT_COLORS[idx % ACCENT_COLORS.length];
             return (
               <div
                 key={product.id}
                 className="rounded-2xl overflow-hidden"
                 style={{ background: '#1a1a24', border: '1px solid #2a2a3a' }}
               >
-                {/* Subtle top line */}
-                <div className="h-[3px] w-full bg-[#00d4ff]/30" />
+                {/* Muted accent top line */}
+                <div style={{ height: 3, background: accent }} />
 
                 <div className="p-4">
                   {product.image_url && (
@@ -150,7 +154,10 @@ export function Catalog() {
                   {/* Name + daily badge */}
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <p className="text-base font-bold text-[#f0f0ff] flex-1">{product.name}</p>
-                    <span className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/20">
+                    <span
+                      className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0"
+                      style={{ background: `${accent}20`, color: accent, border: `1px solid ${accent}40` }}
+                    >
                       +₵{product.daily_return}/day
                     </span>
                   </div>
@@ -171,7 +178,7 @@ export function Catalog() {
                     </div>
                     <div className="bg-[#0a0a0f] rounded-xl p-2 text-center">
                       <p className="text-xs text-[#8888aa]">Total</p>
-                      <p className="text-sm font-bold text-[#00ff88]">₵{totalReturn}</p>
+                      <p className="text-sm font-bold" style={{ color: accent }}>₵{totalReturn}</p>
                     </div>
                   </div>
 
@@ -182,10 +189,11 @@ export function Catalog() {
                     className={`w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98] ${
                       owned
                         ? 'border border-[#2a2a3a] text-[#8888aa] cursor-not-allowed'
-                        : product.active
-                        ? 'bg-[#00d4ff] text-black hover:opacity-90'
-                        : 'bg-[#2a2a3a] text-[#8888aa] cursor-not-allowed'
+                        : !product.active
+                        ? 'bg-[#2a2a3a] text-[#8888aa] cursor-not-allowed'
+                        : 'hover:opacity-90'
                     }`}
+                    style={product.active && !owned ? { background: accent, color: '#fff' } : {}}
                   >
                     {owned ? (
                       <span className="flex items-center justify-center gap-1.5">
@@ -219,11 +227,11 @@ export function Catalog() {
 
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: 'Price',         value: `₵${selectedProduct.price}`,                                       color: '#f0f0ff' },
-                { label: 'Daily Return',  value: `+₵${selectedProduct.daily_return}/day`,                           color: '#00ff88' },
-                { label: 'Duration',      value: `${selectedProduct.duration_days} days`,                            color: '#f0f0ff' },
-                { label: 'Total Return',  value: `₵${selectedProduct.daily_return * selectedProduct.duration_days}`, color: '#00ff88' },
-                { label: 'Balance After', value: `₵${(walletBalance - selectedProduct.price).toFixed(2)}`,           color: '#f0f0ff' },
+                { label: 'Price',         value: `₵${selectedProduct.price}`,                                        color: '#f0f0ff' },
+                { label: 'Daily Return',  value: `+₵${selectedProduct.daily_return}/day`,                            color: '#3db87a' },
+                { label: 'Duration',      value: `${selectedProduct.duration_days} days`,                             color: '#f0f0ff' },
+                { label: 'Total Return',  value: `₵${selectedProduct.daily_return * selectedProduct.duration_days}`,  color: '#3db87a' },
+                { label: 'Balance After', value: `₵${(walletBalance - selectedProduct.price).toFixed(2)}`,            color: '#f0f0ff' },
               ].map(({ label, value, color }) => (
                 <div key={label} className="bg-[#0a0a0f] rounded-xl p-3">
                   <p className="text-xs text-[#8888aa]">{label}</p>
