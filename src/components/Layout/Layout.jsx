@@ -7,13 +7,13 @@ const PAGE_TITLES = {
   '/user/dashboard': 'Dashboard',
   '/user/catalog': 'Gaming Catalog',
   '/user/wallet': 'Wallet',
-  '/admin/dashboard': 'Admin Dashboard',
-  '/admin/inventory': 'Products',
-  '/admin/users': 'Users',
-  '/admin/deposits':    'Deposit Requests',
-  '/admin/withdrawals': 'Withdrawal Requests',
-  '/admin/transactions': 'Transactions',
-  '/admin/settings':    'Settings',
+  '/myspot/dashboard':    'Admin Dashboard',
+  '/myspot/inventory':    'Products',
+  '/myspot/users':        'Users',
+  '/myspot/deposits':     'Deposit Requests',
+  '/myspot/withdrawals':  'Withdrawal Requests',
+  '/myspot/transactions': 'Transactions',
+  '/myspot/settings':     'Settings',
 };
 
 export function Layout({ children }) {

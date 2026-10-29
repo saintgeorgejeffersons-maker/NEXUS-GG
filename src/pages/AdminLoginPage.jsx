@@ -21,7 +21,7 @@ export function AdminLoginPage() {
     if (!form.email.trim()) { setError('Email address is required.'); return; }
     if (!form.password)     { setError('Password is required.'); return; }
     const res = await login(form.email, form.password, 'admin');
-    if (res.success) navigate('/admin/dashboard');
+    if (res.success) navigate('/myspot/dashboard');
     else setError(res.error || 'Invalid admin credentials.');
   };
 

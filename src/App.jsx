@@ -20,10 +20,10 @@ import { UserLayout } from './components/Layout/UserLayout';
 function ProtectedRoute({ children, role }) {
   const { isAuthenticated, role: userRole } = useAuth();
   if (!isAuthenticated) {
-    return <Navigate to={role === 'admin' ? '/admin/login' : '/login'} replace />;
+    return <Navigate to={role === 'admin' ? '/myspot/login' : '/login'} replace />;
   }
   if (role && userRole !== role) {
-    return <Navigate to={userRole === 'admin' ? '/admin/dashboard' : '/user/dashboard'} replace />;
+    return <Navigate to={userRole === 'admin' ? '/myspot/dashboard' : '/user/dashboard'} replace />;
   }
   // User routes get the mobile UserLayout; admin routes get the desktop Layout
   if (role === 'user') return <UserLayout>{children}</UserLayout>;
@@ -35,7 +35,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route path="/myspot/login" element={<AdminLoginPage />} />
 
       {/* User routes */}
       <Route path="/user/dashboard"   element={<ProtectedRoute role="user"><UserDashboard /></ProtectedRoute>} />
@@ -45,13 +45,13 @@ function AppRoutes() {
       <Route path="/user/wallet"      element={<ProtectedRoute role="user"><Wallet /></ProtectedRoute>} />
 
       {/* Admin routes */}
-      <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
-      <Route path="/admin/inventory" element={<ProtectedRoute role="admin"><Inventory /></ProtectedRoute>} />
-      <Route path="/admin/users"     element={<ProtectedRoute role="admin"><Users /></ProtectedRoute>} />
-      <Route path="/admin/deposits"      element={<ProtectedRoute role="admin"><Deposits /></ProtectedRoute>} />
-      <Route path="/admin/withdrawals"   element={<ProtectedRoute role="admin"><Withdrawals /></ProtectedRoute>} />
-      <Route path="/admin/transactions"  element={<ProtectedRoute role="admin"><Transactions /></ProtectedRoute>} />
-      <Route path="/admin/settings"      element={<ProtectedRoute role="admin"><Settings /></ProtectedRoute>} />
+      <Route path="/myspot/dashboard"    element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/myspot/inventory"    element={<ProtectedRoute role="admin"><Inventory /></ProtectedRoute>} />
+      <Route path="/myspot/users"        element={<ProtectedRoute role="admin"><Users /></ProtectedRoute>} />
+      <Route path="/myspot/deposits"     element={<ProtectedRoute role="admin"><Deposits /></ProtectedRoute>} />
+      <Route path="/myspot/withdrawals"  element={<ProtectedRoute role="admin"><Withdrawals /></ProtectedRoute>} />
+      <Route path="/myspot/transactions" element={<ProtectedRoute role="admin"><Transactions /></ProtectedRoute>} />
+      <Route path="/myspot/settings"     element={<ProtectedRoute role="admin"><Settings /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

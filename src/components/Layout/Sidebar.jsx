@@ -11,13 +11,13 @@ const userNav = [
 ];
 
 const adminNav = [
-  { to: '/admin/dashboard',    icon: BarChart3,       label: 'Dashboard'    },
-  { to: '/admin/inventory',    icon: Package,         label: 'Products'     },
-  { to: '/admin/users',        icon: Users,           label: 'Users'        },
-  { to: '/admin/deposits',     icon: ArrowDownCircle, label: 'Deposits'     },
-  { to: '/admin/withdrawals',  icon: ArrowUpCircle,   label: 'Withdrawals'  },
-  { to: '/admin/transactions', icon: List,            label: 'Transactions' },
-  { to: '/admin/settings',     icon: Settings,        label: 'Settings'     },
+  { to: '/myspot/dashboard',    icon: BarChart3,       label: 'Dashboard'    },
+  { to: '/myspot/inventory',    icon: Package,         label: 'Products'     },
+  { to: '/myspot/users',        icon: Users,           label: 'Users'        },
+  { to: '/myspot/deposits',     icon: ArrowDownCircle, label: 'Deposits'     },
+  { to: '/myspot/withdrawals',  icon: ArrowUpCircle,   label: 'Withdrawals'  },
+  { to: '/myspot/transactions', icon: List,            label: 'Transactions' },
+  { to: '/myspot/settings',     icon: Settings,        label: 'Settings'     },
 ];
 
 export function Sidebar({ isOpen, onClose }) {
