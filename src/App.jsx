@@ -15,6 +15,7 @@ import { Withdrawals } from './pages/admin/Withdrawals';
 import { Transactions } from './pages/admin/Transactions';
 import { Settings } from './pages/admin/Settings';
 import { Layout } from './components/Layout/Layout';
+import { UserLayout } from './components/Layout/UserLayout';
 
 function ProtectedRoute({ children, role }) {
   const { isAuthenticated, role: userRole } = useAuth();
@@ -24,6 +25,8 @@ function ProtectedRoute({ children, role }) {
   if (role && userRole !== role) {
     return <Navigate to={userRole === 'admin' ? '/admin/dashboard' : '/user/dashboard'} replace />;
   }
+  // User routes get the mobile UserLayout; admin routes get the desktop Layout
+  if (role === 'user') return <UserLayout>{children}</UserLayout>;
   return <Layout>{children}</Layout>;
 }
 

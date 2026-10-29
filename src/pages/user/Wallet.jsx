@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Wallet as WalletIcon, ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart, Clock, Copy, Check, Users } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import {
+  Wallet as WalletIcon, ArrowUpCircle, ArrowDownCircle, TrendingUp,
+  ShoppingCart, Clock, Copy, Check, Users, Plus, Minus,
+} from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import {
-  getUserTransactions, createTransaction, updateWalletBalance,
-  createDepositRequest, getUserDepositRequests, getSettings,
-  createWithdrawalRequest, getUserWithdrawalRequests,
+  getUserTransactions, createDepositRequest, getUserDepositRequests,
+  getSettings, createWithdrawalRequest, getUserWithdrawalRequests,
 } from '../../lib/db';
-
-const DEPOSIT_PRESETS = [120, 200, 500, 1000];
 
 const TX_META = {
   deposit:             { icon: ArrowUpCircle,   color: '#00ff88', label: 'Deposit'    },
@@ -33,6 +33,14 @@ const STATUS_STYLE = {
   rejected: 'bg-red-900/20 text-red-400 border border-red-700/30',
 };
 
+const DEPOSIT_PRESETS = [120, 200, 500, 1000];
+
+function generateReference() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const rand = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return `NXS-${rand}`;
+}
+
 export function Wallet() {
   const { profile, refreshProfile } = useAuth();
   const [balance, setBalance] = useState(0);
@@ -53,11 +61,6 @@ export function Wallet() {
   const [txError, setTxError] = useState('');
   const [txSuccess, setTxSuccess] = useState('');
 
-  function generateReference() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const rand = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-    return `NXS-${rand}`;
-  }
   useEffect(() => {
     if (!profile?.id) return;
     setBalance(Number(profile.wallet_balance));
@@ -77,129 +80,134 @@ export function Wallet() {
     });
   }, [profile?.id, profile?.wallet_balance]);
 
-  const totalInvested = transactions
-    .filter((t) => t.type === 'purchase')
-    .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
-
-  const totalEarned = transactions
-    .filter((t) => t.type === 'return')
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-
-  const pendingDeposits = depositRequests
-    .filter((r) => r.status === 'pending')
-    .reduce((sum, r) => sum + Number(r.amount), 0);
-
-  const pendingWithdrawals = withdrawalRequests
-    .filter((r) => r.status === 'pending')
-    .reduce((sum, r) => sum + Number(r.amount), 0);
+  const totalInvested = transactions.filter((t) => t.type === 'purchase').reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
+  const totalEarned   = transactions.filter((t) => t.type === 'return').reduce((s, t) => s + Number(t.amount), 0);
+  const pendingDeposits    = depositRequests.filter((r) => r.status === 'pending').reduce((s, r) => s + Number(r.amount), 0);
+  const pendingWithdrawals = withdrawalRequests.filter((r) => r.status === 'pending').reduce((s, r) => s + Number(r.amount), 0);
 
   async function handleDeposit() {
     const val = parseFloat(amount);
     if (!val || val <= 0) { setTxError('Enter a valid amount.'); return; }
-    if (val < minDeposit) { setTxError(`Minimum deposit amount is ₵${minDeposit}.`); return; }
+    if (val < minDeposit) { setTxError(`Minimum deposit is ₵${minDeposit}.`); return; }
     setTxError('');
     try {
       await createDepositRequest(profile.id, val, reference);
       const reqs = await getUserDepositRequests(profile.id);
       setDepositRequests(reqs);
-      setTxSuccess(`Deposit request for ₵${val.toFixed(2)} submitted. Awaiting admin approval.`);
+      setTxSuccess(`Deposit request for ₵${val.toFixed(2)} submitted.`);
       setAmount('');
       setTimeout(() => { setTxSuccess(''); setShowDeposit(false); }, 2500);
-    } catch (e) {
-      setTxError('Failed to submit deposit request. Please try again.');
+    } catch (_) {
+      setTxError('Failed to submit deposit. Please try again.');
     }
   }
 
   async function handleWithdraw() {
     const val = parseFloat(amount);
     if (!val || val <= 0) { setTxError('Enter a valid amount.'); return; }
-    if (val < minWithdrawal) { setTxError(`Minimum withdrawal amount is ₵${minWithdrawal}.`); return; }
+    if (val < minWithdrawal) { setTxError(`Minimum withdrawal is ₵${minWithdrawal}.`); return; }
     if (val > balance) { setTxError('Insufficient balance.'); return; }
     setTxError('');
     try {
       await createWithdrawalRequest(profile.id, val);
       const wreqs = await getUserWithdrawalRequests(profile.id);
       setWithdrawalRequests(wreqs);
-      setTxSuccess(`Withdrawal request for ₵${val.toFixed(2)} submitted. Awaiting admin approval.`);
+      setTxSuccess(`Withdrawal request for ₵${val.toFixed(2)} submitted.`);
       setAmount('');
       setTimeout(() => { setTxSuccess(''); setShowWithdraw(false); }, 2500);
-    } catch (e) {
-      setTxError('Failed to submit withdrawal request. Please try again.');
+    } catch (_) {
+      setTxError('Failed to submit withdrawal. Please try again.');
     }
   }
 
-  function openDeposit() { setAmount(''); setTxError(''); setTxSuccess(''); setReference(generateReference()); setCopied(false); setShowDeposit(true); }
+  function openDeposit() {
+    setAmount(''); setTxError(''); setTxSuccess('');
+    setReference(generateReference()); setCopied(false);
+    setShowDeposit(true);
+  }
   function openWithdraw() { setAmount(''); setTxError(''); setTxSuccess(''); setShowWithdraw(true); }
-
   function handleCopy() {
     navigator.clipboard.writeText(reference);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
 
-  const inputClass = 'w-full bg-[#111118] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-colors';
+  const inputClass = 'w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded-xl px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-colors';
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-[#8888aa]">Loading...</div>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-64 text-[#8888aa]">Loading...</div>
+  );
+
+  const filteredTxs = txFilter === 'all' ? transactions : transactions.filter((tx) => tx.type === txFilter);
 
   return (
-    <div className="space-y-6">
-      {/* Balance Card */}
-      <div className="glass-card p-8 text-center" style={{ border: '1px solid rgba(0,212,255,0.2)' }}>
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#ff6b35]/10 mb-4">
-          <WalletIcon size={28} className="text-[#ff6b35]" />
+    <div className="space-y-4">
+      {/* Balance card */}
+      <div
+        className="rounded-2xl p-5 relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #0d1f2d 0%, #0a0a0f 100%)', border: '1px solid rgba(0,212,255,0.2)' }}
+      >
+        <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full bg-[#ff6b35]/5" />
+        <div className="w-10 h-10 rounded-2xl bg-[#ff6b35]/10 flex items-center justify-center mb-3">
+          <WalletIcon size={20} className="text-[#ff6b35]" />
         </div>
-        <p className="text-[#8888aa] text-sm mb-1">Available Balance</p>
-        <p className="text-5xl font-black text-[#f0f0ff] mb-2">₵{balance.toLocaleString()}</p>
+        <p className="text-xs text-[#8888aa] mb-1">Available Balance</p>
+        <p className="text-4xl font-black text-[#f0f0ff] mb-1">
+          ₵{balance.toLocaleString('en', { minimumFractionDigits: 2 })}
+        </p>
         {pendingDeposits > 0 && (
-          <p className="text-xs text-yellow-400 mb-1 flex items-center justify-center gap-1">
-            <Clock size={12} /> ₵{pendingDeposits.toFixed(2)} deposit pending approval
+          <p className="text-xs text-yellow-400 mb-0.5 flex items-center gap-1">
+            <Clock size={11} /> ₵{pendingDeposits.toFixed(2)} deposit pending
           </p>
         )}
         {pendingWithdrawals > 0 && (
-          <p className="text-xs text-orange-400 mb-4 flex items-center justify-center gap-1">
-            <Clock size={12} /> ₵{pendingWithdrawals.toFixed(2)} withdrawal pending approval
+          <p className="text-xs text-orange-400 mb-3 flex items-center gap-1">
+            <Clock size={11} /> ₵{pendingWithdrawals.toFixed(2)} withdrawal pending
           </p>
         )}
-        <div className="flex gap-3 justify-center mt-4">
-          <button onClick={openDeposit}
-            className="px-8 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all">
-            Deposit
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={openDeposit}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm"
+          >
+            <Plus size={16} /> Deposit
           </button>
-          <button onClick={openWithdraw}
-            className="px-8 py-3 rounded-lg border border-[#00d4ff] text-[#00d4ff] font-bold text-sm hover:bg-[#00d4ff]/10 transition-all">
-            Withdraw
+          <button
+            onClick={openWithdraw}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-[#00d4ff]/40 text-[#00d4ff] font-bold text-sm"
+          >
+            <Minus size={16} /> Withdraw
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: 'Total Invested', value: `₵${totalInvested.toFixed(2)}`, color: '#ff6b35' },
-          { label: 'Total Earned',   value: `₵${totalEarned.toFixed(2)}`,   color: '#00ff88' },
-          { label: 'Available',      value: `₵${balance.toFixed(2)}`,       color: '#00d4ff' },
-        ].map((s) => (
-          <div key={s.label} className="glass-card p-4 text-center">
-            <p className="text-lg font-bold" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-xs text-[#8888aa] mt-1">{s.label}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="glass-card rounded-2xl p-4">
+          <p className="text-xs text-[#8888aa]">Total Invested</p>
+          <p className="text-lg font-black text-[#ff6b35]">₵{totalInvested.toFixed(2)}</p>
+        </div>
+        <div className="glass-card rounded-2xl p-4">
+          <p className="text-xs text-[#8888aa]">Total Earned</p>
+          <p className="text-lg font-black text-[#00ff88]">₵{totalEarned.toFixed(2)}</p>
+        </div>
       </div>
 
       {/* Deposit Requests */}
       {depositRequests.length > 0 && (
-        <div className="glass-card p-5">
-          <h3 className="text-base font-semibold text-[#f0f0ff] mb-4 flex items-center gap-2">
-            <Clock size={16} className="text-yellow-400" /> Deposit Requests
-          </h3>
-          <div className="space-y-2">
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+            <Clock size={14} className="text-yellow-400" />
+            <p className="text-sm font-bold text-[#f0f0ff]">Deposit Requests</p>
+          </div>
+          <div className="divide-y divide-[#2a2a3a]/50">
             {depositRequests.map((req) => (
-              <div key={req.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <div key={req.id} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-sm text-[#f0f0ff] font-medium">₵{Number(req.amount).toFixed(2)}</p>
+                  <p className="text-sm font-semibold text-[#f0f0ff]">₵{Number(req.amount).toFixed(2)}</p>
                   <p className="text-xs text-[#8888aa]">{new Date(req.created_at).toLocaleDateString()}</p>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${STATUS_STYLE[req.status]}`}>
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${STATUS_STYLE[req.status]}`}>
                   {req.status}
                 </span>
               </div>
@@ -210,18 +218,19 @@ export function Wallet() {
 
       {/* Withdrawal Requests */}
       {withdrawalRequests.length > 0 && (
-        <div className="glass-card p-5">
-          <h3 className="text-base font-semibold text-[#f0f0ff] mb-4 flex items-center gap-2">
-            <Clock size={16} className="text-orange-400" /> Withdrawal Requests
-          </h3>
-          <div className="space-y-2">
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+            <Clock size={14} className="text-orange-400" />
+            <p className="text-sm font-bold text-[#f0f0ff]">Withdrawal Requests</p>
+          </div>
+          <div className="divide-y divide-[#2a2a3a]/50">
             {withdrawalRequests.map((req) => (
-              <div key={req.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <div key={req.id} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-sm text-[#f0f0ff] font-medium">₵{Number(req.amount).toFixed(2)}</p>
+                  <p className="text-sm font-semibold text-[#f0f0ff]">₵{Number(req.amount).toFixed(2)}</p>
                   <p className="text-xs text-[#8888aa]">{new Date(req.created_at).toLocaleDateString()}</p>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${STATUS_STYLE[req.status]}`}>
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${STATUS_STYLE[req.status]}`}>
                   {req.status}
                 </span>
               </div>
@@ -231,23 +240,24 @@ export function Wallet() {
       )}
 
       {/* Transaction History */}
-      <div className="glass-card p-5">
-        <h3 className="text-base font-semibold text-[#f0f0ff] mb-4">Transaction History</h3>
+      <div className="glass-card rounded-2xl overflow-hidden">
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-sm font-bold text-[#f0f0ff]">Transaction History</p>
+        </div>
 
         {/* Filter tabs */}
         {transactions.length > 0 && (
-          <div className="flex gap-2 flex-wrap mb-4">
-            {TX_FILTERS.filter(({ key }) => {
-              if (key === 'all') return true;
-              return transactions.some((tx) => tx.type === key);
-            }).map(({ key, label }) => (
+          <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
+            {TX_FILTERS.filter(({ key }) =>
+              key === 'all' || transactions.some((tx) => tx.type === key)
+            ).map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setTxFilter(key)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
                   txFilter === key
                     ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]'
-                    : 'border-[#2a2a3a] text-[#8888aa] hover:text-[#f0f0ff] hover:border-[#8888aa]'
+                    : 'border-[#2a2a3a] text-[#8888aa]'
                 }`}
               >
                 {label}
@@ -262,94 +272,106 @@ export function Wallet() {
         )}
 
         {transactions.length === 0 ? (
-          <p className="text-sm text-[#8888aa] text-center py-6">No transactions yet.</p>
-        ) : (() => {
-          const filtered = txFilter === 'all'
-            ? transactions
-            : transactions.filter((tx) => tx.type === txFilter);
-          return filtered.length === 0 ? (
-            <p className="text-sm text-[#8888aa] text-center py-6">No {txFilter} transactions yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {filtered.map((tx) => {
-                const meta = TX_META[tx.type] || { icon: ArrowUpCircle, color: '#8888aa' };
-                const Icon = meta.icon;
-                const isCredit = Number(tx.amount) > 0;
-                return (
-                  <div key={tx.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
-                    <Icon size={20} style={{ color: meta.color }} className="flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-[#f0f0ff] truncate">{tx.description}</p>
-                      <p className="text-xs text-[#8888aa]">{new Date(tx.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <span className="text-sm font-semibold" style={{ color: meta.color }}>
-                      {isCredit ? '+' : ''}₵{Math.abs(Number(tx.amount)).toFixed(2)}
-                    </span>
+          <p className="text-sm text-[#8888aa] text-center py-8">No transactions yet.</p>
+        ) : filteredTxs.length === 0 ? (
+          <p className="text-sm text-[#8888aa] text-center py-8">No {txFilter} transactions.</p>
+        ) : (
+          <div className="divide-y divide-[#2a2a3a]/50">
+            {filteredTxs.map((tx) => {
+              const meta = TX_META[tx.type] || { icon: ArrowUpCircle, color: '#8888aa' };
+              const Icon = meta.icon;
+              const isCredit = Number(tx.amount) > 0;
+              return (
+                <div key={tx.id} className="flex items-center gap-3 px-4 py-3">
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${meta.color}15` }}
+                  >
+                    <Icon size={16} style={{ color: meta.color }} />
                   </div>
-                );
-              })}
-            </div>
-          );
-        })()}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-[#f0f0ff] truncate">{tx.description}</p>
+                    <p className="text-xs text-[#8888aa]">{new Date(tx.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <span className="text-sm font-bold flex-shrink-0" style={{ color: meta.color }}>
+                    {isCredit ? '+' : ''}₵{Math.abs(Number(tx.amount)).toFixed(2)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Deposit Modal */}
       <Modal isOpen={showDeposit} onClose={() => setShowDeposit(false)} title="Request Deposit">
         <div className="space-y-4">
-          {/* Momo Payment Details */}
           {momoSettings && (
-            <div className="p-4 rounded-lg bg-[#00d4ff]/5 border border-[#00d4ff]/20 space-y-2">
-              <p className="text-xs font-semibold text-[#00d4ff] uppercase tracking-wide mb-2">Send payment to</p>
+            <div className="p-4 rounded-xl bg-[#00d4ff]/5 border border-[#00d4ff]/20 space-y-2">
+              <p className="text-xs font-bold text-[#00d4ff] uppercase tracking-wide mb-2">Send payment to</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <p className="text-xs text-[#8888aa]">Network</p>
-                  <p className="text-[#f0f0ff] font-semibold">{momoSettings.momo_network}</p>
+                  <p className="text-[#f0f0ff] font-bold">{momoSettings.momo_network}</p>
                 </div>
                 <div>
                   <p className="text-xs text-[#8888aa]">Number</p>
-                  <p className="text-[#f0f0ff] font-semibold">{momoSettings.momo_number}</p>
+                  <p className="text-[#f0f0ff] font-bold">{momoSettings.momo_number}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="text-xs text-[#8888aa]">Account Name</p>
-                  <p className="text-[#f0f0ff] font-semibold">{momoSettings.momo_name}</p>
+                  <p className="text-[#f0f0ff] font-bold">{momoSettings.momo_name}</p>
                 </div>
               </div>
-              <p className="text-xs text-[#8888aa] pt-1">After sending, submit your request below for admin confirmation.</p>
             </div>
           )}
 
           {/* Reference */}
-          <div className="p-3 rounded-lg bg-[#7c3aed]/10 border border-[#7c3aed]/30">
-            <p className="text-xs text-[#8888aa] mb-1.5">Your payment reference — use this when sending</p>
+          <div className="p-3 rounded-xl bg-[#7c3aed]/10 border border-[#7c3aed]/30">
+            <p className="text-xs text-[#8888aa] mb-2">Use this reference when sending</p>
             <div className="flex items-center justify-between gap-2">
-              <span className="text-base font-mono font-bold text-[#a78bfa] tracking-widest">{reference}</span>
-              <button onClick={handleCopy}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#7c3aed]/20 text-[#a78bfa] hover:bg-[#7c3aed]/30 transition-all flex-shrink-0">
-                {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
+              <span className="font-mono text-lg font-black text-[#a78bfa] tracking-widest">{reference}</span>
+              <button
+                onClick={handleCopy}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#7c3aed]/20 text-[#a78bfa]"
+              >
+                {copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
               </button>
             </div>
           </div>
 
+          {/* Presets */}
           <div className="grid grid-cols-4 gap-2">
             {DEPOSIT_PRESETS.map((p) => (
-              <button key={p} onClick={() => setAmount(p.toString())}
-                className={`py-2 rounded-lg text-sm font-medium border transition-all ${
+              <button
+                key={p}
+                onClick={() => setAmount(p.toString())}
+                className={`py-2 rounded-xl text-sm font-semibold border transition-all ${
                   amount === p.toString()
                     ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]'
-                    : 'border-[#2a2a3a] text-[#8888aa] hover:text-[#f0f0ff]'
-                }`}>
+                    : 'border-[#2a2a3a] text-[#8888aa]'
+                }`}
+              >
                 ₵{p}
               </button>
             ))}
           </div>
-          <input type="number" placeholder="Custom amount" value={amount}
-            onChange={(e) => setAmount(e.target.value)} className={inputClass} />
-          <p className="text-xs text-[#8888aa] mt-1">Minimum deposit: ₵{minDeposit}</p>
-          {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{txError}</p>}
-          {txSuccess && <p className="text-yellow-400 text-sm bg-yellow-900/20 rounded-lg px-3 py-2">{txSuccess}</p>}
+
+          <input
+            type="number"
+            placeholder={`Min ₵${minDeposit}`}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className={inputClass}
+          />
+
+          {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-xl px-3 py-2">{txError}</p>}
+          {txSuccess && <p className="text-yellow-400 text-sm bg-yellow-900/20 rounded-xl px-3 py-2">{txSuccess}</p>}
           {!txSuccess && (
-            <button onClick={handleDeposit}
-              className="w-full py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all">
+            <button
+              onClick={handleDeposit}
+              className="w-full py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm"
+            >
               Submit Deposit Request
             </button>
           )}
@@ -359,15 +381,27 @@ export function Wallet() {
       {/* Withdraw Modal */}
       <Modal isOpen={showWithdraw} onClose={() => setShowWithdraw(false)} title="Withdraw Funds">
         <div className="space-y-4">
-          <p className="text-sm text-[#8888aa]">Available balance: <span className="text-[#f0f0ff] font-semibold">₵{balance.toFixed(2)}</span></p>
-          <p className="text-xs text-[#8888aa]">Minimum withdrawal: ₵{minWithdrawal}. Your request will be reviewed by an admin before being processed.</p>
-          <input type="number" placeholder="Amount to withdraw" value={amount}
-            onChange={(e) => setAmount(e.target.value)} className={inputClass} />
-          {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{txError}</p>}
-          {txSuccess && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-lg px-3 py-2">{txSuccess}</p>}
+          <div className="p-3 rounded-xl bg-[#0a0a0f] border border-[#2a2a3a]">
+            <p className="text-xs text-[#8888aa]">Available Balance</p>
+            <p className="text-xl font-black text-[#f0f0ff]">₵{balance.toFixed(2)}</p>
+          </div>
+          <p className="text-xs text-[#8888aa]">
+            Minimum withdrawal: ₵{minWithdrawal}. Your request will be reviewed by an admin.
+          </p>
+          <input
+            type="number"
+            placeholder={`Min ₵${minWithdrawal}`}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className={inputClass}
+          />
+          {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-xl px-3 py-2">{txError}</p>}
+          {txSuccess && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-xl px-3 py-2">{txSuccess}</p>}
           {!txSuccess && (
-            <button onClick={handleWithdraw}
-              className="w-full py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all">
+            <button
+              onClick={handleWithdraw}
+              className="w-full py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm"
+            >
               Submit Withdrawal Request
             </button>
           )}

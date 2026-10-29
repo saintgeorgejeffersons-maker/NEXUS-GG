@@ -2,27 +2,25 @@ import { useEffect, useState, useCallback } from 'react';
 import { TrendingUp, ShoppingCart, CheckCircle, Coins, Clock, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getUserInvestments, claimDailyReturn, payReferralCommission, claimMissedEarnings, getMissedDays, getSettings } from '../../lib/db';
+import {
+  getUserInvestments, claimDailyReturn, payReferralCommission,
+  claimMissedEarnings, getMissedDays, getSettings,
+} from '../../lib/db';
 
 function getClaimStatus(lastClaimedAt) {
-  // Get today's midnight (start of current day) in local time
   const now = new Date();
   const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 
-  // No claim yet → always claimable
   if (!lastClaimedAt) return { canClaim: true, countdown: null };
 
   const lastClaimed = new Date(lastClaimedAt);
-
-  // If the last claim happened before today's midnight, it's a new day → claimable
   if (lastClaimed < todayMidnight) return { canClaim: true, countdown: null };
 
-  // Already claimed today → show countdown to next midnight
   const nextMidnight = new Date(todayMidnight.getTime() + 24 * 60 * 60 * 1000);
   const msLeft = nextMidnight.getTime() - now.getTime();
   const hoursLeft = Math.floor(msLeft / (60 * 60 * 1000));
   const minutesLeft = Math.floor((msLeft % (60 * 60 * 1000)) / (60 * 1000));
-  return { canClaim: false, countdown: `Available in ${hoursLeft}h ${minutesLeft}m` };
+  return { canClaim: false, countdown: `${hoursLeft}h ${minutesLeft}m` };
 }
 
 export function ActiveInvestments() {
@@ -53,7 +51,6 @@ export function ActiveInvestments() {
     getSettings().then((s) => setMissedEarningsPct(Number(s.missed_earnings_pct ?? 50)));
   }, [fetchInvestments]);
 
-  // Re-render every minute so countdown timers stay accurate
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 60 * 1000);
     return () => clearInterval(interval);
@@ -88,48 +85,41 @@ export function ActiveInvestments() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-[#8888aa]">Loading...</div>
-    );
-  }
+  if (loading) return (
+    <div className="flex items-center justify-center h-64 text-[#8888aa]">Loading...</div>
+  );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="glass-card p-5" style={{ border: '1px solid rgba(0,212,255,0.2)' }}>
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#00d4ff]/10">
-            <TrendingUp size={20} className="text-[#00d4ff]" />
-          </div>
-          <div>
-            <h1 className="text-xl font-black text-[#f0f0ff]">Active Investments</h1>
-            <p className="text-xs text-[#8888aa]">Claim your daily earnings once every 24 hours</p>
-          </div>
-        </div>
+      <div>
+        <p className="text-lg font-black text-[#f0f0ff]">Active Investments</p>
+        <p className="text-xs text-[#8888aa]">Claim your daily earnings every day by midnight</p>
       </div>
 
-      {/* Global error */}
+      {/* Error */}
       {error && (
-        <div className="glass-card p-4 border border-red-500/30 bg-red-500/10 text-red-400 text-sm rounded-xl">
+        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
           {error}
         </div>
       )}
 
-      {/* Empty state */}
+      {/* Empty */}
       {investments.length === 0 ? (
-        <div className="glass-card p-10 text-center">
-          <ShoppingCart size={40} className="mx-auto mb-3 text-[#8888aa] opacity-40" />
-          <p className="text-[#8888aa] text-sm mb-4">No active investments yet.</p>
+        <div className="glass-card rounded-2xl p-10 flex flex-col items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#2a2a3a] flex items-center justify-center">
+            <ShoppingCart size={26} className="text-[#8888aa]" />
+          </div>
+          <p className="text-sm text-[#8888aa] text-center">No active investments yet.</p>
           <button
             onClick={() => navigate('/user/catalog')}
-            className="px-5 py-2 rounded-lg text-sm font-medium bg-[#00d4ff] text-black hover:opacity-90 transition-all"
+            className="px-6 py-2.5 rounded-xl bg-[#00d4ff] text-black text-sm font-bold"
           >
             Browse Products
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {investments.map((inv) => {
             const elapsed = inv.duration_days - inv.days_remaining;
             const progress = Math.round((elapsed / inv.duration_days) * 100);
@@ -142,82 +132,88 @@ export function ActiveInvestments() {
             return (
               <div
                 key={inv.id}
-                className="glass-card p-5"
-                style={{ border: '1px solid rgba(42,42,58,0.8)' }}
+                className="rounded-2xl overflow-hidden"
+                style={{ background: '#1a1a24', border: '1px solid #2a2a3a' }}
               >
-                {/* Top row */}
-                <div className="flex items-center justify-between mb-3">
-                  <p className="font-semibold text-[#f0f0ff]">{inv.product_name}</p>
-                  <span className="text-xs px-2 py-1 rounded-full bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/20">
-                    +₵{Number(inv.daily_return).toFixed(2)}/day
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                <div className="w-full bg-[#2a2a3a] rounded-full h-1.5 mb-2">
+                {/* Progress bar top */}
+                <div className="h-1 w-full bg-[#2a2a3a]">
                   <div
-                    className="h-1.5 rounded-full bg-gradient-to-r from-[#00d4ff] to-[#00ff88] transition-all"
+                    className="h-1 bg-gradient-to-r from-[#00d4ff] to-[#00ff88] transition-all"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-[#8888aa] mb-3">
-                  <span>Day {elapsed} of {inv.duration_days}</span>
-                  <span>{inv.days_remaining} days remaining</span>
-                </div>
 
-                {/* Stats row */}
-                <div className="flex justify-between text-xs mb-4">
-                  <span className="text-[#8888aa]">
-                    Invested: <span className="text-[#f0f0ff]">₵{Number(inv.price).toFixed(2)}</span>
-                  </span>
-                  <span className="text-[#8888aa]">
-                    Total earned: <span className="text-[#00ff88]">₵{Number(inv.total_earned).toFixed(2)}</span>
-                  </span>
-                </div>
-
-                {/* Claim button / complete badge */}
-                {isComplete ? (
-                  <div className="flex items-center gap-2 justify-center py-2 rounded-lg bg-[#00ff88]/10 border border-[#00ff88]/20">
-                    <CheckCircle size={16} className="text-[#00ff88]" />
-                    <span className="text-sm font-semibold text-[#00ff88]">Investment Complete</span>
+                <div className="p-4 space-y-3">
+                  {/* Top row */}
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-bold text-[#f0f0ff] flex-1">{inv.product_name}</p>
+                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/20 flex-shrink-0">
+                      +₵{Number(inv.daily_return).toFixed(2)}/day
+                    </span>
                   </div>
-                ) : canClaim ? (
-                  <button
-                    onClick={() => handleClaim(inv)}
-                    disabled={isClaiming}
-                    className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all
-                      bg-gradient-to-r from-[#00d4ff] to-[#00ff88] text-black
-                      hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {isClaiming ? 'Claiming…' : <><Coins size={15} className="inline mr-1.5 -mt-0.5" />Claim Daily Earnings</>}
-                  </button>
-                ) : (
-                  <button
-                    disabled
-                    className="w-full py-2.5 rounded-lg text-sm font-medium transition-all
-                      bg-[#2a2a3a] text-[#8888aa] border border-[#2a2a3a] cursor-not-allowed"
-                  >
-                    <Clock size={14} className="inline mr-1.5 -mt-0.5" />{countdown}
-                  </button>
-                )}
 
-                {/* Missed earnings button — shown when user missed 1+ days */}
-                {!isComplete && missedDays > 0 && (
-                  <button
-                    onClick={() => handleClaimMissed(inv)}
-                    disabled={isClaimingMissed}
-                    className="w-full mt-2 py-2.5 rounded-lg text-sm font-semibold transition-all
-                      bg-[#ff9900]/10 border border-[#ff9900]/30 text-[#ff9900]
-                      hover:bg-[#ff9900]/20 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {isClaimingMissed
-                      ? 'Claiming…'
-                      : <><AlertTriangle size={14} className="inline mr-1.5 -mt-0.5" />
-                          Claim Missed Earnings ({missedDays}d × {missedEarningsPct}%)
-                        </>
-                    }
-                  </button>
-                )}
+                  {/* Stats grid */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-[#0a0a0f] rounded-xl p-2.5">
+                      <p className="text-xs text-[#8888aa]">Invested</p>
+                      <p className="text-sm font-bold text-[#f0f0ff]">₵{Number(inv.price).toFixed(2)}</p>
+                    </div>
+                    <div className="bg-[#0a0a0f] rounded-xl p-2.5">
+                      <p className="text-xs text-[#8888aa]">Total Earned</p>
+                      <p className="text-sm font-bold text-[#00ff88]">₵{Number(inv.total_earned).toFixed(2)}</p>
+                    </div>
+                  </div>
+
+                  {/* Days info */}
+                  <div className="flex justify-between text-xs text-[#8888aa]">
+                    <span>Day {elapsed} of {inv.duration_days}</span>
+                    <span>{inv.days_remaining} days remaining</span>
+                  </div>
+
+                  {/* Claim area */}
+                  {isComplete ? (
+                    <div className="flex items-center gap-2 justify-center py-3 rounded-xl bg-[#00ff88]/10 border border-[#00ff88]/20">
+                      <CheckCircle size={16} className="text-[#00ff88]" />
+                      <span className="text-sm font-bold text-[#00ff88]">Investment Complete</span>
+                    </div>
+                  ) : canClaim ? (
+                    <button
+                      onClick={() => handleClaim(inv)}
+                      disabled={isClaiming}
+                      className="w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]
+                        bg-gradient-to-r from-[#00d4ff] to-[#00ff88] text-black
+                        disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isClaiming
+                        ? 'Claiming…'
+                        : <><Coins size={15} className="inline mr-1.5 -mt-0.5" />Claim Daily Earnings</>
+                      }
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2 justify-center py-3 rounded-xl bg-[#2a2a3a] border border-[#2a2a3a]">
+                      <Clock size={14} className="text-[#8888aa]" />
+                      <span className="text-sm text-[#8888aa]">Available in {countdown}</span>
+                    </div>
+                  )}
+
+                  {/* Missed earnings button */}
+                  {!isComplete && missedDays > 0 && (
+                    <button
+                      onClick={() => handleClaimMissed(inv)}
+                      disabled={isClaimingMissed}
+                      className="w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]
+                        bg-[#ff9900]/10 border border-[#ff9900]/30 text-[#ff9900]
+                        hover:bg-[#ff9900]/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isClaimingMissed
+                        ? 'Claiming…'
+                        : <><AlertTriangle size={14} className="inline mr-1.5 -mt-0.5" />
+                            Claim Missed ({missedDays}d × {missedEarningsPct}%)
+                          </>
+                      }
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}

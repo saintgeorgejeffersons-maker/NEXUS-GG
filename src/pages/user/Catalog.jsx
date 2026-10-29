@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { getProducts, createInvestment, createTransaction, updateWalletBalance, getUserActiveInvestmentIds, applyReferralBonus } from '../../lib/db';
+import {
+  getProducts, createInvestment, createTransaction,
+  updateWalletBalance, getUserActiveInvestmentIds, applyReferralBonus,
+} from '../../lib/db';
 import { Modal } from '../../components/ui/Modal';
+import { Search, CheckCircle } from 'lucide-react';
 
 const ACCENT_COLORS = ['#00d4ff', '#7c3aed', '#00ff88', '#ff6b35', '#f59e0b', '#ec4899'];
 
@@ -11,24 +15,23 @@ export function Catalog() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [walletBalance, setWalletBalance] = useState(0);
+  const [ownedProductIds, setOwnedProductIds] = useState(new Set());
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [modalMsg, setModalMsg] = useState('');
   const [modalError, setModalError] = useState('');
   const [confirming, setConfirming] = useState(false);
-  const [ownedProductIds, setOwnedProductIds] = useState(new Set());
 
   useEffect(() => {
     getProducts(true).then((data) => { setProducts(data); setLoading(false); });
   }, []);
 
   useEffect(() => {
-    if (profile) {
-      setWalletBalance(Number(profile.wallet_balance));
-      getUserActiveInvestmentIds(profile.id)
-        .then((ids) => setOwnedProductIds(new Set(ids)))
-        .catch(() => {});
-    }
+    if (!profile) return;
+    setWalletBalance(Number(profile.wallet_balance));
+    getUserActiveInvestmentIds(profile.id)
+      .then((ids) => setOwnedProductIds(new Set(ids)))
+      .catch(() => {});
   }, [profile]);
 
   const filtered = products.filter((p) =>
@@ -54,16 +57,14 @@ export function Catalog() {
       return;
     }
     if (walletBalance < selectedProduct.price) {
-      setModalError('Insufficient balance. Please deposit funds.');
+      setModalError('Insufficient balance. Please deposit funds first.');
       return;
     }
     setConfirming(true);
     setModalError('');
     try {
       const newBalance = walletBalance - selectedProduct.price;
-      // Deduct wallet
       await updateWalletBalance(profile.id, newBalance);
-      // Create investment record
       await createInvestment({
         user_id: profile.id,
         product_id: selectedProduct.id,
@@ -76,7 +77,6 @@ export function Catalog() {
         purchase_date: new Date().toISOString().slice(0, 10),
         active: true,
       });
-      // Record transaction
       await createTransaction({
         user_id: profile.id,
         type: 'purchase',
@@ -87,7 +87,7 @@ export function Catalog() {
       await refreshProfile();
       setOwnedProductIds((prev) => new Set([...prev, selectedProduct.id]));
       try { await applyReferralBonus(profile.id); } catch (_) {}
-      setModalMsg(`Investment successful! ₵${selectedProduct.price} deducted from wallet.`);
+      setModalMsg(`Investment successful! ₵${selectedProduct.price} deducted.`);
     } catch (err) {
       setModalError('Something went wrong. Please try again.');
     } finally {
@@ -96,87 +96,109 @@ export function Catalog() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64 text-[#8888aa]">Loading products...</div>
+    <div className="flex items-center justify-center h-64 text-[#8888aa]">Loading...</div>
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#f0f0ff]">Investment Products</h1>
-        <p className="text-sm text-[#8888aa] mt-1">Buy a product to start earning daily returns</p>
-        <p className="text-sm mt-1" style={{ color: '#00d4ff' }}>
-          Wallet Balance: ₵{walletBalance.toLocaleString()}
-        </p>
+    <div className="space-y-4">
+      {/* Balance pill */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-lg font-black text-[#f0f0ff]">Investment Store</p>
+          <p className="text-xs text-[#8888aa]">Buy a product to earn daily returns</p>
+        </div>
+        <div className="px-3 py-1.5 rounded-xl bg-[#00d4ff]/10 border border-[#00d4ff]/20">
+          <p className="text-xs text-[#8888aa]">Balance</p>
+          <p className="text-sm font-bold text-[#00d4ff]">₵{walletBalance.toLocaleString()}</p>
+        </div>
       </div>
 
       {/* Search */}
-      <input
-        type="text"
-        placeholder="Search products..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full bg-[#1a1a24] border border-[#2a2a38] rounded-lg px-4 py-2.5 text-sm text-[#f0f0ff] placeholder-[#8888aa] outline-none focus:border-[#00d4ff] transition-colors"
-      />
+      <div className="relative">
+        <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8888aa]" />
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full bg-[#1a1a24] border border-[#2a2a3a] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#f0f0ff] placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-colors"
+        />
+      </div>
 
-      {/* Grid */}
+      {/* Product cards */}
       {filtered.length === 0 ? (
-        <p className="text-center text-[#8888aa] py-10">No products found.</p>
+        <p className="text-center text-[#8888aa] py-10 text-sm">No products found.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="space-y-3">
           {filtered.map((product, idx) => {
             const accent = ACCENT_COLORS[idx % ACCENT_COLORS.length];
             const totalReturn = product.daily_return * product.duration_days;
+            const owned = ownedProductIds.has(product.id);
             return (
-              <div key={product.id} className="relative flex flex-col rounded-xl overflow-hidden"
-                style={{ background: '#1a1a24', border: '1px solid #2a2a38' }}>
-                <div style={{ height: 4, background: accent }} />
+              <div
+                key={product.id}
+                className="rounded-2xl overflow-hidden"
+                style={{ background: '#1a1a24', border: '1px solid #2a2a3a' }}
+              >
+                {/* Accent bar */}
+                <div style={{ height: 3, background: accent }} />
 
-                {!product.active && (
-                  <div className="absolute top-4 right-3 z-10 bg-gray-700/90 text-gray-300 text-xs font-semibold px-2 py-1 rounded">
-                    Unavailable
-                  </div>
-                )}
-
-                <div className="p-5 flex flex-col flex-1">
-                  {/* Product image */}
-                  {product.image_url ? (
-                    <div className="w-full h-36 rounded-lg overflow-hidden mb-4 bg-[#0a0a0f]">
+                <div className="p-4">
+                  {/* Image */}
+                  {product.image_url && (
+                    <div className="w-full h-32 rounded-xl overflow-hidden mb-3 bg-[#0a0a0f]">
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                     </div>
-                  ) : null}
+                  )}
 
-                  <h3 className="text-base font-bold text-[#f0f0ff] text-center mb-1">{product.name}</h3>
-                  <p className="text-xs text-[#8888aa] text-center mb-4">{product.description}</p>
-
-                  {/* Info chips */}
-                  <div className="flex flex-wrap justify-center gap-2 mb-3">
-                    <span className="text-xs px-2 py-1 rounded-full bg-[#0a0a0f] text-[#f0f0ff] border border-[#2a2a38]">
-                      ₵{product.price}
-                    </span>
-                    <span className="text-xs px-2 py-1 rounded-full bg-[#0a0a0f] border border-[#2a2a38]"
-                      style={{ color: '#00ff88' }}>
+                  {/* Name + daily return */}
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <p className="text-base font-bold text-[#f0f0ff] flex-1">{product.name}</p>
+                    <span
+                      className="text-xs font-bold px-2 py-1 rounded-full flex-shrink-0"
+                      style={{ background: `${accent}15`, color: accent }}
+                    >
                       +₵{product.daily_return}/day
-                    </span>
-                    <span className="text-xs px-2 py-1 rounded-full bg-[#0a0a0f] text-[#8888aa] border border-[#2a2a38]">
-                      {product.duration_days} days
                     </span>
                   </div>
 
-                  <p className="text-center text-sm font-semibold mb-4" style={{ color: '#00ff88' }}>
-                    Total Return: ₵{totalReturn}
-                  </p>
+                  {product.description && (
+                    <p className="text-xs text-[#8888aa] mb-3">{product.description}</p>
+                  )}
 
+                  {/* Stats row */}
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="bg-[#0a0a0f] rounded-xl p-2 text-center">
+                      <p className="text-xs text-[#8888aa]">Price</p>
+                      <p className="text-sm font-bold text-[#f0f0ff]">₵{product.price}</p>
+                    </div>
+                    <div className="bg-[#0a0a0f] rounded-xl p-2 text-center">
+                      <p className="text-xs text-[#8888aa]">Duration</p>
+                      <p className="text-sm font-bold text-[#f0f0ff]">{product.duration_days}d</p>
+                    </div>
+                    <div className="bg-[#0a0a0f] rounded-xl p-2 text-center">
+                      <p className="text-xs text-[#8888aa]">Total</p>
+                      <p className="text-sm font-bold text-[#00ff88]">₵{totalReturn}</p>
+                    </div>
+                  </div>
+
+                  {/* CTA */}
                   <button
-                    onClick={() => product.active && !ownedProductIds.has(product.id) && openModal(product)}
-                    disabled={!product.active || ownedProductIds.has(product.id)}
-                    className="w-full py-2.5 rounded-lg text-sm font-bold transition-opacity mt-auto"
+                    onClick={() => product.active && !owned && openModal(product)}
+                    disabled={!product.active || owned}
+                    className="w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
                     style={{
-                      background: product.active && !ownedProductIds.has(product.id) ? '#00d4ff' : '#2a2a38',
-                      color: product.active && !ownedProductIds.has(product.id) ? '#000' : '#8888aa',
-                      cursor: product.active && !ownedProductIds.has(product.id) ? 'pointer' : 'not-allowed',
-                    }}>
-                    {ownedProductIds.has(product.id) ? 'Already Invested' : product.active ? 'Invest Now' : 'Unavailable'}
+                      background: owned ? 'transparent' : product.active ? accent : '#2a2a3a',
+                      color: owned ? accent : product.active ? (accent === '#f0f0ff' ? '#000' : '#000') : '#8888aa',
+                      border: owned ? `1px solid ${accent}40` : 'none',
+                      cursor: owned || !product.active ? 'not-allowed' : 'pointer',
+                    }}
+                  >
+                    {owned ? (
+                      <span className="flex items-center justify-center gap-1.5">
+                        <CheckCircle size={14} /> Already Invested
+                      </span>
+                    ) : product.active ? 'Invest Now' : 'Unavailable'}
                   </button>
                 </div>
               </div>
@@ -190,38 +212,53 @@ export function Catalog() {
         <Modal isOpen={!!selectedProduct} onClose={closeModal} title="Confirm Investment">
           <div className="space-y-4">
             {selectedProduct.image_url && (
-              <img src={selectedProduct.image_url} alt={selectedProduct.name}
-                className="w-full h-32 object-cover rounded-lg bg-[#0a0a0f]" />
+              <img
+                src={selectedProduct.image_url}
+                alt={selectedProduct.name}
+                className="w-full h-28 object-cover rounded-xl bg-[#0a0a0f]"
+              />
             )}
+
             <div>
-              <p className="font-bold text-[#f0f0ff]">{selectedProduct.name}</p>
-              <p className="text-sm text-[#8888aa]">Price: ₵{selectedProduct.price}</p>
-              <p className="text-sm" style={{ color: '#00ff88' }}>
-                Daily Return: +₵{selectedProduct.daily_return}/day
-              </p>
+              <p className="font-bold text-[#f0f0ff] text-base">{selectedProduct.name}</p>
+              <p className="text-xs text-[#8888aa] mt-0.5">{selectedProduct.description}</p>
             </div>
 
-            <div className="bg-[#0a0a0f] rounded-lg p-3 text-sm text-[#8888aa] space-y-1">
-              <p>Duration: <span className="text-[#f0f0ff]">{selectedProduct.duration_days} days</span></p>
-              <p>Total Return: <span style={{ color: '#00ff88' }}>₵{selectedProduct.daily_return * selectedProduct.duration_days}</span></p>
-              <p>Balance After: <span className="text-[#f0f0ff]">₵{(walletBalance - selectedProduct.price).toFixed(2)}</span></p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: 'Price',        value: `₵${selectedProduct.price}`,                              color: '#f0f0ff' },
+                { label: 'Daily Return', value: `+₵${selectedProduct.daily_return}/day`,                  color: '#00ff88' },
+                { label: 'Duration',     value: `${selectedProduct.duration_days} days`,                   color: '#f0f0ff' },
+                { label: 'Total Return', value: `₵${selectedProduct.daily_return * selectedProduct.duration_days}`, color: '#00ff88' },
+                { label: 'Balance After',value: `₵${(walletBalance - selectedProduct.price).toFixed(2)}`, color: '#f0f0ff' },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="bg-[#0a0a0f] rounded-xl p-3">
+                  <p className="text-xs text-[#8888aa]">{label}</p>
+                  <p className="text-sm font-bold mt-0.5" style={{ color }}>{value}</p>
+                </div>
+              ))}
             </div>
 
             {modalError && (
-              <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{modalError}</p>
+              <p className="text-red-400 text-sm bg-red-900/20 rounded-xl px-3 py-2">{modalError}</p>
             )}
             {modalMsg && (
-              <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-lg px-3 py-2">{modalMsg}</p>
+              <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-xl px-3 py-2">{modalMsg}</p>
             )}
 
             {!modalMsg && (
-              <button onClick={handleConfirm} disabled={confirming}
-                className="w-full py-2.5 rounded-lg font-bold text-sm bg-[#00d4ff] text-black hover:opacity-90 transition-all disabled:opacity-50">
+              <button
+                onClick={handleConfirm}
+                disabled={confirming}
+                className="w-full py-3 rounded-xl font-bold text-sm bg-[#00d4ff] text-black hover:opacity-90 transition-all disabled:opacity-50"
+              >
                 {confirming ? 'Processing...' : 'Confirm Investment'}
               </button>
             )}
-            <button onClick={closeModal}
-              className="w-full py-2.5 rounded-lg font-bold text-sm border border-[#2a2a38] text-[#8888aa] hover:text-[#f0f0ff] transition-colors">
+            <button
+              onClick={closeModal}
+              className="w-full py-3 rounded-xl font-bold text-sm border border-[#2a2a3a] text-[#8888aa]"
+            >
               {modalMsg ? 'Close' : 'Cancel'}
             </button>
           </div>
