@@ -346,3 +346,8 @@ INSERT INTO public.settings (key, value) VALUES
   ('min_deposit_amount',      '120'),
   ('min_withdrawal_amount',   '50')
 ON CONFLICT DO NOTHING;
+
+-- ============================================================
+-- THEME PREFERENCE
+-- ============================================================
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS theme text not null default 'neon';

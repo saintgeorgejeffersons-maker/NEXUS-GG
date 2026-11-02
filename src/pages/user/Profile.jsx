@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+;import { useState, useEffect } from 'react';
 import {
   ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart,
   Clock, Copy, Check, Users, Plus, Minus,
   Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight,
 } from 'lucide-react';import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme, THEMES } from '../../context/ThemeContext';
 import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -48,6 +49,7 @@ function Section({ title, children, defaultOpen = false }) {
 // ── Main component ────────────────────────────────────────
 export function Profile() {
   const { user, profile, refreshProfile } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   // Wallet data
@@ -341,6 +343,42 @@ export function Profile() {
               <Lock size={14} /> Change Password
             </button>
           )}
+        </div>
+      </Section>
+
+      {/* ── Appearance ── */}
+      <Section title="Appearance" defaultOpen={true}>
+        <div className="p-4 space-y-3">
+          <p className="text-xs text-[#8888aa]">Choose your theme. It syncs across all your devices.</p>
+          <div className="grid grid-cols-2 gap-3">
+            {THEMES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id, profile?.id)}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  theme === t.id
+                    ? 'border-[var(--accent)] bg-[var(--accent)]/10'
+                    : 'border-[#2a2a3a] hover:border-[#8888aa]'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div
+                    className="w-4 h-4 rounded-full flex-shrink-0"
+                    style={{ background: t.preview }}
+                  />
+                  <span className={`text-sm font-bold ${theme === t.id ? 'text-[var(--accent)]' : 'text-[#f0f0ff]'}`}>
+                    {t.label}
+                  </span>
+                  {theme === t.id && (
+                    <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: 'var(--btn-text)' }}>
+                      Active
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-[#8888aa]">{t.description}</p>
+              </button>
+            ))}
+          </div>
         </div>
       </Section>
 
