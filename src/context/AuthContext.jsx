@@ -116,13 +116,16 @@ export function AuthProvider({ children }) {
                 .eq('id', newUserId);
               console.log('[Referral] referred_by update error:', updateErr);
 
-              const { error: upsertErr } = await supabase
+              // Use plain insert — upsert triggers an UPDATE on conflict which RLS may block
+              const { error: insertErr } = await supabase
                 .from('referrals')
-                .upsert(
-                  { referrer_id: refData.id, referred_id: newUserId, bonus_paid: false },
-                  { onConflict: 'referred_id', ignoreDuplicates: true }
-                );
-              console.log('[Referral] referrals upsert error:', upsertErr);
+                .insert({ referrer_id: refData.id, referred_id: newUserId, bonus_paid: false });
+              // Ignore duplicate key errors (code 23505) — referral already linked
+              if (insertErr && insertErr.code !== '23505') {
+                console.log('[Referral] referrals insert error:', insertErr);
+              } else {
+                console.log('[Referral] referrals insert success (or already existed)');
+              }
             } else {
               console.log('[Referral] No referrer found for code:', referralCode.trim().toUpperCase());
             }
