@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { applyReferralBonus } from '../lib/db';
 
 const AuthContext = createContext(null);
 
@@ -115,6 +116,9 @@ export function AuthProvider({ children }) {
                 .insert({ referrer_id: refData.id, referred_id: newUserId, bonus_paid: false });
               // Ignore duplicate key errors (23505) — referral already linked
               if (insertErr && insertErr.code !== '23505') throw insertErr;
+
+              // Credit the signup bonus to the referred user immediately
+              try { await applyReferralBonus(newUserId); } catch (_) {}
             }
           }
         } catch (_) {

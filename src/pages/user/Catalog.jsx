@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   getProducts, createInvestment, createTransaction,
-  updateWalletBalance, getUserActiveInvestmentIds, applyReferralBonus,
+  updateWalletBalance, getUserActiveInvestmentIds,
 } from '../../lib/db';
 import { Modal } from '../../components/ui/Modal';
 import { Search, CheckCircle } from 'lucide-react';
@@ -87,7 +87,6 @@ export function Catalog() {
       setWalletBalance(newBalance);
       await refreshProfile();
       setOwnedProductIds((prev) => new Set([...prev, selectedProduct.id]));
-      try { await applyReferralBonus(profile.id); } catch (_) {}
       setModalMsg(`Investment successful! ₵${selectedProduct.price} deducted.`);
     } catch (_) {
       setModalError('Something went wrong. Please try again.');
