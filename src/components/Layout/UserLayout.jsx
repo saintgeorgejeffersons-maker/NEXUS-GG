@@ -19,11 +19,12 @@ const TAB_NAV = [
 ];
 
 const PAGE_TITLES = {
-  '/user/dashboard':   'Home',
-  '/user/catalog':     'Store',
-  '/user/investments': 'Investments',
-  '/user/referrals':   'Referrals',
-  '/user/profile':     'Profile',
+  '/user/dashboard':    'Home',
+  '/user/catalog':      'Store',
+  '/user/investments':  'Investments',
+  '/user/referrals':    'Referrals',
+  '/user/profile':      'Profile',
+  '/user/transactions': 'Transactions',
 };
 
 function NotificationPanel({ notifications, readIds, onMarkRead, onMarkAll, onClose }) {

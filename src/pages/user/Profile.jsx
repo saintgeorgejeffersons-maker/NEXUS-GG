@@ -1,36 +1,18 @@
 import { useState, useEffect } from 'react';
 import {
   ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart,
-  Clock, Copy, Check, Users, Plus, Minus, User,
-  Edit3, Save, X, Lock, ChevronDown, ChevronUp,
-} from 'lucide-react';
-import { Modal } from '../../components/ui/Modal';
+  Clock, Copy, Check, Users, Plus, Minus,
+  Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight,
+} from 'lucide-react';import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 import {
-  getUserTransactions, createDepositRequest, getUserDepositRequests,
+  createDepositRequest, getUserDepositRequests,
   getSettings, createWithdrawalRequest, getUserWithdrawalRequests,
-  updateWalletBalance,
 } from '../../lib/db';
 
 // ── Constants ────────────────────────────────────────────
-const TX_META = {
-  deposit:             { icon: ArrowUpCircle,   color: '#00ff88', label: 'Deposit'    },
-  return:              { icon: TrendingUp,       color: '#00d4ff', label: 'Return'     },
-  purchase:            { icon: ShoppingCart,     color: '#ff6b35', label: 'Purchase'   },
-  withdrawal:          { icon: ArrowDownCircle,  color: '#ef4444', label: 'Withdrawal' },
-  referral_commission: { icon: Users,            color: '#a78bfa', label: 'Referral'   },
-};
-
-const TX_FILTERS = [
-  { key: 'all',                label: 'All'         },
-  { key: 'return',             label: 'Returns'     },
-  { key: 'deposit',            label: 'Deposits'    },
-  { key: 'purchase',           label: 'Purchases'   },
-  { key: 'withdrawal',         label: 'Withdrawals' },
-  { key: 'referral_commission',label: 'Referrals'   },
-];
-
 const STATUS_STYLE = {
   pending:  'bg-yellow-900/20 text-yellow-400 border border-yellow-700/30',
   approved: 'bg-green-900/20 text-[#00ff88] border border-green-700/30',
@@ -66,17 +48,16 @@ function Section({ title, children, defaultOpen = false }) {
 // ── Main component ────────────────────────────────────────
 export function Profile() {
   const { user, profile, refreshProfile } = useAuth();
+  const navigate = useNavigate();
 
   // Wallet data
   const [balance, setBalance] = useState(0);
-  const [transactions, setTransactions] = useState([]);
   const [depositRequests, setDepositRequests] = useState([]);
   const [withdrawalRequests, setWithdrawalRequests] = useState([]);
   const [momoSettings, setMomoSettings] = useState(null);
   const [minDeposit, setMinDeposit] = useState(120);
   const [minWithdrawal, setMinWithdrawal] = useState(50);
   const [loading, setLoading] = useState(true);
-  const [txFilter, setTxFilter] = useState('all');
 
   // Modals
   const [showDeposit, setShowDeposit] = useState(false);
@@ -107,12 +88,10 @@ export function Profile() {
     setBalance(Number(profile.wallet_balance));
     setProfileForm({ full_name: profile.full_name ?? '', mobile: profile.mobile ?? '' });
     Promise.all([
-      getUserTransactions(profile.id),
       getUserDepositRequests(profile.id),
       getUserWithdrawalRequests(profile.id),
       getSettings(),
-    ]).then(([txs, reqs, wreqs, settings]) => {
-      setTransactions(txs);
+    ]).then(([reqs, wreqs, settings]) => {
       setDepositRequests(reqs);
       setWithdrawalRequests(wreqs);
       setMomoSettings(settings);
@@ -204,9 +183,6 @@ export function Profile() {
 
   const pendingDeposits    = depositRequests.filter((r) => r.status === 'pending').reduce((s, r) => s + Number(r.amount), 0);
   const pendingWithdrawals = withdrawalRequests.filter((r) => r.status === 'pending').reduce((s, r) => s + Number(r.amount), 0);
-  const totalInvested      = transactions.filter((t) => t.type === 'purchase').reduce((s, t) => s + Math.abs(Number(t.amount)), 0);
-  const totalEarned        = transactions.filter((t) => t.type === 'return').reduce((s, t) => s + Number(t.amount), 0);
-  const filteredTxs        = txFilter === 'all' ? transactions : transactions.filter((tx) => tx.type === txFilter);
   const initials           = (profile?.full_name ?? '?').charAt(0).toUpperCase();
   const joinedDate         = profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en', { month: 'long', year: 'numeric' }) : '—';
 
@@ -257,17 +233,22 @@ export function Profile() {
         </div>
       </div>
 
-      {/* ── Stats ── */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="glass-card rounded-2xl p-4">
-          <p className="text-xs text-[#8888aa]">Total Invested</p>
-          <p className="text-lg font-black text-[#ff6b35]">₵{totalInvested.toFixed(2)}</p>
+      {/* ── Transaction History button ── */}
+      <button
+        onClick={() => navigate('/user/transactions')}
+        className="w-full glass-card rounded-2xl p-4 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#00d4ff]/10 flex items-center justify-center">
+            <TrendingUp size={18} className="text-[#00d4ff]" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-bold text-[#f0f0ff]">Transaction History</p>
+            <p className="text-xs text-[#8888aa]">View all your transactions</p>
+          </div>
         </div>
-        <div className="glass-card rounded-2xl p-4">
-          <p className="text-xs text-[#8888aa]">Total Earned</p>
-          <p className="text-lg font-black text-[#00ff88]">₵{totalEarned.toFixed(2)}</p>
-        </div>
-      </div>
+        <ArrowRight size={18} className="text-[#8888aa]" />
+      </button>
 
       {/* ── Edit Profile ── */}
       <Section title="Edit Profile">
@@ -400,55 +381,6 @@ export function Profile() {
           </div>
         </Section>
       )}
-
-      {/* ── Transaction History ── */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        <div className="px-4 pt-4 pb-2">
-          <p className="text-sm font-bold text-[#f0f0ff]">Transaction History</p>
-        </div>
-        {transactions.length > 0 && (
-          <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
-            {TX_FILTERS.filter(({ key }) => key === 'all' || transactions.some((tx) => tx.type === key))
-              .map(({ key, label }) => (
-                <button key={key} onClick={() => setTxFilter(key)}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                    txFilter === key ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]' : 'border-[#2a2a3a] text-[#8888aa]'
-                  }`}>
-                  {label}
-                  {key !== 'all' && <span className="ml-1 opacity-60">({transactions.filter((tx) => tx.type === key).length})</span>}
-                </button>
-              ))}
-          </div>
-        )}
-        {transactions.length === 0 ? (
-          <p className="text-sm text-[#8888aa] text-center py-8">No transactions yet.</p>
-        ) : filteredTxs.length === 0 ? (
-          <p className="text-sm text-[#8888aa] text-center py-8">No {txFilter} transactions.</p>
-        ) : (
-          <div className="divide-y divide-[#2a2a3a]/50">
-            {filteredTxs.map((tx) => {
-              const meta = TX_META[tx.type] || { icon: ArrowUpCircle, color: '#8888aa' };
-              const Icon = meta.icon;
-              const isCredit = Number(tx.amount) > 0;
-              return (
-                <div key={tx.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${meta.color}15` }}>
-                    <Icon size={16} style={{ color: meta.color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#f0f0ff] truncate">{tx.description}</p>
-                    <p className="text-xs text-[#8888aa]">{new Date(tx.created_at).toLocaleDateString()}</p>
-                  </div>
-                  <span className="text-sm font-bold flex-shrink-0" style={{ color: meta.color }}>
-                    {isCredit ? '+' : ''}₵{Math.abs(Number(tx.amount)).toFixed(2)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
       {/* ── Deposit Modal ── */}
       <Modal isOpen={showDeposit} onClose={() => setShowDeposit(false)} title="Request Deposit">

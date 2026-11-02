@@ -5,6 +5,8 @@ import { AdminLoginPage } from './pages/AdminLoginPage';
 import { UserDashboard } from './pages/user/UserDashboard';
 import { Catalog } from './pages/user/Catalog';
 import { Profile } from './pages/user/Profile';
+import { Transactions } from './pages/user/Transactions';
+import { Transactions as AdminTransactions } from './pages/admin/Transactions';
 import { ActiveInvestments } from './pages/user/ActiveInvestments';
 import { Referral } from './pages/user/Referral';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -12,7 +14,6 @@ import { Inventory } from './pages/admin/Inventory';
 import { Users } from './pages/admin/Users';
 import { Deposits } from './pages/admin/Deposits';
 import { Withdrawals } from './pages/admin/Withdrawals';
-import { Transactions } from './pages/admin/Transactions';
 import { Settings } from './pages/admin/Settings';
 import { Layout } from './components/Layout/Layout';
 import { UserLayout } from './components/Layout/UserLayout';
@@ -41,7 +42,8 @@ function AppRoutes() {
       <Route path="/user/catalog"     element={<ProtectedRoute role="user"><Catalog /></ProtectedRoute>} />
       <Route path="/user/investments" element={<ProtectedRoute role="user"><ActiveInvestments /></ProtectedRoute>} />
       <Route path="/user/referrals"   element={<ProtectedRoute role="user"><Referral /></ProtectedRoute>} />
-      <Route path="/user/profile"     element={<ProtectedRoute role="user"><Profile /></ProtectedRoute>} />
+      <Route path="/user/profile"       element={<ProtectedRoute role="user"><Profile /></ProtectedRoute>} />
+      <Route path="/user/transactions"  element={<ProtectedRoute role="user"><Transactions /></ProtectedRoute>} />
 
       {/* Admin routes */}
       <Route path="/myspot/dashboard"    element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
@@ -49,7 +51,7 @@ function AppRoutes() {
       <Route path="/myspot/users"        element={<ProtectedRoute role="admin"><Users /></ProtectedRoute>} />
       <Route path="/myspot/deposits"     element={<ProtectedRoute role="admin"><Deposits /></ProtectedRoute>} />
       <Route path="/myspot/withdrawals"  element={<ProtectedRoute role="admin"><Withdrawals /></ProtectedRoute>} />
-      <Route path="/myspot/transactions" element={<ProtectedRoute role="admin"><Transactions /></ProtectedRoute>} />
+      <Route path="/myspot/transactions" element={<ProtectedRoute role="admin"><AdminTransactions /></ProtectedRoute>} />
       <Route path="/myspot/settings"     element={<ProtectedRoute role="admin"><Settings /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
