@@ -60,6 +60,8 @@ export function AuthProvider({ children }) {
     });
     if (error) return { success: false, error: error.message };
 
+    const newUserId = data.session?.user?.id ?? data.user?.id;
+
     // If email confirmation is off, signUp returns a session immediately
     if (data.session) {
       setUser(data.session.user);
@@ -71,33 +73,35 @@ export function AuthProvider({ children }) {
         const code = data.session.user.id.replace(/-/g, '').slice(0, 8).toUpperCase();
         await supabase.from('profiles').update({ referral_code: code }).eq('id', data.session.user.id);
       } catch (_) {}
-    }
 
-    // Link referral if a code was provided
-    const newUserId = data.session?.user?.id ?? data.user?.id;
-    if (referralCode && referralCode.trim() && newUserId) {
-      try {
-        const { data: refData } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('referral_code', referralCode.trim().toUpperCase())
-          .maybeSingle();
-        if (refData?.id) {
-          // Update referred_by on new user's profile
-          await supabase
+      // Link referral — runs inside session so RLS allows it
+      if (referralCode && referralCode.trim() && newUserId) {
+        try {
+          // Small delay to let the DB trigger finish creating the profile row
+          await new Promise((r) => setTimeout(r, 800));
+
+          const { data: refData } = await supabase
             .from('profiles')
-            .update({ referred_by: refData.id })
-            .eq('id', newUserId);
-          // Insert referral row (ignore duplicate error — user may have already been linked)
-          await supabase
-            .from('referrals')
-            .upsert(
-              { referrer_id: refData.id, referred_id: newUserId, bonus_paid: false },
-              { onConflict: 'referred_id', ignoreDuplicates: true }
-            );
+            .select('id')
+            .eq('referral_code', referralCode.trim().toUpperCase())
+            .maybeSingle();
+
+          if (refData?.id) {
+            await supabase
+              .from('profiles')
+              .update({ referred_by: refData.id })
+              .eq('id', newUserId);
+
+            await supabase
+              .from('referrals')
+              .upsert(
+                { referrer_id: refData.id, referred_id: newUserId, bonus_paid: false },
+                { onConflict: 'referred_id', ignoreDuplicates: true }
+              );
+          }
+        } catch (_) {
+          // Never block registration on referral failure
         }
-      } catch (_) {
-        // Referral linkage failure must never block registration
       }
     }
 
