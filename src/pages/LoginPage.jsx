@@ -19,7 +19,10 @@ export function LoginPage() {
 
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get('ref');
-    if (ref) set('referralCode', ref);
+    if (ref) {
+      set('referralCode', ref);
+      setMode('register'); // auto-switch to register tab when referral link is used
+    }
   }, []);
 
   const switchMode = (m) => {
