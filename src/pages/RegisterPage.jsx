@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Gamepad2 } from 'lucide-react';
+import { Eye, EyeOff, Gamepad2, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const inputClass =
-  'w-full bg-[#1a1a24] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-all duration-200';
+  'w-full bg-[#1a1a24] border border-[#2a2a3a] rounded-xl px-4 py-3.5 text-[#f0f0ff] text-sm placeholder-[#555570] focus:outline-none focus:border-[#00d4ff] transition-all duration-200';
+
+const labelClass = 'block text-sm font-semibold text-[#f0f0ff] mb-1.5';
+const requiredStar = <span className="text-red-400 ml-0.5">*</span>;
 
 export function RegisterPage() {
-  const [form, setForm] = useState({ name: '', email: '', mobile: '', password: '', referralCode: '' });
+  const [form, setForm] = useState({
+    name: '', mobile: '', email: '', password: '', confirmPassword: '', referralCode: '',
+  });
   const [showPw, setShowPw] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -16,7 +22,6 @@ export function RegisterPage() {
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
-  // Pre-fill referral code from URL param
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get('ref');
     if (ref) set('referralCode', ref);
@@ -25,12 +30,20 @@ export function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!form.name.trim())   { setError('Full name is required.'); return; }
-    if (!form.email.trim())  { setError('Email address is required.'); return; }
-    if (!form.mobile.trim()) { setError('Mobile number is required.'); return; }
-    if (!form.password)      { setError('Password is required.'); return; }
+
+    if (!form.name.trim())     { setError('Full name is required.'); return; }
+    if (!form.mobile.trim())   { setError('Phone number is required.'); return; }
+    if (!form.password)        { setError('Password is required.'); return; }
+    if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (form.password !== form.confirmPassword) { setError('Passwords do not match.'); return; }
+
+    // Use provided email or generate a placeholder from phone number
+    const email = form.email.trim()
+      ? form.email.trim()
+      : `${form.mobile.replace(/\D/g, '')}@nexusgg.app`;
+
     setLoading(true);
-    const res = await register(form.name, form.email, form.mobile, form.password, form.referralCode);
+    const res = await register(form.name, email, `+233${form.mobile.replace(/^0/, '')}`, form.password, form.referralCode);
     setLoading(false);
     if (res.success) navigate('/user/dashboard');
     else setError(res.error);
@@ -43,54 +56,130 @@ export function RegisterPage() {
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#7c3aed]/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md">
+      <div className="relative z-10 w-full max-w-md py-8">
         {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#00d4ff]/10 border border-[#00d4ff]/30 mb-4">
-            <Gamepad2 size={32} className="text-[#00d4ff]" />
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#00d4ff]/10 border border-[#00d4ff]/30 mb-3">
+            <Gamepad2 size={28} className="text-[#00d4ff]" />
           </div>
-          <h1 className="text-3xl font-black tracking-wider text-[#f0f0ff]">
+          <h1 className="text-2xl font-black tracking-wider text-[#f0f0ff]">
             NEXUS<span className="text-[#00d4ff]">GG</span>
           </h1>
-          <p className="text-[#8888aa] text-sm mt-1">Game. Invest. Earn.</p>
+          <p className="text-[#8888aa] text-xs mt-1">Game. Invest. Earn.</p>
         </div>
 
-        <div className="glass-card p-6">
-          <h2 className="text-lg font-bold text-[#f0f0ff] mb-5">Create an account</h2>
+        <div className="glass-card p-6 space-y-4">
+          <h2 className="text-base font-bold text-[#f0f0ff]">Create Account</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input className={inputClass} type="text" placeholder="Full name"
-              value={form.name} onChange={(e) => set('name', e.target.value)} />
 
-            <input className={inputClass} type="email" placeholder="Email address"
-              value={form.email} onChange={(e) => set('email', e.target.value)} />
-
-            <input className={inputClass} type="tel" placeholder="Mobile number"
-              value={form.mobile} onChange={(e) => set('mobile', e.target.value)} />
-
-            <div className="relative">
-              <input className={inputClass} type={showPw ? 'text' : 'password'} placeholder="Password"
-                value={form.password} onChange={(e) => set('password', e.target.value)} />
-              <button type="button" onClick={() => setShowPw(!showPw)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8888aa] hover:text-[#f0f0ff]">
-                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+            {/* Full Name */}
+            <div>
+              <label className={labelClass}>Full Name {requiredStar}</label>
+              <input
+                className={inputClass}
+                type="text"
+                placeholder="Enter your full name"
+                value={form.name}
+                onChange={(e) => set('name', e.target.value)}
+              />
             </div>
 
-            <input className={inputClass} type="text" placeholder="Referral code (optional)"
-              value={form.referralCode} onChange={(e) => set('referralCode', e.target.value)} />
+            {/* Phone Number */}
+            <div>
+              <label className={labelClass}>Phone Number {requiredStar}</label>
+              <div className="flex gap-2">
+                {/* Country prefix — hardcoded Ghana */}
+                <div className="flex items-center gap-1.5 px-3 py-3.5 rounded-xl bg-[#1a1a24] border border-[#2a2a3a] text-sm text-[#f0f0ff] flex-shrink-0 cursor-default select-none">
+                  <span>🇬🇭</span>
+                  <span className="font-medium">+233</span>
+                  <ChevronDown size={13} className="text-[#8888aa]" />
+                </div>
+                <input
+                  className={inputClass}
+                  type="tel"
+                  placeholder="Enter phone number"
+                  value={form.mobile}
+                  onChange={(e) => set('mobile', e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Email (optional) */}
+            <div>
+              <label className={labelClass}>Email Address <span className="text-[#8888aa] font-normal text-xs">(Optional)</span></label>
+              <input
+                className={inputClass}
+                type="email"
+                placeholder="Enter your email address (optional)"
+                value={form.email}
+                onChange={(e) => set('email', e.target.value)}
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className={labelClass}>Login Password {requiredStar}</label>
+              <div className="relative">
+                <input
+                  className={inputClass}
+                  type={showPw ? 'text' : 'password'}
+                  placeholder="6-16 characters, letters and numbers"
+                  value={form.password}
+                  onChange={(e) => set('password', e.target.value)}
+                  maxLength={16}
+                />
+                <button type="button" onClick={() => setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8888aa] hover:text-[#f0f0ff]">
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className={labelClass}>Confirm Password {requiredStar}</label>
+              <div className="relative">
+                <input
+                  className={inputClass}
+                  type={showConfirm ? 'text' : 'password'}
+                  placeholder="Please re-enter password"
+                  value={form.confirmPassword}
+                  onChange={(e) => set('confirmPassword', e.target.value)}
+                />
+                <button type="button" onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8888aa] hover:text-[#f0f0ff]">
+                  {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Referral Code */}
+            <div>
+              <label className={labelClass}>Referral Code <span className="text-[#8888aa] font-normal text-xs">(Optional)</span></label>
+              <input
+                className={inputClass}
+                type="text"
+                placeholder="Enter referral code"
+                value={form.referralCode}
+                onChange={(e) => set('referralCode', e.target.value)}
+              />
+            </div>
 
             {error && (
-              <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{error}</p>
+              <p className="text-red-400 text-sm bg-red-900/20 rounded-xl px-3 py-2">{error}</p>
             )}
 
-            <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-lg font-semibold text-sm bg-[#00d4ff] text-black hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-60">
-              {loading ? 'Creating account...' : 'Create Account'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#00d4ff] text-black hover:opacity-90 active:scale-[0.98] transition-all duration-200 disabled:opacity-60 mt-2"
+            >
+              {loading ? 'Creating account...' : 'Register Now'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-[#8888aa] mt-5">
+          <p className="text-center text-sm text-[#8888aa]">
             Already have an account?{' '}
             <Link to="/login" className="text-[#00d4ff] font-semibold hover:underline">
               Login
