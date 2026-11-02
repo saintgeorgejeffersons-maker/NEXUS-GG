@@ -83,27 +83,40 @@ export function AuthProvider({ children }) {
       // Link referral — runs inside session so RLS allows it
       if (referralCode && referralCode.trim() && newUserId) {
         try {
-          // Small delay to let the DB trigger finish creating the profile row
-          await new Promise((r) => setTimeout(r, 800));
-
-          const { data: refData } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('referral_code', referralCode.trim().toUpperCase())
-            .maybeSingle();
-
-          if (refData?.id) {
-            await supabase
+          // Wait for the DB trigger to create the new user's profile row.
+          // Retry up to 10 times (5 seconds total) instead of a fixed delay,
+          // so slower Supabase cold-starts don't cause a silent failure.
+          let newUserProfile = null;
+          for (let attempt = 0; attempt < 10; attempt++) {
+            await new Promise((r) => setTimeout(r, 500));
+            const { data } = await supabase
               .from('profiles')
-              .update({ referred_by: refData.id })
-              .eq('id', newUserId);
+              .select('id')
+              .eq('id', newUserId)
+              .maybeSingle();
+            if (data?.id) { newUserProfile = data; break; }
+          }
 
-            await supabase
-              .from('referrals')
-              .upsert(
-                { referrer_id: refData.id, referred_id: newUserId, bonus_paid: false },
-                { onConflict: 'referred_id', ignoreDuplicates: true }
-              );
+          if (newUserProfile) {
+            const { data: refData } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('referral_code', referralCode.trim().toUpperCase())
+              .maybeSingle();
+
+            if (refData?.id) {
+              await supabase
+                .from('profiles')
+                .update({ referred_by: refData.id })
+                .eq('id', newUserId);
+
+              await supabase
+                .from('referrals')
+                .upsert(
+                  { referrer_id: refData.id, referred_id: newUserId, bonus_paid: false },
+                  { onConflict: 'referred_id', ignoreDuplicates: true }
+                );
+            }
           }
         } catch (_) {
           // Never block registration on referral failure
