@@ -496,6 +496,18 @@ export async function claimMissedEarnings(investment, userId) {
   return { updatedInvestment, missedDays, missedAmount, pct };
 }
 
+// ── PRODUCT IMAGE UPLOAD ─────────────────────────────────
+export async function uploadProductImage(file) {
+  const ext = file.name.split('.').pop();
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await supabase.storage
+    .from('products-images')
+    .upload(fileName, file, { upsert: false, contentType: file.type });
+  if (error) throw error;
+  const { data } = supabase.storage.from('products-images').getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
 // ── NOTIFICATIONS ─────────────────────────────────────────
 export async function markNotificationRead(notificationId) {
   const { error } = await supabase

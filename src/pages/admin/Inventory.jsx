@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Edit, Trash2, Save, X, Upload, Image } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
-import { getProducts, upsertProduct, updateProduct, deleteProduct } from '../../lib/db';
+import { getProducts, upsertProduct, updateProduct, deleteProduct, uploadProductImage } from '../../lib/db';
 
 const EMPTY_FORM = {
   name: '', price: '', daily_return: '', duration_days: 30,
@@ -15,6 +15,10 @@ export function Inventory() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef(null);
 
   const [editingPriceId, setEditingPriceId] = useState(null);
   const [editingPriceVal, setEditingPriceVal] = useState('');
@@ -26,7 +30,14 @@ export function Inventory() {
     getProducts().then((data) => { setProductList(data); setLoading(false); });
   }, []);
 
-  function openAdd() { setEditingProduct(null); setForm(EMPTY_FORM); setShowModal(true); }
+  function openAdd() {
+    setEditingProduct(null);
+    setForm(EMPTY_FORM);
+    setImageFile(null);
+    setImagePreview('');
+    setUploadError('');
+    setShowModal(true);
+  }
   function openEdit(p) {
     setEditingProduct(p);
     setForm({
@@ -34,22 +45,46 @@ export function Inventory() {
       duration_days: p.duration_days, description: p.description ?? '',
       image_url: p.image_url ?? '', active: p.active,
     });
+    setImageFile(null);
+    setImagePreview(p.image_url ?? '');
+    setUploadError('');
     setShowModal(true);
   }
-  function closeModal() { setShowModal(false); setEditingProduct(null); }
+  function closeModal() {
+    setShowModal(false);
+    setEditingProduct(null);
+    setImageFile(null);
+    setImagePreview('');
+    setUploadError('');
+  }
   const set = (f, v) => setForm((prev) => ({ ...prev, [f]: v }));
+
+  function handleFileChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setUploadError('Please select an image file.'); return; }
+    if (file.size > 5 * 1024 * 1024) { setUploadError('Image must be under 5MB.'); return; }
+    setUploadError('');
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
 
   async function handleSave() {
     if (!form.name || !form.price || !form.daily_return || !form.duration_days) return;
     setSaving(true);
+    setUploadError('');
     try {
+      let finalImageUrl = form.image_url;
+      if (imageFile) {
+        finalImageUrl = await uploadProductImage(imageFile);
+      }
       const payload = {
         name: form.name,
         price: Number(form.price),
         daily_return: Number(form.daily_return),
         duration_days: Number(form.duration_days),
         description: form.description,
-        image_url: form.image_url,
+        image_url: finalImageUrl,
         active: form.active,
       };
       if (editingProduct) {
@@ -60,6 +95,8 @@ export function Inventory() {
         setProductList((prev) => [...prev, created]);
       }
       closeModal();
+    } catch (err) {
+      setUploadError(`Failed to save: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -242,13 +279,51 @@ export function Inventory() {
           </div>
 
           <div>
-            <label className="block text-xs text-[#8888aa] mb-1">Image URL</label>
-            <input className={inputClass} type="url" placeholder="https://example.com/image.jpg"
-              value={form.image_url} onChange={(e) => set('image_url', e.target.value)} />
-            {form.image_url && (
-              <img src={form.image_url} alt="Preview"
-                className="mt-2 w-full h-32 object-cover rounded-lg bg-[#0a0a0f]"
-                onError={(e) => { e.target.style.display = 'none'; }} />
+            <label className="block text-xs text-[#8888aa] mb-1">Product Image</label>
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            {/* Upload area */}
+            {imagePreview ? (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-36 object-cover rounded-lg bg-[#0a0a0f]"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setImageFile(null); setImagePreview(''); set('image_url', ''); }}
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-red-500/80 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/60 text-xs text-white hover:bg-[#00d4ff]/80 transition-colors"
+                >
+                  <Upload size={12} /> Change
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full h-28 rounded-lg border-2 border-dashed border-[#2a2a38] flex flex-col items-center justify-center gap-2 text-[#8888aa] hover:border-[#00d4ff] hover:text-[#00d4ff] transition-colors"
+              >
+                <Image size={22} />
+                <span className="text-xs">Click to upload image</span>
+                <span className="text-xs opacity-60">PNG, JPG, WEBP up to 5MB</span>
+              </button>
+            )}
+            {uploadError && (
+              <p className="text-red-400 text-xs mt-1">{uploadError}</p>
             )}
           </div>
 
