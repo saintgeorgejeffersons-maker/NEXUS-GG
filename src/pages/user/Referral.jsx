@@ -67,7 +67,7 @@ export function Referral() {
   }
 
   async function handleCopyLink() {
-    const link = `https://nexus-gg.ciscoivf.online/signup?ref=${referralCode}`;
+    const link = `https://nexus-gg.ciscoivf.online/login?ref=${referralCode}`;
     try {
       await navigator.clipboard.writeText(link);
       setCopying(true);
@@ -75,7 +75,7 @@ export function Referral() {
     } catch (_) {}
   }
 
-  const referralLink = `https://nexus-gg.ciscoivf.online/signup?ref=${referralCode}`;
+  const referralLink = `https://nexus-gg.ciscoivf.online/login?ref=${referralCode}`;
 
   if (loading) return (
     <div className="flex items-center justify-center h-64 text-[#8888aa]">Loading...</div>

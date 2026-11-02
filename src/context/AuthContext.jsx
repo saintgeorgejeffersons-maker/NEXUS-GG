@@ -65,6 +65,12 @@ export function AuthProvider({ children }) {
       setUser(data.session.user);
       await fetchProfile(data.session.user.id);
       setIsAuthenticated(true);
+
+      // Auto-generate referral code for every new user
+      try {
+        const code = data.session.user.id.replace(/-/g, '').slice(0, 8).toUpperCase();
+        await supabase.from('profiles').update({ referral_code: code }).eq('id', data.session.user.id);
+      } catch (_) {}
     }
 
     // Link referral if a code was provided
@@ -77,16 +83,21 @@ export function AuthProvider({ children }) {
           .eq('referral_code', referralCode.trim().toUpperCase())
           .maybeSingle();
         if (refData?.id) {
+          // Update referred_by on new user's profile
           await supabase
             .from('profiles')
             .update({ referred_by: refData.id })
             .eq('id', newUserId);
+          // Insert referral row (ignore duplicate error — user may have already been linked)
           await supabase
             .from('referrals')
-            .insert({ referrer_id: refData.id, referred_id: newUserId, bonus_paid: false });
+            .upsert(
+              { referrer_id: refData.id, referred_id: newUserId, bonus_paid: false },
+              { onConflict: 'referred_id', ignoreDuplicates: true }
+            );
         }
       } catch (_) {
-        // Swallow silently — referral linkage failure must never block registration
+        // Referral linkage failure must never block registration
       }
     }
 
