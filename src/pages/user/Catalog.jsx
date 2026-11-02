@@ -138,68 +138,54 @@ export function Catalog() {
             return (
               <div
                 key={product.id}
-                className="rounded-2xl overflow-hidden"
+                className="flex items-center gap-3 p-3 rounded-2xl"
                 style={{ background: '#1a1a24', border: '1px solid #2a2a3a' }}
               >
-                {/* Muted accent top line */}
-                <div style={{ height: 3, background: accent }} />
-
-                <div className="p-4">
-                  {product.image_url && (
-                    <div className="w-full h-32 rounded-xl overflow-hidden mb-3 bg-[#0a0a0f]">
-                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                    </div>
+                {/* Image */}
+                <div className="w-20 h-20 rounded-xl overflow-hidden bg-[#0a0a0f] flex-shrink-0">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[#8888aa] text-xs">No img</div>
                   )}
+                </div>
 
-                  {/* Name + daily badge */}
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-base font-bold text-[#f0f0ff] flex-1">{product.name}</p>
-                    <span
-                      className="text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0"
-                      style={{ background: `${accent}20`, color: accent, border: `1px solid ${accent}40` }}
-                    >
-                      +₵{product.daily_return}/day
-                    </span>
+                {/* Details */}
+                <div className="flex-1 min-w-0 space-y-1">
+                  {/* Product name — most prominent */}
+                  <p className="text-base font-black text-[#f0f0ff] leading-tight">{product.name}</p>
+
+                  {/* Key figures — label muted, value coloured + bold */}
+                  <div className="space-y-0.5">
+                    <p className="text-xs text-[#8888aa]">
+                      Price: <span className="text-sm font-bold" style={{ color: accent }}>₵{product.price}</span>
+                    </p>
+                    <p className="text-xs text-[#8888aa]">
+                      Duration: <span className="text-sm font-bold text-[#f0f0ff]">{product.duration_days} days</span>
+                    </p>
+                    <p className="text-xs text-[#8888aa]">
+                      Daily income: <span className="text-sm font-bold" style={{ color: accent }}>₵{product.daily_return}</span>
+                    </p>
+                    <p className="text-xs text-[#8888aa]">
+                      Total income: <span className="text-sm font-extrabold" style={{ color: accent }}>₵{totalReturn}</span>
+                    </p>
                   </div>
+                </div>
 
-                  {product.description && (
-                    <p className="text-xs text-[#8888aa] mb-3">{product.description}</p>
-                  )}
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                    <div className="bg-[#0a0a0f] rounded-xl p-2 text-center">
-                      <p className="text-xs text-[#8888aa]">Price</p>
-                      <p className="text-sm font-bold text-[#f0f0ff]">₵{product.price}</p>
-                    </div>
-                    <div className="bg-[#0a0a0f] rounded-xl p-2 text-center">
-                      <p className="text-xs text-[#8888aa]">Duration</p>
-                      <p className="text-sm font-bold text-[#f0f0ff]">{product.duration_days}d</p>
-                    </div>
-                    <div className="bg-[#0a0a0f] rounded-xl p-2 text-center">
-                      <p className="text-xs text-[#8888aa]">Total</p>
-                      <p className="text-sm font-bold" style={{ color: accent }}>₵{totalReturn}</p>
-                    </div>
-                  </div>
-
-                  {/* CTA */}
+                {/* Buy button */}
+                <div className="flex-shrink-0">
                   <button
                     onClick={() => product.active && !owned && openModal(product)}
                     disabled={!product.active || owned}
-                    className={`w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98] ${
-                      owned
-                        ? 'border border-[#2a2a3a] text-[#8888aa] cursor-not-allowed'
-                        : !product.active
-                        ? 'bg-[#2a2a3a] text-[#8888aa] cursor-not-allowed'
-                        : 'hover:opacity-90'
-                    }`}
-                    style={product.active && !owned ? { background: accent, color: '#fff' } : {}}
+                    className="px-4 py-2.5 rounded-full text-sm font-bold transition-all active:scale-[0.97]"
+                    style={{
+                      background: owned || !product.active ? '#2a2a3a' : accent,
+                      color: owned || !product.active ? '#8888aa' : '#fff',
+                      cursor: owned || !product.active ? 'not-allowed' : 'pointer',
+                      minWidth: '60px',
+                    }}
                   >
-                    {owned ? (
-                      <span className="flex items-center justify-center gap-1.5">
-                        <CheckCircle size={14} /> Already Invested
-                      </span>
-                    ) : product.active ? 'Invest Now' : 'Unavailable'}
+                    {owned ? <CheckCircle size={16} className="mx-auto" /> : product.active ? 'Buy' : '—'}
                   </button>
                 </div>
               </div>
