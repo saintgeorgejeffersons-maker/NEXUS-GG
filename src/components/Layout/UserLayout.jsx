@@ -1,14 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, TrendingUp, Share2, UserCircle,
   Bell, LogOut, CheckCircle, Clock, XCircle, Zap,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import {
-  getUserDepositRequests,
-  getUserWithdrawalRequests,
-} from '../../lib/db';
+import { getUserDepositRequests, getUserWithdrawalRequests } from '../../lib/db';
 
 const TAB_NAV = [
   { to: '/user/dashboard',    icon: LayoutDashboard, label: 'Home'      },
@@ -36,7 +33,6 @@ function NotificationPanel({ notifications, readIds, onMarkRead, onMarkAll, onCl
         className="bg-[#1a1a24] rounded-t-2xl border-t border-[#2a2a3a] max-h-[70vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-[#2a2a3a]" />
         </div>
@@ -45,9 +41,7 @@ function NotificationPanel({ notifications, readIds, onMarkRead, onMarkAll, onCl
             Notifications {unread > 0 && <span className="text-[#00d4ff] text-sm">({unread})</span>}
           </p>
           {unread > 0 && (
-            <button onClick={onMarkAll} className="text-xs text-[#00d4ff]">
-              Mark all read
-            </button>
+            <button onClick={onMarkAll} className="text-xs text-[#00d4ff]">Mark all read</button>
           )}
         </div>
         <div className="overflow-y-auto flex-1">
@@ -89,6 +83,24 @@ export function UserLayout({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [readIds, setReadIds] = useState(() => new Set());
 
+  // Load persisted read IDs from localStorage
+  useEffect(() => {
+    if (!profile?.id) return;
+    try {
+      const stored = localStorage.getItem(`notif_read_${profile.id}`);
+      if (stored) setReadIds(new Set(JSON.parse(stored)));
+    } catch (_) {}
+  }, [profile?.id]);
+
+  // Persist readIds to localStorage whenever they change
+  useEffect(() => {
+    if (!profile?.id) return;
+    try {
+      localStorage.setItem(`notif_read_${profile.id}`, JSON.stringify([...readIds]));
+    } catch (_) {}
+  }, [readIds, profile?.id]);
+
+  // Load notifications from deposit/withdrawal requests
   useEffect(() => {
     if (!profile?.id) return;
     async function load() {
@@ -118,16 +130,12 @@ export function UserLayout({ children }) {
     load();
   }, [profile?.id]);
 
-  useEffect(() => { setReadIds(new Set()); }, [notifications]);
-
   const unread = notifications.filter((n) => !readIds.has(n.id)).length;
-  const initials = (profile?.full_name ?? user?.email ?? '?').charAt(0).toUpperCase();
 
   return (
     <div className="flex flex-col h-screen bg-[#0a0a0f] overflow-hidden max-w-md mx-auto">
       {/* Top Header */}
       <header className="flex items-center justify-between px-4 pt-safe-top py-3 bg-[#111118] border-b border-[#2a2a3a] flex-shrink-0">
-        {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-[#00d4ff]/20 flex items-center justify-center">
             <Zap size={15} className="text-[#00d4ff]" />
@@ -137,10 +145,8 @@ export function UserLayout({ children }) {
           </span>
         </div>
 
-        {/* Page Title — center */}
         <p className="absolute left-1/2 -translate-x-1/2 text-sm font-semibold text-[#f0f0ff]">{title}</p>
 
-        {/* Right actions */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => setNotifOpen(true)}
@@ -164,7 +170,7 @@ export function UserLayout({ children }) {
         </div>
       </header>
 
-      {/* Scrollable page content */}
+      {/* Page content */}
       <main className="flex-1 overflow-y-auto">
         <div className="px-4 py-4 pb-24">
           {children}
