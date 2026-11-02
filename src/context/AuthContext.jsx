@@ -83,57 +83,42 @@ export function AuthProvider({ children }) {
       // Link referral — runs inside session so RLS allows it
       if (referralCode && referralCode.trim() && newUserId) {
         try {
-          console.log('[Referral] Starting referral link. code:', referralCode, 'newUserId:', newUserId);
-
           // Wait for the DB trigger to create the new user's profile row.
+          // Retry up to 10 times (5 seconds total) to handle slow Supabase cold-starts.
           let newUserProfile = null;
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 500));
-            const { data, error } = await supabase
+            const { data } = await supabase
               .from('profiles')
               .select('id')
               .eq('id', newUserId)
               .maybeSingle();
-            console.log(`[Referral] Profile poll attempt ${attempt + 1}:`, data, error);
             if (data?.id) { newUserProfile = data; break; }
           }
 
-          console.log('[Referral] newUserProfile found:', newUserProfile);
-
           if (newUserProfile) {
-            const { data: refData, error: refLookupError } = await supabase
+            const { data: refData } = await supabase
               .from('profiles')
               .select('id')
               .eq('referral_code', referralCode.trim().toUpperCase())
               .maybeSingle();
 
-            console.log('[Referral] Referrer lookup result:', refData, 'error:', refLookupError);
-
             if (refData?.id) {
-              const { error: updateErr } = await supabase
+              await supabase
                 .from('profiles')
                 .update({ referred_by: refData.id })
                 .eq('id', newUserId);
-              console.log('[Referral] referred_by update error:', updateErr);
 
-              // Use plain insert — upsert triggers an UPDATE on conflict which RLS may block
+              // Use plain insert — upsert with onConflict triggers an UPDATE which RLS blocks
               const { error: insertErr } = await supabase
                 .from('referrals')
                 .insert({ referrer_id: refData.id, referred_id: newUserId, bonus_paid: false });
-              // Ignore duplicate key errors (code 23505) — referral already linked
-              if (insertErr && insertErr.code !== '23505') {
-                console.log('[Referral] referrals insert error:', insertErr);
-              } else {
-                console.log('[Referral] referrals insert success (or already existed)');
-              }
-            } else {
-              console.log('[Referral] No referrer found for code:', referralCode.trim().toUpperCase());
+              // Ignore duplicate key errors (23505) — referral already linked
+              if (insertErr && insertErr.code !== '23505') throw insertErr;
             }
-          } else {
-            console.log('[Referral] New user profile never appeared after 10 attempts.');
           }
-        } catch (err) {
-          console.error('[Referral] Unexpected error:', err);
+        } catch (_) {
+          // Never block registration on referral failure
         }
       }
     }
