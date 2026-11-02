@@ -58,13 +58,13 @@ export function UserDashboard() {
         <p className="text-4xl font-black text-[#f0f0ff] mb-4">₵{balance.toLocaleString('en', { minimumFractionDigits: 2 })}</p>
         <div className="flex gap-3">
           <button
-            onClick={() => navigate('/user/wallet')}
+            onClick={() => navigate('/user/profile')}
             className="flex-1 py-2.5 rounded-xl bg-[#00d4ff] text-black text-sm font-bold"
           >
             Deposit
           </button>
           <button
-            onClick={() => navigate('/user/wallet')}
+            onClick={() => navigate('/user/profile')}
             className="flex-1 py-2.5 rounded-xl border border-[#00d4ff]/40 text-[#00d4ff] text-sm font-bold"
           >
             Withdraw
@@ -155,7 +155,7 @@ export function UserDashboard() {
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <p className="text-sm font-bold text-[#f0f0ff]">Recent Transactions</p>
           <button
-            onClick={() => navigate('/user/wallet')}
+            onClick={() => navigate('/user/profile')}
             className="flex items-center gap-1 text-xs text-[#00d4ff]"
           >
             View all <ArrowRight size={12} />
@@ -204,8 +204,7 @@ export function UserDashboard() {
           className="py-3.5 rounded-2xl border border-[#00d4ff]/40 text-[#00d4ff] text-sm font-bold"
         >
           Refer & Earn
-        </button>
-      </div>
+        </button>      </div>
     </div>
   );
 }

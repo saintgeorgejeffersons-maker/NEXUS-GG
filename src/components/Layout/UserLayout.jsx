@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, ShoppingBag, TrendingUp, Share2, Wallet,
+  LayoutDashboard, ShoppingBag, TrendingUp, Share2, UserCircle,
   Bell, LogOut, CheckCircle, Clock, XCircle, Zap,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -11,11 +11,11 @@ import {
 } from '../../lib/db';
 
 const TAB_NAV = [
-  { to: '/user/dashboard',    icon: LayoutDashboard, label: 'Home'        },
-  { to: '/user/catalog',      icon: ShoppingBag,     label: 'Store'       },
-  { to: '/user/investments',  icon: TrendingUp,      label: 'Invest'      },
-  { to: '/user/referrals',    icon: Share2,          label: 'Referrals'   },
-  { to: '/user/wallet',       icon: Wallet,          label: 'Wallet'      },
+  { to: '/user/dashboard',    icon: LayoutDashboard, label: 'Home'      },
+  { to: '/user/catalog',      icon: ShoppingBag,     label: 'Store'     },
+  { to: '/user/investments',  icon: TrendingUp,      label: 'Invest'    },
+  { to: '/user/referrals',    icon: Share2,          label: 'Referrals' },
+  { to: '/user/profile',      icon: UserCircle,      label: 'Profile'   },
 ];
 
 const PAGE_TITLES = {
@@ -23,7 +23,7 @@ const PAGE_TITLES = {
   '/user/catalog':     'Store',
   '/user/investments': 'Investments',
   '/user/referrals':   'Referrals',
-  '/user/wallet':      'Wallet',
+  '/user/profile':     'Profile',
 };
 
 function NotificationPanel({ notifications, readIds, onMarkRead, onMarkAll, onClose }) {

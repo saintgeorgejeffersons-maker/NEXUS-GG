@@ -4,7 +4,7 @@ import { LoginPage } from './pages/LoginPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
 import { UserDashboard } from './pages/user/UserDashboard';
 import { Catalog } from './pages/user/Catalog';
-import { Wallet } from './pages/user/Wallet';
+import { Profile } from './pages/user/Profile';
 import { ActiveInvestments } from './pages/user/ActiveInvestments';
 import { Referral } from './pages/user/Referral';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -25,7 +25,6 @@ function ProtectedRoute({ children, role }) {
   if (role && userRole !== role) {
     return <Navigate to={userRole === 'admin' ? '/myspot/dashboard' : '/user/dashboard'} replace />;
   }
-  // User routes get the mobile UserLayout; admin routes get the desktop Layout
   if (role === 'user') return <UserLayout>{children}</UserLayout>;
   return <Layout>{children}</Layout>;
 }
@@ -42,7 +41,7 @@ function AppRoutes() {
       <Route path="/user/catalog"     element={<ProtectedRoute role="user"><Catalog /></ProtectedRoute>} />
       <Route path="/user/investments" element={<ProtectedRoute role="user"><ActiveInvestments /></ProtectedRoute>} />
       <Route path="/user/referrals"   element={<ProtectedRoute role="user"><Referral /></ProtectedRoute>} />
-      <Route path="/user/wallet"      element={<ProtectedRoute role="user"><Wallet /></ProtectedRoute>} />
+      <Route path="/user/profile"     element={<ProtectedRoute role="user"><Profile /></ProtectedRoute>} />
 
       {/* Admin routes */}
       <Route path="/myspot/dashboard"    element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
