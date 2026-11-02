@@ -36,6 +36,7 @@ export function RegisterPage() {
     if (!form.password)        { setError('Password is required.'); return; }
     if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     if (form.password !== form.confirmPassword) { setError('Passwords do not match.'); return; }
+    if (!form.referralCode.trim()) { setError('A referral code is required to register.'); return; }
 
     // Use provided email or generate a placeholder from phone number
     const email = form.email.trim()
@@ -156,7 +157,7 @@ export function RegisterPage() {
 
             {/* Referral Code */}
             <div>
-              <label className={labelClass}>Referral Code <span className="text-[#8888aa] font-normal text-xs">(Optional)</span></label>
+              <label className={labelClass}>Referral Code {requiredStar}</label>
               <input
                 className={inputClass}
                 type="text"
