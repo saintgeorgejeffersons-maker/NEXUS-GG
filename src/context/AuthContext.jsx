@@ -83,43 +83,54 @@ export function AuthProvider({ children }) {
       // Link referral — runs inside session so RLS allows it
       if (referralCode && referralCode.trim() && newUserId) {
         try {
+          console.log('[Referral] Starting referral link. code:', referralCode, 'newUserId:', newUserId);
+
           // Wait for the DB trigger to create the new user's profile row.
-          // Retry up to 10 times (5 seconds total) instead of a fixed delay,
-          // so slower Supabase cold-starts don't cause a silent failure.
           let newUserProfile = null;
           for (let attempt = 0; attempt < 10; attempt++) {
             await new Promise((r) => setTimeout(r, 500));
-            const { data } = await supabase
+            const { data, error } = await supabase
               .from('profiles')
               .select('id')
               .eq('id', newUserId)
               .maybeSingle();
+            console.log(`[Referral] Profile poll attempt ${attempt + 1}:`, data, error);
             if (data?.id) { newUserProfile = data; break; }
           }
 
+          console.log('[Referral] newUserProfile found:', newUserProfile);
+
           if (newUserProfile) {
-            const { data: refData } = await supabase
+            const { data: refData, error: refLookupError } = await supabase
               .from('profiles')
               .select('id')
               .eq('referral_code', referralCode.trim().toUpperCase())
               .maybeSingle();
 
+            console.log('[Referral] Referrer lookup result:', refData, 'error:', refLookupError);
+
             if (refData?.id) {
-              await supabase
+              const { error: updateErr } = await supabase
                 .from('profiles')
                 .update({ referred_by: refData.id })
                 .eq('id', newUserId);
+              console.log('[Referral] referred_by update error:', updateErr);
 
-              await supabase
+              const { error: upsertErr } = await supabase
                 .from('referrals')
                 .upsert(
                   { referrer_id: refData.id, referred_id: newUserId, bonus_paid: false },
                   { onConflict: 'referred_id', ignoreDuplicates: true }
                 );
+              console.log('[Referral] referrals upsert error:', upsertErr);
+            } else {
+              console.log('[Referral] No referrer found for code:', referralCode.trim().toUpperCase());
             }
+          } else {
+            console.log('[Referral] New user profile never appeared after 10 attempts.');
           }
-        } catch (_) {
-          // Never block registration on referral failure
+        } catch (err) {
+          console.error('[Referral] Unexpected error:', err);
         }
       }
     }
