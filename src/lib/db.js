@@ -148,28 +148,11 @@ export async function applyReferralBonus(referredUserId) {
 }
 
 export async function payReferralCommission(referredUserId, dailyReturn) {
-  const { data: referralRow } = await supabase
-    .from('referrals')
-    .select('referrer_id')
-    .eq('referred_id', referredUserId)
-    .maybeSingle();
-  if (!referralRow) return;
-
-  const settings = await getSettings();
-  const pct = Number(settings.referral_commission_pct ?? 10);
-  const commission = Math.round((dailyReturn * pct / 100) * 100) / 100;
-  if (commission <= 0) return;
-
-  const referrerId = referralRow.referrer_id;
-  const referrer = await getProfile(referrerId);
-  await updateWalletBalance(referrerId, Number(referrer.wallet_balance) + commission);
-
-  await createTransaction({
-    user_id: referrerId,
-    type: 'referral_commission',
-    description: `Referral commission from user`,
-    amount: commission,
+  const { error } = await supabase.rpc('pay_referral_commission', {
+    p_referred_user_id: referredUserId,
+    p_daily_return: dailyReturn,
   });
+  if (error) throw error;
 }
 
 // ── INVESTMENTS ───────────────────────────────────────────
