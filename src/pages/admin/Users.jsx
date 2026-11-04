@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Search, Wallet, TrendingUp, Trash2 } from 'lucide-react';
-import { getAllProfiles, getAllInvestments, deleteUserAccount } from '../../lib/db';
+import { Search, Wallet, TrendingUp, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { getAllProfiles, getAllInvestments, deleteUserAccount, adminResetPassword } from '../../lib/db';
+import { Modal } from '../../components/ui/Modal';
 
 export function Users() {
   const [users, setUsers] = useState([]);
@@ -9,6 +10,14 @@ export function Users() {
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState(null);
   const [deleting, setDeleting] = useState(null);
+
+  // Reset password state
+  const [resetUser, setResetUser] = useState(null); // { id, full_name }
+  const [newPassword, setNewPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [resetSaving, setResetSaving] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
 
   async function load() {
     const [profiles, invs] = await Promise.all([getAllProfiles(), getAllInvestments()]);
@@ -28,6 +37,35 @@ export function Users() {
 
   function activeInvestmentsCount(userId) {
     return investments.filter((i) => i.user_id === userId && i.active).length;
+  }
+
+  function openResetModal(u) {
+    setResetUser(u);
+    setNewPassword('');
+    setShowPw(false);
+    setResetError('');
+    setResetSuccess('');
+  }
+
+  function closeResetModal() {
+    setResetUser(null);
+    setNewPassword('');
+    setResetError('');
+    setResetSuccess('');
+  }
+
+  async function handleResetPassword() {
+    if (newPassword.length < 6) { setResetError('Password must be at least 6 characters.'); return; }
+    setResetSaving(true); setResetError('');
+    try {
+      await adminResetPassword(resetUser.id, newPassword);
+      setResetSuccess('Password updated successfully.');
+      setTimeout(() => closeResetModal(), 2000);
+    } catch (e) {
+      setResetError(e.message || 'Failed to reset password.');
+    } finally {
+      setResetSaving(false);
+    }
   }
 
   async function handleDelete(userId) {
@@ -120,27 +158,37 @@ export function Users() {
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-5 py-3">
-                      {confirmId === u.id ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleDelete(u.id)}
-                            disabled={deleting === u.id}
-                            className="px-2 py-1 rounded text-xs font-medium bg-red-900/30 text-red-400 border border-red-700/30 hover:bg-red-900/50 transition-all disabled:opacity-50">
-                            {deleting === u.id ? 'Deleting…' : 'Confirm'}
-                          </button>
-                          <button
-                            onClick={() => setConfirmId(null)}
-                            className="px-2 py-1 rounded text-xs text-[#8888aa] hover:text-[#f0f0ff] transition-all">
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
+                      <div className="flex items-center gap-1">
+                        {/* Reset Password */}
                         <button
-                          onClick={() => setConfirmId(u.id)}
-                          className="p-1.5 rounded-lg text-[#8888aa] hover:text-red-400 hover:bg-red-900/20 transition-all">
-                          <Trash2 size={14} />
+                          onClick={() => openResetModal(u)}
+                          title="Reset password"
+                          className="p-1.5 rounded-lg text-[#8888aa] hover:text-[#00d4ff] hover:bg-[#00d4ff]/10 transition-all">
+                          <KeyRound size={14} />
                         </button>
-                      )}
+                        {/* Delete */}
+                        {confirmId === u.id ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleDelete(u.id)}
+                              disabled={deleting === u.id}
+                              className="px-2 py-1 rounded text-xs font-medium bg-red-900/30 text-red-400 border border-red-700/30 hover:bg-red-900/50 transition-all disabled:opacity-50">
+                              {deleting === u.id ? 'Deleting…' : 'Confirm'}
+                            </button>
+                            <button
+                              onClick={() => setConfirmId(null)}
+                              className="px-2 py-1 rounded text-xs text-[#8888aa] hover:text-[#f0f0ff] transition-all">
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmId(u.id)}
+                            className="p-1.5 rounded-lg text-[#8888aa] hover:text-red-400 hover:bg-red-900/20 transition-all">
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -149,6 +197,39 @@ export function Users() {
           </table>
         </div>
       </div>
+      {/* Reset Password Modal */}
+      <Modal isOpen={!!resetUser} onClose={closeResetModal} title="Reset User Password">
+        <div className="space-y-4">
+          <p className="text-sm text-[#8888aa]">
+            Setting a new password for <span className="text-[#f0f0ff] font-semibold">{resetUser?.full_name}</span>.
+          </p>
+          <div className="relative">
+            <input
+              type={showPw ? 'text' : 'password'}
+              placeholder="New password (min 6 characters)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded-xl px-4 py-3 pr-11 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-colors"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8888aa] hover:text-[#f0f0ff] transition-colors">
+              {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {resetError   && <p className="text-red-400 text-sm bg-red-900/20 rounded-xl px-3 py-2">{resetError}</p>}
+          {resetSuccess && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-xl px-3 py-2">{resetSuccess}</p>}
+          {!resetSuccess && (
+            <button
+              onClick={handleResetPassword}
+              disabled={resetSaving}
+              className="w-full py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm disabled:opacity-50">
+              {resetSaving ? 'Updating…' : 'Set New Password'}
+            </button>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

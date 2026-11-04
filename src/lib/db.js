@@ -520,3 +520,22 @@ export async function deleteUserAccount(userId) {
   const { error } = await supabase.rpc('delete_user_account', { target_user_id: userId });
   if (error) throw error;
 }
+
+// ── ADMIN PASSWORD RESET ──────────────────────────────────
+export async function adminResetPassword(userId, newPassword) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reset-password`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ userId, newPassword }),
+    }
+  );
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? 'Failed to reset password.');
+  return json;
+}
