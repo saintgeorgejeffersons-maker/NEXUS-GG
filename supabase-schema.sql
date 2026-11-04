@@ -351,3 +351,65 @@ ON CONFLICT DO NOTHING;
 -- THEME PREFERENCE
 -- ============================================================
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS theme text not null default 'neon';
+
+-- ============================================================
+-- PAY REFERRAL COMMISSION FUNCTION
+-- Run this in Supabase → SQL Editor
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.pay_referral_commission(
+  p_referred_user_id uuid,
+  p_daily_return numeric
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_referrer_id uuid;
+  v_commission_pct numeric;
+  v_commission numeric;
+BEGIN
+  -- Find the referrer
+  SELECT referrer_id INTO v_referrer_id
+  FROM public.referrals
+  WHERE referred_id = p_referred_user_id
+  LIMIT 1;
+
+  -- No referrer, nothing to do
+  IF v_referrer_id IS NULL THEN
+    RETURN;
+  END IF;
+
+  -- Get commission percentage from settings (default 10%)
+  SELECT COALESCE(NULLIF(value, ''), '10')::numeric INTO v_commission_pct
+  FROM public.settings
+  WHERE key = 'referral_commission_pct';
+
+  IF v_commission_pct IS NULL THEN
+    v_commission_pct := 10;
+  END IF;
+
+  v_commission := ROUND((p_daily_return * v_commission_pct / 100)::numeric, 2);
+
+  IF v_commission <= 0 THEN
+    RETURN;
+  END IF;
+
+  -- Credit the referrer's wallet
+  UPDATE public.profiles
+  SET wallet_balance = wallet_balance + v_commission
+  WHERE id = v_referrer_id;
+
+  -- Record the commission transaction
+  INSERT INTO public.transactions (user_id, type, description, amount)
+  VALUES (
+    v_referrer_id,
+    'referral_commission',
+    'Referral commission from daily claim',
+    v_commission
+  );
+END;
+$$;
+
+-- Grant execute to authenticated users (called via RPC from the client)
+GRANT EXECUTE ON FUNCTION public.pay_referral_commission(uuid, numeric) TO authenticated;
