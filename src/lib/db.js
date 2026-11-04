@@ -152,7 +152,10 @@ export async function payReferralCommission(referredUserId, dailyReturn) {
     p_referred_user_id: referredUserId,
     p_daily_return: dailyReturn,
   });
-  if (error) throw error;
+  if (error) {
+    console.error('RPC pay_referral_commission failed:', error);
+    throw error;
+  }
 }
 
 // ── INVESTMENTS ───────────────────────────────────────────

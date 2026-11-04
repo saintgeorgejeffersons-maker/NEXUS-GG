@@ -61,7 +61,7 @@ export function ActiveInvestments() {
     setError(null);
     try {
       await claimDailyReturn(investment, profile.id);
-      try { await payReferralCommission(profile.id, investment.daily_return); } catch (_) {}
+      try { await payReferralCommission(profile.id, investment.daily_return); } catch (commErr) { console.error('payReferralCommission error:', commErr); }
       await fetchInvestments();
       if (refreshProfile) await refreshProfile();
     } catch (err) {
