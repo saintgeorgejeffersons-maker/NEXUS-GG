@@ -12,20 +12,20 @@ export function AboutUs() {
     getSettings().then((s) => {
       setContent({
         about_title:       s.about_title       ?? 'About NEXUS GG',
-        about_tagline:     s.about_tagline     ?? 'Game. Invest. Earn.',
-        about_description: s.about_description ?? 'NEXUS GG is a gaming investment platform that lets you grow your money through daily returns on gaming assets. We combine the excitement of gaming with the power of smart investing.',
-        about_mission:     s.about_mission     ?? 'Our mission is to make investing accessible, rewarding, and fun for everyone — starting with the gaming community.',
+        about_tagline:     s.about_tagline     ?? 'Interactive Hardware Investment Platform — US · CA · UK · Ghana',
+        about_description: s.about_description ?? 'Physical gaming hubs—from high-energy console lounges to competitive esports arenas—run on immediate, daily rental transactions. Every hour, gamers pay cash or tap their cards to play on top-tier consoles. Nexus GG bridges the gap through a high-yield, interactive model: On-Demand Fractional Hardware Deployment. First proven across esports centers in North America and Europe, Nexus GG puts investors directly in control of physical gaming assets, generating automated daily yield payouts whenever consoles are deployed for active play.',
+        about_mission:     s.about_mission     ?? 'Ghana\'s gaming and esports community is experiencing exponential growth across Accra, Kumasi, and Takoradi. Nexus GG provides local gaming lounges with state-of-the-art hardware without heavy upfront debt, while opening direct asset-backed investment access to local and international investors. Start acquiring fractional console shares from as low as GHS 150 / $10, and receive daily yields directly into Mobile Money (MTN, Telecel, AT) or local bank accounts.',
         about_email:       s.about_email       ?? '',
         about_phone:       s.about_phone       ?? '',
         about_website:     s.about_website     ?? '',
-        about_feat1_title: s.about_feat1_title ?? 'Daily Returns',
-        about_feat1_desc:  s.about_feat1_desc  ?? 'Earn consistent daily returns on your gaming investments.',
-        about_feat2_title: s.about_feat2_title ?? 'Secure Platform',
-        about_feat2_desc:  s.about_feat2_desc  ?? 'Your funds and data are protected with industry-standard security.',
-        about_feat3_title: s.about_feat3_title ?? 'Referral Rewards',
-        about_feat3_desc:  s.about_feat3_desc  ?? 'Invite friends and earn commission on every claim they make.',
-        about_feat4_title: s.about_feat4_title ?? 'Growing Community',
-        about_feat4_desc:  s.about_feat4_desc  ?? 'Join thousands of gamers already earning on NEXUS GG.',
+        about_feat1_title: s.about_feat1_title ?? 'Daily Payouts',
+        about_feat1_desc:  s.about_feat1_desc  ?? 'Revenue is routed directly to your wallet every 24 hours — no quarterly or annual waiting.',
+        about_feat2_title: s.about_feat2_title ?? 'Physical Asset Backing',
+        about_feat2_desc:  s.about_feat2_desc  ?? 'Your investment is backed by real, income-generating hardware — not paper assets or market speculation.',
+        about_feat3_title: s.about_feat3_title ?? 'Click-to-Rent Control',
+        about_feat3_desc:  s.about_feat3_desc  ?? 'You actively control when your console enters the lounge rental pool to earn daily returns.',
+        about_feat4_title: s.about_feat4_title ?? 'Low Entry Barrier',
+        about_feat4_desc:  s.about_feat4_desc  ?? 'Start acquiring fractional console shares in PS5s, Xbox, or SIM rigs from as low as GHS 150 / $10.',
       });
       setLoading(false);
     });
@@ -79,7 +79,7 @@ export function AboutUs() {
 
       {/* Mission */}
       <div className="rounded-2xl p-5 space-y-2" style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.08) 0%, rgba(124,58,237,0.08) 100%)', border: '1px solid rgba(0,212,255,0.15)' }}>
-        <p className="text-xs font-bold text-[#00d4ff] uppercase tracking-wide">Our Mission</p>
+        <p className="text-xs font-bold text-[#00d4ff] uppercase tracking-wide">Ghana Market Expansion — 2026</p>
         <p className="text-sm text-[#c0c0d0] leading-relaxed">{content.about_mission}</p>
       </div>
 
