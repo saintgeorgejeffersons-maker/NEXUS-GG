@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Save, Smartphone, Percent, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
+import { Save, Smartphone, Percent, ArrowDownCircle, ArrowUpCircle, Info } from 'lucide-react';
 import { getSettings, upsertSetting } from '../../lib/db';
 
 const NETWORKS = ['MTN', 'Vodafone', 'AirtelTigo'];
@@ -17,6 +17,21 @@ export function Settings() {
     missed_earnings_pct: '',
     min_deposit_amount: '',
     min_withdrawal_amount: '',
+    about_title:       '',
+    about_tagline:     '',
+    about_description: '',
+    about_mission:     '',
+    about_email:       '',
+    about_phone:       '',
+    about_website:     '',
+    about_feat1_title: '',
+    about_feat1_desc:  '',
+    about_feat2_title: '',
+    about_feat2_desc:  '',
+    about_feat3_title: '',
+    about_feat3_desc:  '',
+    about_feat4_title: '',
+    about_feat4_desc:  '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -34,6 +49,21 @@ export function Settings() {
         missed_earnings_pct:     s.missed_earnings_pct     ?? '50',
         min_deposit_amount:      s.min_deposit_amount      ?? '120',
         min_withdrawal_amount:   s.min_withdrawal_amount   ?? '50',
+        about_title:       s.about_title       ?? 'About NEXUS GG',
+        about_tagline:     s.about_tagline     ?? 'Game. Invest. Earn.',
+        about_description: s.about_description ?? 'NEXUS GG is a gaming investment platform that lets you grow your money through daily returns on gaming assets.',
+        about_mission:     s.about_mission     ?? 'Our mission is to make investing accessible, rewarding, and fun for everyone — starting with the gaming community.',
+        about_email:       s.about_email       ?? '',
+        about_phone:       s.about_phone       ?? '',
+        about_website:     s.about_website     ?? '',
+        about_feat1_title: s.about_feat1_title ?? 'Daily Returns',
+        about_feat1_desc:  s.about_feat1_desc  ?? 'Earn consistent daily returns on your gaming investments.',
+        about_feat2_title: s.about_feat2_title ?? 'Secure Platform',
+        about_feat2_desc:  s.about_feat2_desc  ?? 'Your funds and data are protected with industry-standard security.',
+        about_feat3_title: s.about_feat3_title ?? 'Referral Rewards',
+        about_feat3_desc:  s.about_feat3_desc  ?? 'Invite friends and earn commission on every claim they make.',
+        about_feat4_title: s.about_feat4_title ?? 'Growing Community',
+        about_feat4_desc:  s.about_feat4_desc  ?? 'Join thousands of gamers already earning on NEXUS GG.',
       });
       setLoading(false);
     });
@@ -69,6 +99,21 @@ export function Settings() {
         upsertSetting('missed_earnings_pct',     String(form.missed_earnings_pct)),
         upsertSetting('min_deposit_amount',      String(form.min_deposit_amount)),
         upsertSetting('min_withdrawal_amount',   String(form.min_withdrawal_amount)),
+        upsertSetting('about_title',       form.about_title.trim()),
+        upsertSetting('about_tagline',     form.about_tagline.trim()),
+        upsertSetting('about_description', form.about_description.trim()),
+        upsertSetting('about_mission',     form.about_mission.trim()),
+        upsertSetting('about_email',       form.about_email.trim()),
+        upsertSetting('about_phone',       form.about_phone.trim()),
+        upsertSetting('about_website',     form.about_website.trim()),
+        upsertSetting('about_feat1_title', form.about_feat1_title.trim()),
+        upsertSetting('about_feat1_desc',  form.about_feat1_desc.trim()),
+        upsertSetting('about_feat2_title', form.about_feat2_title.trim()),
+        upsertSetting('about_feat2_desc',  form.about_feat2_desc.trim()),
+        upsertSetting('about_feat3_title', form.about_feat3_title.trim()),
+        upsertSetting('about_feat3_desc',  form.about_feat3_desc.trim()),
+        upsertSetting('about_feat4_title', form.about_feat4_title.trim()),
+        upsertSetting('about_feat4_desc',  form.about_feat4_desc.trim()),
       ]);
       setSuccess('Settings saved successfully.');
       setTimeout(() => setSuccess(''), 3000);
@@ -247,9 +292,80 @@ export function Settings() {
         </button>
       </div>
 
+      {/* About Us */}
+      <div className="glass-card p-6 space-y-5">
+        <div className="flex items-center gap-2 mb-2">
+          <Info size={18} className="text-[#00d4ff]" />
+          <h3 className="text-base font-semibold text-[#f0f0ff]">About Us Page</h3>
+        </div>
+
+        {[
+          { label: 'Page Title', key: 'about_title',   placeholder: 'e.g. About NEXUS GG' },
+          { label: 'Tagline',    key: 'about_tagline', placeholder: 'e.g. Game. Invest. Earn.' },
+          { label: 'Email',      key: 'about_email',   placeholder: 'e.g. support@nexusgg.com' },
+          { label: 'Phone',      key: 'about_phone',   placeholder: 'e.g. +233 24 000 0000' },
+          { label: 'Website',    key: 'about_website', placeholder: 'e.g. https://nexusgg.com' },
+        ].map(({ label, key, placeholder }) => (
+          <div key={key}>
+            <label className="text-xs text-[#8888aa] font-medium mb-2 block">{label}</label>
+            <input
+              type="text"
+              placeholder={placeholder}
+              value={form[key]}
+              onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+        ))}
+
+        {[
+          { label: 'Description', key: 'about_description', placeholder: 'Tell users who you are...' },
+          { label: 'Mission',     key: 'about_mission',     placeholder: 'Your mission statement...' },
+        ].map(({ label, key, placeholder }) => (
+          <div key={key}>
+            <label className="text-xs text-[#8888aa] font-medium mb-2 block">{label}</label>
+            <textarea
+              rows={3}
+              placeholder={placeholder}
+              value={form[key]}
+              onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+              className={`${inputClass} resize-none`}
+            />
+          </div>
+        ))}
+
+        <p className="text-xs text-[#8888aa] font-semibold uppercase tracking-wide pt-1">Feature Highlights</p>
+        {[1, 2, 3, 4].map((n) => (
+          <div key={n} className="space-y-2 p-3 rounded-xl border border-[#2a2a3a]">
+            <p className="text-xs text-[#8888aa]">Feature {n}</p>
+            <input
+              type="text"
+              placeholder="Title"
+              value={form[`about_feat${n}_title`]}
+              onChange={(e) => setForm((f) => ({ ...f, [`about_feat${n}_title`]: e.target.value }))}
+              className={inputClass}
+            />
+            <input
+              type="text"
+              placeholder="Short description"
+              value={form[`about_feat${n}_desc`]}
+              onChange={(e) => setForm((f) => ({ ...f, [`about_feat${n}_desc`]: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+        ))}
+
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+          <Save size={16} />
+          {saving ? 'Saving...' : 'Save About Us'}
+        </button>
+      </div>
+
       {/* Preview */}
-      <div className="glass-card p-5">
-        <p className="text-xs font-semibold text-[#8888aa] uppercase tracking-wide mb-3">Preview — what users will see</p>
+      <div className="glass-card p-5">        <p className="text-xs font-semibold text-[#8888aa] uppercase tracking-wide mb-3">Preview — what users will see</p>
         <div className="p-4 rounded-lg bg-[#00d4ff]/5 border border-[#00d4ff]/20 space-y-2">
           <p className="text-xs font-semibold text-[#00d4ff] uppercase tracking-wide mb-2">Send payment to</p>
           <div className="grid grid-cols-2 gap-2 text-sm">

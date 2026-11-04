@@ -2,7 +2,7 @@
 import {
   ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart,
   Clock, Copy, Check, Users, Plus, Minus,
-  Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight,
+  Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight, Info,
 } from 'lucide-react';import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme, THEMES } from '../../context/ThemeContext';
@@ -247,6 +247,23 @@ export function Profile() {
           <div className="text-left">
             <p className="text-sm font-bold text-[#f0f0ff]">Transaction History</p>
             <p className="text-xs text-[#8888aa]">View all your transactions</p>
+          </div>
+        </div>
+        <ArrowRight size={18} className="text-[#8888aa]" />
+      </button>
+
+      {/* ── About Us button ── */}
+      <button
+        onClick={() => navigate('/user/about')}
+        className="w-full glass-card rounded-2xl p-4 flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#7c3aed]/10 flex items-center justify-center">
+            <Info size={18} className="text-[#7c3aed]" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-bold text-[#f0f0ff]">About Us</p>
+            <p className="text-xs text-[#8888aa]">Learn more about NEXUS GG</p>
           </div>
         </div>
         <ArrowRight size={18} className="text-[#8888aa]" />

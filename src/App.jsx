@@ -12,6 +12,7 @@ import { Transactions } from './pages/user/Transactions';
 import { Transactions as AdminTransactions } from './pages/admin/Transactions';
 import { ActiveInvestments } from './pages/user/ActiveInvestments';
 import { Referral } from './pages/user/Referral';
+import { AboutUs } from './pages/user/AboutUs';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Inventory } from './pages/admin/Inventory';
 import { Users } from './pages/admin/Users';
@@ -48,6 +49,7 @@ function AppRoutes() {
       <Route path="/user/referrals"   element={<ProtectedRoute role="user"><Referral /></ProtectedRoute>} />
       <Route path="/user/profile"       element={<ProtectedRoute role="user"><Profile /></ProtectedRoute>} />
       <Route path="/user/transactions"  element={<ProtectedRoute role="user"><Transactions /></ProtectedRoute>} />
+      <Route path="/user/about"         element={<ProtectedRoute role="user"><AboutUs /></ProtectedRoute>} />
 
       {/* Admin routes */}
       <Route path="/myspot/dashboard"    element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
