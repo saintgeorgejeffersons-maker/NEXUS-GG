@@ -451,12 +451,16 @@ export async function claimMissedEarnings(investment, userId) {
   const profile = await getProfile(userId);
   await updateWalletBalance(userId, Number(profile.wallet_balance) + missedAmount);
 
-  // Update investment: deduct the missed days from days_remaining, update total_earned
-  // Do NOT update last_claimed_at — the user still needs to claim today's full earnings
+  // Update investment: deduct the missed days from days_remaining, update total_earned.
+  // Set last_claimed_at to yesterday's midnight so getMissedDays returns 0 after this
+  // claim, while still allowing the user to claim today's normal daily earnings.
+  const now = new Date();
+  const yesterdayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
   const newDaysRemaining = Math.max(0, investment.days_remaining - missedDays);
   const updates = {
     total_earned: Number(investment.total_earned) + missedAmount,
     days_remaining: newDaysRemaining,
+    last_claimed_at: yesterdayEnd.toISOString(),
     active: newDaysRemaining > 0,
   };
 
