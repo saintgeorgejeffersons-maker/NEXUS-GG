@@ -363,12 +363,16 @@ CREATE OR REPLACE FUNCTION public.pay_referral_commission(
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_referrer_id uuid;
   v_commission_pct numeric;
   v_commission numeric;
 BEGIN
+  -- Bypass RLS so we can write to another user's wallet and transactions
+  SET LOCAL row_security = off;
+
   -- Find the referrer
   SELECT referrer_id INTO v_referrer_id
   FROM public.referrals
