@@ -8,7 +8,6 @@ const inputClass =
   'w-full bg-[#1a1a24] border border-[#2a2a3a] rounded-xl px-4 py-3.5 text-[#f0f0ff] text-sm placeholder-[#555570] focus:outline-none focus:border-[#00d4ff] transition-all duration-200';
 
 const labelClass = 'block text-sm font-semibold text-[#f0f0ff] mb-1.5';
-const requiredStar = <span className="text-red-400 ml-0.5">*</span>;
 
 export function RegisterPage() {
   const [form, setForm] = useState({
@@ -75,7 +74,7 @@ export function RegisterPage() {
 
             {/* Full Name */}
             <div>
-              <label className={labelClass}>Full Name {requiredStar}</label>
+              <label className={labelClass}>Full Name</label>
               <input
                 className={inputClass}
                 type="text"
@@ -87,7 +86,7 @@ export function RegisterPage() {
 
             {/* Phone Number */}
             <div>
-              <label className={labelClass}>Phone Number {requiredStar}</label>
+              <label className={labelClass}>Phone Number</label>
               <div className="flex gap-2">
                 {/* Country prefix — hardcoded Ghana */}
                 <div className="flex items-center gap-1.5 px-3 py-3.5 rounded-xl bg-[#1a1a24] border border-[#2a2a3a] text-sm text-[#f0f0ff] flex-shrink-0 cursor-default select-none">
@@ -119,7 +118,7 @@ export function RegisterPage() {
 
             {/* Password */}
             <div>
-              <label className={labelClass}>Login Password {requiredStar}</label>
+              <label className={labelClass}>Login Password</label>
               <div className="relative">
                 <input
                   className={inputClass}
@@ -138,7 +137,7 @@ export function RegisterPage() {
 
             {/* Confirm Password */}
             <div>
-              <label className={labelClass}>Confirm Password {requiredStar}</label>
+              <label className={labelClass}>Confirm Password</label>
               <div className="relative">
                 <input
                   className={inputClass}
@@ -156,7 +155,7 @@ export function RegisterPage() {
 
             {/* Referral Code */}
             <div>
-              <label className={labelClass}>Referral Code {requiredStar}</label>
+              <label className={labelClass}>Referral Code</label>
               <input
                 className={inputClass}
                 type="text"
