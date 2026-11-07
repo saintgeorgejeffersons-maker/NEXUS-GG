@@ -13,7 +13,7 @@ export function AboutUs() {
     getSettings().then((s) => {
       setContent({
         about_title:       s.about_title       ?? 'About NEXUS GG',
-        about_tagline:     s.about_tagline     ?? 'Interactive Hardware Investment Platform — US · CA · UK · Ghana',
+        about_tagline:     s.about_tagline     ?? 'Interactive Hardware Investment Platform  US · CA · UK · Ghana',
         about_description: s.about_description ?? 'Physical gaming hubs, from high-energy console lounges to competitive esports arenas, run on immediate, daily rental transactions. Every hour, gamers pay cash or tap their cards to play on top-tier consoles. Nexus GG bridges the gap through a high-yield, interactive model: On-Demand Fractional Hardware Deployment. First proven across esports centers in North America and Europe, Nexus GG puts investors directly in control of physical gaming assets, generating automated daily yield payouts whenever consoles are deployed for active play.',
         about_mission:     s.about_mission     ?? 'Ghana\'s gaming and esports community is experiencing exponential growth across Accra, Kumasi, and Takoradi. Nexus GG provides local gaming lounges with state-of-the-art hardware without heavy upfront debt, while opening direct asset-backed investment access to local and international investors. Start acquiring fractional console shares from as low as GHS 150 / $10, and receive daily yields directly into Mobile Money (MTN, Telecel, AT) or local bank accounts.',
         about_email:       s.about_email       ?? '',
@@ -72,7 +72,7 @@ export function AboutUs() {
 
       {/* Mission */}
       <div className="space-y-2">
-        <p className="text-xs font-bold text-[#00d4ff] uppercase tracking-wide">Ghana Market Expansion — 2026</p>
+        <p className="text-xs font-bold text-[#00d4ff] uppercase tracking-wide">Ghana Market Expansion 2026</p>
         <p className="text-sm text-[#c0c0d0] leading-relaxed">{content.about_mission}</p>
       </div>
 
