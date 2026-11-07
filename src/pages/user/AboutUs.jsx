@@ -72,13 +72,13 @@ export function AboutUs() {
       </div>
 
       {/* Description */}
-      <div className="glass-card rounded-2xl p-5 space-y-3">
+      <div className="space-y-2">
         <p className="text-xs font-bold text-[#8888aa] uppercase tracking-wide">Who We Are</p>
         <p className="text-sm text-[#c0c0d0] leading-relaxed">{content.about_description}</p>
       </div>
 
       {/* Mission */}
-      <div className="rounded-2xl p-5 space-y-2" style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.08) 0%, rgba(124,58,237,0.08) 100%)', border: '1px solid rgba(0,212,255,0.15)' }}>
+      <div className="space-y-2">
         <p className="text-xs font-bold text-[#00d4ff] uppercase tracking-wide">Ghana Market Expansion — 2026</p>
         <p className="text-sm text-[#c0c0d0] leading-relaxed">{content.about_mission}</p>
       </div>
