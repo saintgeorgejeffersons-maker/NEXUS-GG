@@ -59,7 +59,7 @@ export function AboutUs() {
 
       {/* Hero */}
       <div className="text-center py-4">
-        <img src={logo} alt="NEXUS GG" className="w-16 h-16 mx-auto mb-4 invert" />
+        <img src={logo} alt="NEXUS GG" className="w-20 h-20 mx-auto mb-4 invert" />
         <h1 className="text-2xl font-black text-[#f0f0ff] mb-1">{content.about_title}</h1>
         <p className="text-[#00d4ff] text-sm font-semibold">{content.about_tagline}</p>
       </div>

@@ -41,7 +41,7 @@ export function Sidebar({ isOpen, onClose }) {
       >
         <div className="p-5 border-b border-[#2a2a3a]">
           <div className="flex items-center gap-2">
-            <img src={logo} alt="NEXUS GG" className="w-8 h-8 invert" />
+            <img src={logo} alt="NEXUS GG" className="w-10 h-10 invert" />
             <span className="text-xl font-black tracking-wider text-[#f0f0ff]">
               NEXUS<span className="text-[#00d4ff]">GG</span>
             </span>

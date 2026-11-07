@@ -61,7 +61,7 @@ export function RegisterPage() {
       <div className="relative z-10 w-full max-w-md py-8">
         {/* Brand */}
         <div className="text-center mb-6">
-          <img src={logo} alt="NEXUS GG" className="w-14 h-14 mx-auto mb-3 invert" />
+          <img src={logo} alt="NEXUS GG" className="w-[72px] h-[72px] mx-auto mb-3 invert" />
           <h1 className="text-2xl font-black tracking-wider text-[#f0f0ff]">
             NEXUS<span className="text-[#00d4ff]">GG</span>
           </h1>

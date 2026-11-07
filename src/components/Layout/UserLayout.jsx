@@ -35,7 +35,7 @@ export function UserLayout({ children }) {
       {/* Top Header */}
       <header className="flex items-center justify-between px-4 pt-safe-top py-3 bg-[#111118] border-b border-[#2a2a3a] flex-shrink-0">
         <div className="flex items-center gap-2">
-          <img src={logo} alt="NEXUS GG" className="w-7 h-7 invert" />
+          <img src={logo} alt="NEXUS GG" className="w-9 h-9 invert" />
           <span className="text-base font-black tracking-wider text-[#f0f0ff]">
             NEXUS<span className="text-[#00d4ff]">GG</span>
           </span>

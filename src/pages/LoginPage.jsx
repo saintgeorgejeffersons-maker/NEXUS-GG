@@ -44,7 +44,7 @@ export function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Brand */}
         <div className="text-center mb-8">
-          <img src={logo} alt="NEXUS GG" className="w-16 h-16 mx-auto mb-4 invert" />
+          <img src={logo} alt="NEXUS GG" className="w-20 h-20 mx-auto mb-4 invert" />
           <h1 className="text-3xl font-black tracking-wider text-[#f0f0ff]">
             NEXUS<span className="text-[#00d4ff]">GG</span>
           </h1>
