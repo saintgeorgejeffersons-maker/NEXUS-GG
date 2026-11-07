@@ -17,18 +17,31 @@ const EVENTS = [
   { type: 'purchased', item: 'Steam Deck OLED 1TB',  amount: '₵1,200' },
   { type: 'purchased', item: 'Asus ROG Ally X',      amount: '₵2,700' },
   { type: 'purchased', item: 'PS5 Digital Slim',     amount: '₵7,000' },
-  // deposits — realistic amounts
+  // deposits — vary from ₵120 minimum upward
   { type: 'deposited', amount: '₵120'   },
-  { type: 'deposited', amount: '₵250'   },
+  { type: 'deposited', amount: '₵150'   },
+  { type: 'deposited', amount: '₵200'   },
+  { type: 'deposited', amount: '₵300'   },
+  { type: 'deposited', amount: '₵450'   },
   { type: 'deposited', amount: '₵500'   },
+  { type: 'deposited', amount: '₵750'   },
+  { type: 'deposited', amount: '₵1,000' },
   { type: 'deposited', amount: '₵1,200' },
+  { type: 'deposited', amount: '₵1,500' },
+  { type: 'deposited', amount: '₵2,000' },
   { type: 'deposited', amount: '₵2,700' },
-  { type: 'deposited', amount: '₵7,000' },
-  // withdrawals
-  { type: 'withdrew',  amount: '₵80'    },
+  { type: 'deposited', amount: '₵5,000' },
+  // withdrawals — vary from ₵120 minimum upward
+  { type: 'withdrew',  amount: '₵120'   },
   { type: 'withdrew',  amount: '₵150'   },
+  { type: 'withdrew',  amount: '₵200'   },
   { type: 'withdrew',  amount: '₵300'   },
+  { type: 'withdrew',  amount: '₵450'   },
   { type: 'withdrew',  amount: '₵600'   },
+  { type: 'withdrew',  amount: '₵800'   },
+  { type: 'withdrew',  amount: '₵1,000' },
+  { type: 'withdrew',  amount: '₵1,500' },
+  { type: 'withdrew',  amount: '₵2,500' },
 ];
 
 const TIMESTAMPS = [
