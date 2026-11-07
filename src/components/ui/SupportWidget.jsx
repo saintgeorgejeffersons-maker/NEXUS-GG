@@ -4,7 +4,17 @@ import { getSettings } from '../../lib/db';
 
 const STORAGE_KEY = 'nexusgg_support_widget_pos';
 const FAB_SIZE = 44;
-const DEFAULT_POS = { x: window.innerWidth - FAB_SIZE - 16, y: window.innerHeight - FAB_SIZE - 80 };
+
+function getAppBounds() {
+  const appWidth = Math.min(448, window.innerWidth);
+  const appLeft  = (window.innerWidth - appWidth) / 2;
+  return { appLeft, appRight: appLeft + appWidth };
+}
+
+function getDefaultPos() {
+  const { appRight } = getAppBounds();
+  return { x: appRight - FAB_SIZE - 16, y: window.innerHeight - FAB_SIZE - 80 };
+}
 
 function TelegramIcon({ size = 18 }) {
   return (
@@ -27,13 +37,14 @@ function getSavedPos() {
     const saved = sessionStorage.getItem(STORAGE_KEY);
     if (saved) {
       const p = JSON.parse(saved);
+      const { appLeft, appRight } = getAppBounds();
       return {
-        x: Math.min(Math.max(0, p.x), window.innerWidth  - FAB_SIZE),
+        x: Math.min(Math.max(appLeft, p.x), appRight - FAB_SIZE),
         y: Math.min(Math.max(0, p.y), window.innerHeight - FAB_SIZE),
       };
     }
   } catch (_) {}
-  return DEFAULT_POS;
+  return getDefaultPos();
 }
 
 export function SupportWidget() {
@@ -78,8 +89,14 @@ export function SupportWidget() {
     const dx = clientX - dragRef.current.startX;
     const dy = clientY - dragRef.current.startY;
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragRef.current.moved = true;
-    const newX = Math.min(Math.max(0, dragRef.current.originX + dx), window.innerWidth  - FAB_SIZE);
-    const newY = Math.min(Math.max(0, dragRef.current.originY + dy), window.innerHeight - FAB_SIZE);
+
+    // Clamp within the app container (max-w-md = 448px, centered)
+    const appWidth  = Math.min(448, window.innerWidth);
+    const appLeft   = (window.innerWidth - appWidth) / 2;
+    const appRight  = appLeft + appWidth;
+
+    const newX = Math.min(Math.max(appLeft, dragRef.current.originX + dx), appRight  - FAB_SIZE);
+    const newY = Math.min(Math.max(0,       dragRef.current.originY + dy), window.innerHeight - FAB_SIZE);
     setPos({ x: newX, y: newY });
   }, []);
 
