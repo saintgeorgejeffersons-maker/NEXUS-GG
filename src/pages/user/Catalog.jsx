@@ -7,8 +7,8 @@ import {
 import { Modal } from '../../components/ui/Modal';
 import { Search, CheckCircle } from 'lucide-react';
 
-// Muted accent palette — varied but not neon
-const ACCENT_COLORS = ['#4da6c8', '#7c6aad', '#3db87a', '#c97a4a', '#c4963a', '#b85c8a'];
+// Single accent color for all products
+const ACCENT = '#00d4ff';
 
 export function Catalog() {
   const { profile, refreshProfile } = useAuth();
@@ -130,10 +130,9 @@ export function Catalog() {
         <p className="text-center text-[#8888aa] py-10 text-sm">No products found.</p>
       ) : (
         <div className="space-y-3">
-          {filtered.map((product, idx) => {
+          {filtered.map((product) => {
             const totalReturn = product.daily_return * product.duration_days;
             const owned = ownedProductIds.has(product.id);
-            const accent = ACCENT_COLORS[idx % ACCENT_COLORS.length];
             return (
               <div
                 key={product.id}
@@ -157,16 +156,16 @@ export function Catalog() {
                   {/* Key figures — label muted, value coloured + bold */}
                   <div className="space-y-0.5">
                     <p className="text-xs text-[#8888aa]">
-                      Price: <span className="text-sm font-bold" style={{ color: accent }}>₵{product.price}</span>
+                      Price: <span className="text-sm font-bold" style={{ color: ACCENT }}>₵{product.price}</span>
                     </p>
                     <p className="text-xs text-[#8888aa]">
                       Duration: <span className="text-sm font-bold text-[#f0f0ff]">{product.duration_days} days</span>
                     </p>
                     <p className="text-xs text-[#8888aa]">
-                      Daily income: <span className="text-sm font-bold" style={{ color: accent }}>₵{product.daily_return}</span>
+                      Daily income: <span className="text-sm font-bold" style={{ color: ACCENT }}>₵{product.daily_return}</span>
                     </p>
                     <p className="text-xs text-[#8888aa]">
-                      Total income: <span className="text-sm font-extrabold" style={{ color: accent }}>₵{totalReturn}</span>
+                      Total income: <span className="text-sm font-extrabold" style={{ color: ACCENT }}>₵{totalReturn}</span>
                     </p>
                   </div>
                 </div>
@@ -178,8 +177,8 @@ export function Catalog() {
                     disabled={!product.active || owned}
                     className="px-4 py-2.5 rounded-full text-sm font-bold transition-all active:scale-[0.97]"
                     style={{
-                      background: owned || !product.active ? '#2a2a3a' : accent,
-                      color: owned || !product.active ? '#8888aa' : '#fff',
+                      background: owned || !product.active ? '#2a2a3a' : ACCENT,
+                      color: owned || !product.active ? '#8888aa' : '#000',
                       cursor: owned || !product.active ? 'not-allowed' : 'pointer',
                       minWidth: '60px',
                     }}
