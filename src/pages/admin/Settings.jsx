@@ -17,6 +17,7 @@ export function Settings() {
     missed_earnings_pct: '',
     min_deposit_amount: '',
     min_withdrawal_amount: '',
+    withdrawal_fee_pct:    '',
     about_title:       '',
     about_tagline:     '',
     about_description: '',
@@ -51,6 +52,7 @@ export function Settings() {
         missed_earnings_pct:     s.missed_earnings_pct     ?? '50',
         min_deposit_amount:      s.min_deposit_amount      ?? '120',
         min_withdrawal_amount:   s.min_withdrawal_amount   ?? '50',
+        withdrawal_fee_pct:      s.withdrawal_fee_pct      ?? '0',
         about_title:       s.about_title       ?? 'About NEXUS GG',
         about_tagline:     s.about_tagline     ?? 'Interactive Hardware Investment Platform  US · CA · UK · Ghana',
         about_description: s.about_description ?? 'Physical gaming hubs, from high-energy console lounges to competitive esports arenas, run on immediate, daily rental transactions. Every hour, gamers pay cash or tap their cards to play on top-tier consoles. Nexus GG bridges the gap through a high-yield, interactive model: On-Demand Fractional Hardware Deployment. First proven across esports centers in North America and Europe, Nexus GG puts investors directly in control of physical gaming assets, generating automated daily yield payouts whenever consoles are deployed for active play.',
@@ -103,6 +105,7 @@ export function Settings() {
         upsertSetting('missed_earnings_pct',     String(form.missed_earnings_pct)),
         upsertSetting('min_deposit_amount',      String(form.min_deposit_amount)),
         upsertSetting('min_withdrawal_amount',   String(form.min_withdrawal_amount)),
+        upsertSetting('withdrawal_fee_pct',      String(form.withdrawal_fee_pct)),
         upsertSetting('about_title',       form.about_title.trim()),
         upsertSetting('about_tagline',     form.about_tagline.trim()),
         upsertSetting('about_description', form.about_description.trim()),
@@ -287,6 +290,20 @@ export function Settings() {
             className={inputClass}
           />
           <p className="text-xs text-[#8888aa] mt-1">Users cannot submit a withdrawal request below this amount.</p>
+        </div>
+
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Withdrawal Processing Fee % (0–100)</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            placeholder="e.g. 5"
+            value={form.withdrawal_fee_pct}
+            onChange={(e) => setForm((f) => ({ ...f, withdrawal_fee_pct: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">Percentage deducted from the requested amount. Users will see a live breakdown in the withdrawal modal. Set to 0 to disable.</p>
         </div>
 
         <button

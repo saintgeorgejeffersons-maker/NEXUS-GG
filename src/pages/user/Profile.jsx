@@ -57,6 +57,7 @@ export function Profile() {
   const [momoSettings, setMomoSettings] = useState(null);
   const [minDeposit, setMinDeposit] = useState(120);
   const [minWithdrawal, setMinWithdrawal] = useState(50);
+  const [withdrawalFeePct, setWithdrawalFeePct] = useState(0);
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -97,6 +98,7 @@ export function Profile() {
       setMomoSettings(settings);
       setMinDeposit(Number(settings.min_deposit_amount ?? 120));
       setMinWithdrawal(Number(settings.min_withdrawal_amount ?? 50));
+      setWithdrawalFeePct(Number(settings.withdrawal_fee_pct ?? 0));
       setLoading(false);
     });
   }, [profile?.id, profile?.wallet_balance]);
@@ -452,6 +454,31 @@ export function Profile() {
           <p className="text-xs text-[#8888aa]">Minimum withdrawal: ₵{minWithdrawal}. Reviewed by admin before processing.</p>
           <input type="number" placeholder={`Min ₵${minWithdrawal}`} value={amount}
             onChange={(e) => setAmount(e.target.value)} className={inputClass} />
+
+          {/* Fee breakdown — shown when amount is entered */}
+          {(() => {
+            const val = parseFloat(amount);
+            if (!val || val <= 0 || withdrawalFeePct <= 0) return null;
+            const fee = Math.round(val * withdrawalFeePct) / 100;
+            const receives = val - fee;
+            return (
+              <div className="rounded-xl border border-[#2a2a3a] overflow-hidden text-sm">
+                <div className="flex justify-between items-center px-3 py-2 bg-[#0a0a0f]">
+                  <span className="text-[#8888aa]">Amount requested</span>
+                  <span className="text-[#f0f0ff] font-semibold">₵{val.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center px-3 py-2 border-t border-[#2a2a3a]">
+                  <span className="text-[#8888aa]">Processing fee ({withdrawalFeePct}%)</span>
+                  <span className="text-red-400 font-semibold">-₵{fee.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center px-3 py-2.5 border-t border-[#2a2a3a] bg-[#00d4ff]/5">
+                  <span className="text-[#f0f0ff] font-bold">You will receive</span>
+                  <span className="text-[#00d4ff] font-black">₵{receives.toFixed(2)}</span>
+                </div>
+              </div>
+            );
+          })()}
+
           {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-xl px-3 py-2">{txError}</p>}
           {txSuccess && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-xl px-3 py-2">{txSuccess}</p>}
           {!txSuccess && (
