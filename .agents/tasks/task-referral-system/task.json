@@ -1,0 +1,7 @@
+{
+  "task_id": "task-referral-system",
+  "task_description": "Build a full referral system for the NexusGG gaming dashboard: DB schema migrations, referral DB helpers, referral code signup flow, referral commission on daily claim, signup bonus on first investment, a dedicated Referral page, admin settings for commission/bonus amounts, and sidebar/route wiring.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

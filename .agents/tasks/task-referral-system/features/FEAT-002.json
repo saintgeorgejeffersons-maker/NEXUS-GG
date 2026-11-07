@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Wire referral mechanics into the signup flow, daily claim, and investment purchase. Depends on FEAT-001 helpers existing in db.js. Three files change: AuthContext.jsx (register accepts referralCode), LoginPage.jsx (referral code field + URL pre-fill + post-signup linkage), ActiveInvestments.jsx (call payReferralCommission after claim), Catalog.jsx (call applyReferralBonus after first purchase).",
+  "status": "pending",
+  "steps": [
+    "Modify src/context/AuthContext.jsx register function signature to accept a 5th parameter referralCode (default ''). After the successful signUp and session check block, if referralCode is non-empty: (a) query supabase.from('profiles').select('id').eq('referral_code', referralCode.toUpperCase()).single() to find the referrer; (b) if found, update the new user's profile with referred_by = referrerId: supabase.from('profiles').update({referred_by: referrerProfile.id}).eq('id', newUserId); (c) insert into referrals table: supabase.from('referrals').insert({referrer_id: referrerProfile.id, referred_id: newUserId, bonus_paid: false}). If any step fails, swallow the error silently (don't fail registration). The newUserId comes from data.session.user.id or data.user.id (check both cases — email-confirm-off gives data.session, email-confirm-on gives data.user with no session).",
+    "Modify src/pages/LoginPage.jsx: (a) Add useLocation and useEffect imports from react-router-dom and react respectively. (b) Add referralCode to the form state initial value: { name: '', email: '', mobile: '', password: '', referralCode: '' }. (c) On component mount, read the ?ref= query param using new URLSearchParams(window.location.search).get('ref') and pre-fill form.referralCode if present. (d) In the register section of the JSX (after the mobile input, before the password field), add an optional text input with placeholder 'Referral code (optional)', value={form.referralCode}, onChange setting referralCode field, using the same inputClass. (e) In handleSubmit register branch, pass form.referralCode as the 5th argument to register(): register(form.name, form.email, form.mobile, form.password, form.referralCode). The referralCode validation/lookup is handled inside AuthContext — LoginPage just passes it through.",
+    "Modify src/pages/user/ActiveInvestments.jsx: add payReferralCommission to the import from '../../lib/db'. In handleClaim(), after the await claimDailyReturn(...) succeeds and before fetchInvestments(), add: try { await payReferralCommission(profile.id, investment.daily_return); } catch (_) {} — the commission call must be fire-and-forget so a missing referral row never breaks the claim UI.",
+    "Modify src/pages/user/Catalog.jsx: add applyReferralBonus to the import from '../../lib/db'. In handleConfirm(), after await refreshProfile() succeeds (after setOwnedProductIds update), add: try { await applyReferralBonus(profile.id); } catch (_) {} — same fire-and-forget pattern so a missing referral row never breaks the purchase UI."
+  ],
+  "acceptance_criteria": [
+    "AuthContext.register accepts 5 args; extra arg defaults to empty string so existing admin login page call still compiles",
+    "LoginPage shows referral code field in register mode and reads ?ref= from URL on mount",
+    "ActiveInvestments imports and calls payReferralCommission after a successful claim",
+    "Catalog imports and calls applyReferralBonus after a successful investment purchase",
+    "`npm run build` exits 0 with no errors"
+  ],
+  "verification": [
+    "cd c:\\PRIVATE\\gaming-dashboard && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

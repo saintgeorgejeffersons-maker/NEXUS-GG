@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { AuthProvider, useAuth, setThemeLoader } from './context/AuthContext';
-import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { AdminLoginPage } from './pages/AdminLoginPage';
@@ -67,22 +65,10 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ThemeWirer />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
   );
-}
-
-// Wires ThemeContext.loadThemeFromProfile into AuthContext
-function ThemeWirer() {
-  const { loadThemeFromProfile } = useTheme();
-  useEffect(() => {
-    setThemeLoader(loadThemeFromProfile);
-  }, [loadThemeFromProfile]);
-  return null;
 }

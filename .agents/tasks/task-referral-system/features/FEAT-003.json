@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "UI layer: new Referral page, admin Settings referral fields, Sidebar nav entry, App route. Depends on FEAT-001 (getReferralStats, generateReferralCode, updateReferralCode helpers) and FEAT-002 (routes must compile). Four files modified, one new file created.",
+  "status": "pending",
+  "steps": [
+    "Create src/pages/user/Referral.jsx as a new file. Structure: named export `Referral`. Imports: useState, useEffect from react; useAuth from ../../context/AuthContext; generateReferralCode, updateReferralCode, getReferralStats from ../../lib/db; Share2, Copy, Users, TrendingUp, CheckCircle, Edit3, RefreshCw from lucide-react. State: referralCode (string), editingCode (string), isEditing (bool), stats ({referrals:[], totalEarned:0, activeCount:0}), loading (bool), copying (bool), saving (bool), error (string), success (string). On mount (useEffect), read profile.referral_code: if set, setReferralCode(profile.referral_code); else call generateReferralCode(profile.id) and setReferralCode(result). Then call getReferralStats(profile.id) and setStats. Sections to render: (1) Header card (glass-card with Share2 icon, title 'Referral Program', subtitle 'Earn commission on every daily claim your referred users make'). (2) 'Your Referral Code' glass-card: shows the code in a monospace styled box; an Edit button (Edit3 icon) that toggles isEditing; when editing, an input bound to editingCode + Save button calling updateReferralCode(profile.id, editingCode.toUpperCase()) — on success setReferralCode(newCode) and refreshProfile(); a 'Copy Referral Link' button (Copy icon) that copies `https://nexusgg.vercel.app/signup?ref=${referralCode}` to clipboard using navigator.clipboard.writeText, shows 'Copied!' feedback for 2s; a 'Generate New Code' button (RefreshCw icon) calling generateReferralCode(profile.id). (3) Stats row: 3 glass-card chips — Total Referrals (stats.referrals.length), Commission Earned (₵stats.totalEarned.toFixed(2)), Active Investors (stats.activeCount). (4) Referred Users list glass-card: table/list of stats.referrals showing full_name, masked email (show first 2 chars + '***' + '@' + domain), date joined (created_at formatted), bonus paid badge (green 'Bonus Paid' or grey 'Pending' based on bonus_paid field). If stats.referrals is empty, show empty state 'No referrals yet. Share your link to start earning!' Use the same dark-theme glass-card, text-[#f0f0ff], text-[#8888aa], border-[#2a2a3a], bg-[#00d4ff] accent pattern as existing pages. Error/success messages use red-400/green (00ff88) inline alert pattern from other pages.",
+    "Modify src/pages/admin/Settings.jsx: (a) Add GitBranch (or Percent) icon import from lucide-react — use `Percent` icon for commission section header. (b) Extend the form state to include referral_commission_pct: '' and referral_bonus_amount: ''. (c) In the useEffect getSettings() call, also read s.referral_commission_pct and s.referral_bonus_amount into form state (default '10' and '50' if not found). (d) Add a second glass-card section below the MoMo card titled 'Referral Settings' with Percent icon. Inside: a numeric input for 'Commission % (0-100)' bound to form.referral_commission_pct (type='number', min=0, max=100); a numeric input for 'Signup Bonus Amount (₵)' bound to form.referral_bonus_amount (type='number', min=0). (e) In handleSave(), add upsertSetting('referral_commission_pct', String(form.referral_commission_pct)) and upsertSetting('referral_bonus_amount', String(form.referral_bonus_amount)) to the Promise.all array. (f) Add basic validation: commission must be 0-100, bonus must be >= 0 — show setError if not.",
+    "Modify src/components/Layout/Sidebar.jsx: (a) Add Share2 to the lucide-react import list. (b) Insert a new entry into the userNav array between Active Investments and Wallet: { to: '/user/referrals', icon: Share2, label: 'Referrals' }.",
+    "Modify src/App.jsx: (a) Add import for Referral page: `import { Referral } from './pages/user/Referral';`. (b) Add route inside the user routes block: `<Route path=\"/user/referrals\" element={<ProtectedRoute role=\"user\"><Referral /></ProtectedRoute>} />`."
+  ],
+  "acceptance_criteria": [
+    "src/pages/user/Referral.jsx exists and is a valid React component with named export Referral",
+    "Admin Settings page has referral commission and bonus fields that save to settings table",
+    "Sidebar userNav has Referrals entry between Active Investments and Wallet",
+    "App.jsx has /user/referrals route pointing to Referral component",
+    "`npm run build` exits 0 with no errors",
+    "`npm run lint` produces no new errors"
+  ],
+  "verification": [
+    "cd c:\\PRIVATE\\gaming-dashboard && npm run build",
+    "cd c:\\PRIVATE\\gaming-dashboard && npm run lint"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

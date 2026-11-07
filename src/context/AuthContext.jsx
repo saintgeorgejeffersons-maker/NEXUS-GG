@@ -4,10 +4,6 @@ import { applyReferralBonus } from '../lib/db';
 
 const AuthContext = createContext(null);
 
-// ThemeContext loader — injected from App to avoid circular deps
-let _loadThemeFromProfile = null;
-export function setThemeLoader(fn) { _loadThemeFromProfile = fn; }
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -23,8 +19,6 @@ export function AuthProvider({ children }) {
       .single();
     if (!error && data) {
       setProfile(data);
-      // Apply saved theme whenever profile is loaded
-      if (_loadThemeFromProfile) _loadThemeFromProfile(data.theme);
       return data;
     }
     return null;

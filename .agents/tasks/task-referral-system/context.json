@@ -1,0 +1,25 @@
+{
+  "project_type": "Vite + React 19 SPA, Supabase backend (auth + postgres), Tailwind CSS dark-theme dashboard",
+  "language": "JavaScript (JSX), no TypeScript",
+  "build_system": "Vite 8 — `npm run build` compiles; `npm run dev` starts dev server on localhost:5173. No test runner.",
+  "test_framework": "None. Verification is: `npm run build` must exit 0 with no errors.",
+  "build_command": "cd c:\\PRIVATE\\gaming-dashboard && npm run build",
+  "test_command": "cd c:\\PRIVATE\\gaming-dashboard && npm run build",
+  "verification_instructions": "Run `npm run build` from c:\\PRIVATE\\gaming-dashboard. Build must complete with exit code 0 and no JSX/import errors. Also run `npm run lint` to catch any unused-import or prop warnings.",
+  "snapshot_or_generated_files": "supabase-schema.sql is the migration file — manually applied in Supabase SQL Editor. It is NOT auto-run; it is committed to the repo so the admin can copy-paste it. All SQL additions must go to the bottom of this file as an explicit migration block.",
+  "environment_constraints": "Do NOT restart the dev server. Do NOT push to git. All SQL belongs in supabase-schema.sql as a migration block at the bottom — never in a separate file.",
+  "contribution_requirements": "Match existing code style exactly: named exports, async/await with try/catch, supabase client from src/lib/supabase.js, dark-theme glass-card pattern, lucide-react icons. No TypeScript, no new libraries.",
+  "key_patterns": "db.js: named async exports, throw error on failure. AuthContext: register(fullName, email, mobile, password) returns {success, error}. Pages: useAuth() for profile/refreshProfile. glass-card CSS class for cards. inputClass variable for form inputs. Sidebar userNav array for nav items. App.jsx has explicit route list.",
+  "relevant_files": [
+    "c:\\PRIVATE\\gaming-dashboard\\supabase-schema.sql",
+    "c:\\PRIVATE\\gaming-dashboard\\src\\lib\\db.js",
+    "c:\\PRIVATE\\gaming-dashboard\\src\\context\\AuthContext.jsx",
+    "c:\\PRIVATE\\gaming-dashboard\\src\\pages\\LoginPage.jsx",
+    "c:\\PRIVATE\\gaming-dashboard\\src\\pages\\user\\ActiveInvestments.jsx",
+    "c:\\PRIVATE\\gaming-dashboard\\src\\pages\\user\\Catalog.jsx",
+    "c:\\PRIVATE\\gaming-dashboard\\src\\pages\\admin\\Settings.jsx",
+    "c:\\PRIVATE\\gaming-dashboard\\src\\components\\Layout\\Sidebar.jsx",
+    "c:\\PRIVATE\\gaming-dashboard\\src\\App.jsx"
+  ],
+  "directory_structure": "src/pages/user/ — user-facing pages; src/pages/admin/ — admin pages; src/lib/db.js — all DB helpers; src/context/AuthContext.jsx — auth state; src/components/Layout/ — Sidebar, Layout wrapper; supabase-schema.sql — DB schema + migrations at project root"
+}

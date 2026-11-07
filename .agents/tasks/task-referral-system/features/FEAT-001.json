@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "DB schema migration + all referral DB helpers. Add referral_code and referred_by columns to profiles, create the referrals table with RLS, seed referral settings, and add five new helper functions to src/lib/db.js. All downstream FEATs depend on these helpers existing first.",
+  "status": "pending",
+  "steps": [
+    "Append a migration block titled '-- REFERRAL SYSTEM MIGRATION' to the bottom of supabase-schema.sql (after the last existing block). Include in order: (1) ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS referral_code text unique; (2) ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS referred_by uuid references public.profiles(id) on delete set null; (3) CREATE TABLE IF NOT EXISTS public.referrals with columns: id bigserial primary key, referrer_id uuid references public.profiles(id) on delete cascade not null, referred_id uuid references public.profiles(id) on delete cascade not null, bonus_paid boolean not null default false, created_at timestamptz default now(), CONSTRAINT referrals_referred_id_key UNIQUE(referred_id); (4) ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY; (5) RLS policies: users can select their own rows where referrer_id = auth.uid() OR referred_id = auth.uid(); admins (public.is_admin()) can select/insert/update all rows; (6) INSERT into public.settings for keys referral_commission_pct (value '10') and referral_bonus_amount (value '50') ON CONFLICT DO NOTHING.",
+    "Add function generateReferralCode(userId) to src/lib/db.js: takes first 8 chars of userId, uppercases them, updates profiles.referral_code for that user, returns the code string. Throws on error.",
+    "Add function updateReferralCode(userId, newCode) to src/lib/db.js: validates newCode is alphanumeric and 4-16 chars (regex /^[a-zA-Z0-9]{4,16}$/), checks uniqueness by querying profiles where referral_code = newCode and id != userId, updates profile.referral_code if unique. Returns {success: true} or {success: false, error: 'message'}. Does NOT throw — returns error object instead.",
+    "Add function getReferralStats(userId) to src/lib/db.js: queries referrals table where referrer_id = userId, joins with profiles(full_name, email, created_at) via .select('*, referred:profiles!referred_id(full_name, email, created_at)'). Computes totalEarned by summing all 'referral_commission' type transactions for this userId from the transactions table (query transactions where user_id = userId and type = 'referral_commission', reduce sum). Returns {referrals: array, totalEarned: number, activeCount: number} where activeCount is count of referred users who have at least one active investment (query investments where user_id in referred_ids and active = true). Throws on error.",
+    "Add function applyReferralBonus(referredUserId) to src/lib/db.js: queries referrals table where referred_id = referredUserId and bonus_paid = false. If no row found, return early (no-op). Gets referral_bonus_amount from getSettings(). Fetches referred user's current wallet balance via getProfile(referredUserId). Credits bonus: calls updateWalletBalance(referredUserId, currentBalance + bonusAmount). Inserts a transaction for referredUserId with type 'return', description 'Referral signup bonus', amount = bonusAmount. Updates referrals row set bonus_paid = true where referred_id = referredUserId. Throws on error.",
+    "Add function payReferralCommission(referredUserId, dailyReturn) to src/lib/db.js: queries referrals table where referred_id = referredUserId. If no row found, return early (no-op). Gets referral_commission_pct from getSettings(). Calculates commission = (dailyReturn * commissionPct) / 100, rounded to 2 decimal places. Fetches referrer's current wallet balance via getProfile(referrerRow.referrer_id). Credits commission: calls updateWalletBalance(referrerId, referrerBalance + commission). Inserts a transaction for referrerId with type 'referral_commission', description 'Referral commission from [referredUserId]', amount = commission. Throws on error. NOTE: 'referral_commission' must be added to the transactions.type CHECK constraint in the migration — add ALTER TABLE public.transactions DROP CONSTRAINT IF EXISTS transactions_type_check; then ALTER TABLE public.transactions ADD CONSTRAINT transactions_type_check CHECK (type IN ('deposit', 'withdrawal', 'purchase', 'return', 'referral_commission')); in the SQL migration block."
+  ],
+  "acceptance_criteria": [
+    "supabase-schema.sql has the REFERRAL SYSTEM MIGRATION block at the bottom with all 6 SQL steps",
+    "src/lib/db.js exports generateReferralCode, updateReferralCode, getReferralStats, applyReferralBonus, payReferralCommission",
+    "`npm run build` exits 0 with no errors after these changes"
+  ],
+  "verification": [
+    "cd c:\\PRIVATE\\gaming-dashboard && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
