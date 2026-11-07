@@ -15,7 +15,6 @@ function getDefaultPos() {
   const { appRight } = getAppBounds();
   return { x: appRight - FAB_SIZE - 16, y: window.innerHeight - FAB_SIZE - 80 };
 }
-
 function TelegramIcon({ size = 18 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -40,7 +39,7 @@ function getSavedPos() {
       const { appLeft, appRight } = getAppBounds();
       return {
         x: Math.min(Math.max(appLeft, p.x), appRight - FAB_SIZE),
-        y: Math.min(Math.max(0, p.y), window.innerHeight - FAB_SIZE),
+        y: Math.min(Math.max(0, p.y), window.innerHeight - FAB_SIZE - 64),
       };
     }
   } catch (_) {}
@@ -96,7 +95,7 @@ export function SupportWidget() {
     const appRight  = appLeft + appWidth;
 
     const newX = Math.min(Math.max(appLeft, dragRef.current.originX + dx), appRight  - FAB_SIZE);
-    const newY = Math.min(Math.max(0,       dragRef.current.originY + dy), window.innerHeight - FAB_SIZE);
+    const newY = Math.min(Math.max(0,       dragRef.current.originY + dy), window.innerHeight - FAB_SIZE - 64);
     setPos({ x: newX, y: newY });
   }, []);
 
