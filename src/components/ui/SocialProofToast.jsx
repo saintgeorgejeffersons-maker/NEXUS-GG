@@ -4,9 +4,11 @@ import { X, ShoppingCart, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 // ── Mock data pool ────────────────────────────────────────────────────────────
 
 const USERNAMES = [
-  'Alex_99', 'Kofi_G', 'CyberKnight', 'Viper_GG', 'ProGamer_X',
-  'Nana_K', 'Ama_Plays', 'ShadowByte', 'LegendZoro', 'QuickFire_J',
-  'Phantom_GH', 'KwesiDrive', 'NeonSlayer', 'Abena_Pro', 'TurboAce',
+  'Kofi_G', 'Ama_Plays', 'Kwesi_J', 'Abena_Pro', 'Nana_K',
+  'Adjoa_GG', 'Kojo_X', 'Akosua_99', 'Fiifi_GH', 'Efua_Win',
+  'Kwame_GG', 'Adwoa_K', 'Yaw_Pro', 'Akua_plays', 'Kweku_X',
+  'user38271', 'user74920', 'user15063', 'user82347', 'user59104',
+  'user23816', 'user67453', 'user41289', 'user90532', 'user30174',
 ];
 
 const EVENTS = [
