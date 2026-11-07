@@ -104,9 +104,19 @@ export function SupportWidget() {
     if (!dragRef.current.active) return;
     dragRef.current.active = false;
     setDragging(false);
-    // Persist position
-    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(pos)); } catch (_) {}
-  }, [pos]);
+
+    // Snap to nearest left or right edge of the app container
+    setPos((current) => {
+      const { appLeft, appRight } = getAppBounds();
+      const center = (appLeft + appRight) / 2;
+      const snappedX = current.x + FAB_SIZE / 2 < center
+        ? appLeft + 8                  // snap to left edge
+        : appRight - FAB_SIZE - 8;     // snap to right edge
+      const snapped = { x: snappedX, y: current.y };
+      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapped)); } catch (_) {}
+      return snapped;
+    });
+  }, []);
 
   // Mouse events
   useEffect(() => {

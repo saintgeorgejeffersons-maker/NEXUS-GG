@@ -188,20 +188,6 @@ export function Referral() {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => { setIsEditing(true); setEditingCode(referralCode); setCodeError(''); }}
-                className="py-2.5 rounded-xl text-sm font-semibold border border-[#2a2a3a] text-[#8888aa] flex items-center justify-center gap-1.5"
-              >
-                <Edit3 size={13} /> Edit Code
-              </button>
-              <button
-                onClick={handleGenerateNew}
-                disabled={generating}
-                className="py-2.5 rounded-xl text-sm font-semibold border border-[#2a2a3a] text-[#8888aa] flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                <RefreshCw size={13} className={generating ? 'animate-spin' : ''} />
-                {generating ? 'Generating...' : 'New Code'}
-              </button>
             </div>
           </>
         )}
