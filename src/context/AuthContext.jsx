@@ -141,7 +141,7 @@ export function AuthProvider({ children }) {
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { success: false, error: 'Invalid credentials.' };
+    if (error) return { success: false, error: 'Please check your login details carefully.' };
 
     // Verify the role matches
     const prof = await fetchProfile(data.user.id);
