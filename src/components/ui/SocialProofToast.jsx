@@ -128,7 +128,7 @@ function Toast({ event, onDismiss }) {
         alignItems: 'flex-start',
         gap: '10px',
         width: '100%',
-        maxWidth: '300px',
+        maxWidth: '260px',
         position: 'relative',
         pointerEvents: 'auto',
       }}
@@ -219,15 +219,20 @@ export function SocialProofToast() {
       aria-label="Activity notifications"
       style={{
         position: 'fixed',
-        bottom: 80,        // above the bottom tab bar
-        left: 12,
+        bottom: 80,
+        left: '50%',
+        transform: 'translateX(-50%)',
         zIndex: 9999,
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
         pointerEvents: 'none',
-        maxWidth: 300,
-        width: 'calc(100vw - 24px)',
+        width: '100%',
+        maxWidth: '448px',   // matches max-w-md (448px)
+        paddingLeft: 12,
+        paddingRight: 12,
+        boxSizing: 'border-box',
+        alignItems: 'flex-start',
       }}
     >
       {toasts.map((ev) => (
