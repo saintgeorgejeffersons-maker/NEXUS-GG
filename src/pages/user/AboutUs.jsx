@@ -86,14 +86,16 @@ export function AboutUs() {
       {/* Features */}
       <div>
         <p className="text-xs font-bold text-[#8888aa] uppercase tracking-wide mb-3">What We Offer</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-0 divide-y divide-[#2a2a3a]">
           {FEATURES.map(({ icon: Icon, color, title, desc }) => (
-            <div key={title} className="glass-card rounded-2xl p-4 space-y-2">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${color}15` }}>
+            <div key={title} className="flex items-start gap-4 py-4">
+              <div className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center mt-0.5" style={{ background: `${color}15` }}>
                 <Icon size={18} style={{ color }} />
               </div>
-              <p className="text-sm font-bold text-[#f0f0ff]">{title}</p>
-              <p className="text-xs text-[#8888aa] leading-relaxed">{desc}</p>
+              <div>
+                <p className="text-sm font-bold text-[#f0f0ff] mb-0.5">{title}</p>
+                <p className="text-xs text-[#8888aa] leading-relaxed">{desc}</p>
+              </div>
             </div>
           ))}
         </div>
