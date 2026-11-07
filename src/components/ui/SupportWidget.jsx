@@ -68,8 +68,10 @@ export function SupportWidget() {
       ref={containerRef}
       style={{
         position: 'fixed',
-        bottom: 80,   // above tab bar
-        right: 16,
+        bottom: 80,
+        left: '50%',
+        // offset to the right edge of the max-w-md (448px) container, minus 16px padding
+        transform: 'translateX(calc(224px - 64px))',
         zIndex: 9998,
         display: 'flex',
         flexDirection: 'column',
