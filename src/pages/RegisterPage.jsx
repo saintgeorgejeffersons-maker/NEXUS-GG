@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/hmalm01.svg';
+import { supabase } from '../lib/supabase';
 
 const inputClass =
   'w-full bg-[#1a1a24] border border-[#2a2a3a] rounded-xl px-4 py-3.5 text-[#f0f0ff] text-sm placeholder-[#555570] focus:outline-none focus:border-[#00d4ff] transition-all duration-200';
@@ -17,8 +18,16 @@ export function RegisterPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isFirstUser, setIsFirstUser] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  // Check if this is the very first user (no profiles exist yet)
+  useEffect(() => {
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).then(({ count }) => {
+      if (count === 0) setIsFirstUser(true);
+    });
+  }, []);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -36,7 +45,7 @@ export function RegisterPage() {
     if (!form.password)        { setError('Password is required.'); return; }
     if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     if (form.password !== form.confirmPassword) { setError('Passwords do not match.'); return; }
-    if (!form.referralCode.trim()) { setError('A referral code is required to register.'); return; }
+    if (!isFirstUser && !form.referralCode.trim()) { setError('A referral code is required to register.'); return; }
 
     // Use provided email or generate a placeholder from phone number
     const email = form.email.trim()
@@ -155,11 +164,13 @@ export function RegisterPage() {
 
             {/* Referral Code */}
             <div>
-              <label className={labelClass}>Referral Code</label>
+              <label className={labelClass}>
+                Referral Code{isFirstUser && <span className="text-[#8888aa] font-normal text-xs ml-1">(Optional — first account)</span>}
+              </label>
               <input
                 className={inputClass}
                 type="text"
-                placeholder="Enter referral code"
+                placeholder={isFirstUser ? 'Enter referral code (optional)' : 'Enter referral code'}
                 value={form.referralCode}
                 onChange={(e) => set('referralCode', e.target.value)}
               />
