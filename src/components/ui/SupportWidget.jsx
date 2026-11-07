@@ -4,25 +4,33 @@ import { getSettings } from '../../lib/db';
 
 const STORAGE_KEY = 'nexusgg_support_widget_pos';
 const FAB_SIZE = 44;
-const TAB_BAR_H = 72; // tab bar + safe area buffer
+const TAB_BAR  = 64;   // tab bar height — widget never goes below this
+const HEADER   = 56;   // header height — widget never goes above this
+const PADDING  = 8;    // gap from edges
 
-function getMaxY() {
-  // Try to measure the actual tab bar
-  const nav = document.querySelector('nav.fixed.bottom-0');
-  if (nav) return nav.getBoundingClientRect().top - FAB_SIZE - 8;
-  return window.innerHeight - FAB_SIZE - TAB_BAR_H;
+// pos stores { side: 'left'|'right', bottom: number }
+// "bottom" is distance from top of tab bar upward (i.e. visual distance above tab bar)
+
+function getAppWidth() { return Math.min(448, window.innerWidth); }
+
+function clampBottom(bottom) {
+  const maxBottom = window.innerHeight - HEADER - TAB_BAR - FAB_SIZE;
+  return Math.min(Math.max(PADDING, bottom), maxBottom);
 }
 
-function getAppBounds() {
-  const appWidth = Math.min(448, window.innerWidth);
-  const appLeft  = (window.innerWidth - appWidth) / 2;
-  return { appLeft, appRight: appLeft + appWidth };
+function getSavedPos() {
+  try {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const p = JSON.parse(saved);
+      if (p.side && typeof p.bottom === 'number') {
+        return { side: p.side, bottom: clampBottom(p.bottom) };
+      }
+    }
+  } catch (_) {}
+  return { side: 'right', bottom: PADDING };
 }
 
-function getDefaultPos() {
-  const { appRight } = getAppBounds();
-  return { x: appRight - FAB_SIZE - 16, y: getMaxY() - 8 };
-}
 function TelegramIcon({ size = 18 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -39,134 +47,118 @@ function WhatsAppIcon({ size = 18 }) {
   );
 }
 
-function getSavedPos() {
-  try {
-    const saved = sessionStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const p = JSON.parse(saved);
-      const { appLeft, appRight } = getAppBounds();
-      return {
-        x: Math.min(Math.max(appLeft, p.x), appRight - FAB_SIZE),
-        y: Math.min(Math.max(0, p.y), getMaxY()),
-      };
-    }
-  } catch (_) {}
-  return getDefaultPos();
-}
-
 export function SupportWidget() {
-  const [open, setOpen]   = useState(false);
-  const [links, setLinks] = useState({ whatsapp: '', telegram: '' });
-  const [pos, setPos]     = useState(getSavedPos);
+  const [open, setOpen]     = useState(false);
+  const [links, setLinks]   = useState({ whatsapp: '', telegram: '' });
+  const [pos, setPos]       = useState(getSavedPos);
   const [dragging, setDragging] = useState(false);
 
   const containerRef = useRef(null);
-  const dragRef      = useRef({ active: false, startX: 0, startY: 0, originX: 0, originY: 0, moved: false });
+  // track drag in a ref to avoid stale closure issues
+  const dragRef = useRef({
+    active: false, moved: false,
+    startY: 0, startBottom: 0,   // y axis
+    startX: 0,                   // x axis (for snap decision)
+  });
 
-  // Load admin links
   useEffect(() => {
     getSettings().then((s) => {
       setLinks({ whatsapp: s.support_whatsapp ?? '', telegram: s.support_telegram ?? '' });
     }).catch(() => {});
   }, []);
 
-  // Close menu on outside click (only when not dragging)
+  // close on outside tap
   useEffect(() => {
     if (!open) return;
-    function handleOutside(e) {
+    function onOutside(e) {
       if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
     }
-    document.addEventListener('mousedown', handleOutside);
-    document.addEventListener('touchstart', handleOutside);
+    document.addEventListener('mousedown', onOutside);
+    document.addEventListener('touchstart', onOutside);
     return () => {
-      document.removeEventListener('mousedown', handleOutside);
-      document.removeEventListener('touchstart', handleOutside);
+      document.removeEventListener('mousedown', onOutside);
+      document.removeEventListener('touchstart', onOutside);
     };
   }, [open]);
 
-  // ── Drag handlers ────────────────────────────────────────────────────────
+  // ── drag ──────────────────────────────────────────────────────────────────
 
-  const onDragStart = useCallback((clientX, clientY) => {
-    dragRef.current = { active: true, startX: clientX, startY: clientY, originX: pos.x, originY: pos.y, moved: false };
+  const startDrag = useCallback((clientX, clientY) => {
+    dragRef.current = {
+      active: true, moved: false,
+      startX: clientX, startY: clientY,
+      startBottom: pos.bottom,
+    };
     setDragging(true);
-  }, [pos]);
+  }, [pos.bottom]);
 
-  const onDragMove = useCallback((clientX, clientY) => {
+  const moveDrag = useCallback((clientX, clientY) => {
     if (!dragRef.current.active) return;
+    const dy = dragRef.current.startY - clientY; // inverted: drag up = more bottom
     const dx = clientX - dragRef.current.startX;
-    const dy = clientY - dragRef.current.startY;
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragRef.current.moved = true;
-
-    // Clamp within the app container (max-w-md = 448px, centered)
-    const appWidth  = Math.min(448, window.innerWidth);
-    const appLeft   = (window.innerWidth - appWidth) / 2;
-    const appRight  = appLeft + appWidth;
-
-    const newX = Math.min(Math.max(appLeft, dragRef.current.originX + dx), appRight - FAB_SIZE);
-    const newY = Math.min(Math.max(0,       dragRef.current.originY + dy), getMaxY());
-    setPos({ x: newX, y: newY });
+    if (Math.abs(dy) > 3 || Math.abs(dx) > 3) dragRef.current.moved = true;
+    const newBottom = clampBottom(dragRef.current.startBottom + dy);
+    setPos((p) => ({ ...p, bottom: newBottom }));
   }, []);
 
-  const onDragEnd = useCallback(() => {
+  const endDrag = useCallback((clientX) => {
     if (!dragRef.current.active) return;
     dragRef.current.active = false;
     setDragging(false);
 
-    // Snap to nearest left or right edge of the app container
-    setPos((current) => {
-      const { appLeft, appRight } = getAppBounds();
-      const center = (appLeft + appRight) / 2;
-      const snappedX = current.x + FAB_SIZE / 2 < center
-        ? appLeft + 8                  // snap to left edge
-        : appRight - FAB_SIZE - 8;     // snap to right edge
-      const snapped = { x: snappedX, y: Math.min(current.y, getMaxY()) };
+    // snap to left or right based on release x relative to app center
+    const appWidth  = getAppWidth();
+    const appLeft   = (window.innerWidth - appWidth) / 2;
+    const appCenter = appLeft + appWidth / 2;
+    const side      = clientX < appCenter ? 'left' : 'right';
+
+    setPos((p) => {
+      const snapped = { side, bottom: p.bottom };
       try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapped)); } catch (_) {}
       return snapped;
     });
   }, []);
 
-  // Mouse events
+  // mouse
   useEffect(() => {
-    function onMouseMove(e) { onDragMove(e.clientX, e.clientY); }
-    function onMouseUp()    { onDragEnd(); }
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup',   onMouseUp);
-    return () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup',   onMouseUp);
-    };
-  }, [onDragMove, onDragEnd]);
+    function onMove(e) { moveDrag(e.clientX, e.clientY); }
+    function onUp(e)   { endDrag(e.clientX); }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup',   onUp);
+    return () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+  }, [moveDrag, endDrag]);
 
-  // Touch events
+  // touch
   useEffect(() => {
-    function onTouchMove(e) {
+    function onMove(e) {
       if (!dragRef.current.active) return;
       e.preventDefault();
-      onDragMove(e.touches[0].clientX, e.touches[0].clientY);
+      moveDrag(e.touches[0].clientX, e.touches[0].clientY);
     }
-    function onTouchEnd() { onDragEnd(); }
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend',  onTouchEnd);
-    return () => {
-      document.removeEventListener('touchmove', onTouchMove);
-      document.removeEventListener('touchend',  onTouchEnd);
-    };
-  }, [onDragMove, onDragEnd]);
+    function onEnd(e) { endDrag(e.changedTouches[0].clientX); }
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend',  onEnd);
+    return () => { document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+  }, [moveDrag, endDrag]);
 
   if (!links.whatsapp && !links.telegram) return null;
+
+  // Convert side + bottom into CSS fixed position
+  const appWidth = getAppWidth();
+  const appLeft  = (window.innerWidth - appWidth) / 2;
+  const xPos     = pos.side === 'left'
+    ? appLeft + PADDING
+    : appLeft + appWidth - FAB_SIZE - PADDING;
 
   const fabBase = {
     width: FAB_SIZE, height: FAB_SIZE, borderRadius: '50%',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     border: 'none', flexShrink: 0, textDecoration: 'none',
-    cursor: dragging ? 'grabbing' : 'pointer',
-    transition: 'transform 0.18s ease, box-shadow 0.18s ease',
   };
 
   const secondaryStyle = (color, rgba, delay) => ({
     ...fabBase,
-    background: color,
-    color: '#fff',
+    background: color, color: '#fff',
     boxShadow: open ? `0 4px 18px ${rgba}` : 'none',
     opacity: open ? 1 : 0,
     transform: open ? 'scale(1) translateY(0)' : 'scale(0.6) translateY(12px)',
@@ -180,8 +172,9 @@ export function SupportWidget() {
       ref={containerRef}
       style={{
         position: 'fixed',
-        left: pos.x,
-        top:  pos.y,
+        left:   xPos,
+        // bottom offset from the tab bar top, not from viewport bottom
+        bottom: TAB_BAR + pos.bottom,
         zIndex: 9998,
         display: 'flex',
         flexDirection: 'column-reverse',
@@ -191,12 +184,12 @@ export function SupportWidget() {
         userSelect: 'none',
       }}
     >
-      {/* Primary FAB — drag handle */}
+      {/* Primary FAB */}
       <button
         aria-label={open ? 'Close support menu' : 'Open support menu'}
         aria-expanded={open}
-        onMouseDown={(e) => { e.preventDefault(); onDragStart(e.clientX, e.clientY); }}
-        onTouchStart={(e) => { onDragStart(e.touches[0].clientX, e.touches[0].clientY); }}
+        onMouseDown={(e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); }}
+        onTouchStart={(e) => { startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
         onClick={() => { if (!dragRef.current.moved) setOpen((v) => !v); }}
         style={{
           ...fabBase,
@@ -206,14 +199,13 @@ export function SupportWidget() {
           boxShadow: open
             ? '0 0 20px rgba(0,255,136,0.25), 0 4px 16px rgba(0,0,0,0.6)'
             : '0 2px 12px rgba(0,0,0,0.5)',
-          transform: 'scale(1)',
           cursor: dragging ? 'grabbing' : 'grab',
         }}
       >
         {open ? <X size={18} /> : <Headphones size={18} />}
       </button>
 
-      {/* WhatsApp — renders above FAB via column-reverse */}
+      {/* WhatsApp */}
       {links.whatsapp && (
         <a href={links.whatsapp} target="_blank" rel="noopener noreferrer"
           aria-label="WhatsApp support" onClick={() => setOpen(false)}
@@ -222,7 +214,7 @@ export function SupportWidget() {
         </a>
       )}
 
-      {/* Telegram — renders above WhatsApp via column-reverse */}
+      {/* Telegram */}
       {links.telegram && (
         <a href={links.telegram} target="_blank" rel="noopener noreferrer"
           aria-label="Telegram support" onClick={() => setOpen(false)}
