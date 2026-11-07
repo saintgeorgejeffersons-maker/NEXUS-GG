@@ -57,18 +57,12 @@ export function AboutUs() {
       </div>
 
       {/* Hero */}
-      <div className="glass-card rounded-2xl p-6 text-center relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-48 h-48 bg-[#00d4ff]/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-[#7c3aed]/5 rounded-full blur-3xl" />
+      <div className="text-center py-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#00d4ff]/10 border border-[#00d4ff]/30 mb-4 mx-auto">
+          <Gamepad2 size={30} className="text-[#00d4ff]" />
         </div>
-        <div className="relative z-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#00d4ff]/10 border border-[#00d4ff]/30 mb-4 mx-auto">
-            <Gamepad2 size={30} className="text-[#00d4ff]" />
-          </div>
-          <h1 className="text-2xl font-black text-[#f0f0ff] mb-1">{content.about_title}</h1>
-          <p className="text-[#00d4ff] text-sm font-semibold">{content.about_tagline}</p>
-        </div>
+        <h1 className="text-2xl font-black text-[#f0f0ff] mb-1">{content.about_title}</h1>
+        <p className="text-[#00d4ff] text-sm font-semibold">{content.about_tagline}</p>
       </div>
 
       {/* Description */}
