@@ -121,9 +121,6 @@ export function SupportWidget() {
 
   if (!links.whatsapp && !links.telegram) return null;
 
-  // Determine if speed-dial should expand upward or downward based on position
-  const expandUp = pos.y > window.innerHeight / 2;
-
   const fabBase = {
     width: FAB_SIZE, height: FAB_SIZE, borderRadius: '50%',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -138,7 +135,7 @@ export function SupportWidget() {
     color: '#fff',
     boxShadow: open ? `0 4px 18px ${rgba}` : 'none',
     opacity: open ? 1 : 0,
-    transform: open ? 'scale(1) translateY(0)' : `scale(0.6) translateY(${expandUp ? '12px' : '-12px'})`,
+    transform: open ? 'scale(1) translateY(0)' : 'scale(0.6) translateY(12px)',
     pointerEvents: open ? 'auto' : 'none',
     transition: 'opacity 0.22s ease, transform 0.22s ease',
     transitionDelay: open ? delay : '0s',
@@ -153,7 +150,7 @@ export function SupportWidget() {
         top:  pos.y,
         zIndex: 9998,
         display: 'flex',
-        flexDirection: expandUp ? 'column' : 'column-reverse',
+        flexDirection: 'column-reverse',
         alignItems: 'center',
         gap: 8,
         touchAction: 'none',
@@ -175,14 +172,14 @@ export function SupportWidget() {
           boxShadow: open
             ? '0 0 20px rgba(0,255,136,0.25), 0 4px 16px rgba(0,0,0,0.6)'
             : '0 2px 12px rgba(0,0,0,0.5)',
-          transform: open ? 'rotate(45deg) scale(1.05)' : 'rotate(0deg) scale(1)',
+          transform: 'scale(1)',
           cursor: dragging ? 'grabbing' : 'grab',
         }}
       >
         {open ? <X size={18} /> : <Headphones size={18} />}
       </button>
 
-      {/* WhatsApp */}
+      {/* WhatsApp — renders above FAB via column-reverse */}
       {links.whatsapp && (
         <a href={links.whatsapp} target="_blank" rel="noopener noreferrer"
           aria-label="WhatsApp support" onClick={() => setOpen(false)}
@@ -191,7 +188,7 @@ export function SupportWidget() {
         </a>
       )}
 
-      {/* Telegram */}
+      {/* Telegram — renders above WhatsApp via column-reverse */}
       {links.telegram && (
         <a href={links.telegram} target="_blank" rel="noopener noreferrer"
           aria-label="Telegram support" onClick={() => setOpen(false)}
