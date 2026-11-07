@@ -10,26 +10,25 @@ const USERNAMES = [
 ];
 
 const EVENTS = [
-  // purchases
-  { type: 'purchased', item: 'PS5 Digital Slim',      amount: '₵7,000'  },
-  { type: 'purchased', item: 'Steam Deck OLED 1TB',   amount: '₵1,200'  },
-  { type: 'purchased', item: 'Asus ROG Ally X',       amount: '₵2,700'  },
-  { type: 'purchased', item: 'Nintendo Switch OLED',  amount: '₵500'    },
-  { type: 'purchased', item: 'Xbox Series X',         amount: '₵3,500'  },
-  { type: 'purchased', item: 'PS5 Pro',               amount: '₵9,500'  },
-  { type: 'purchased', item: 'Lenovo Legion Go',      amount: '₵2,200'  },
-  // deposits
-  { type: 'deposited', amount: '₵120'    },
-  { type: 'deposited', amount: '₵500'    },
-  { type: 'deposited', amount: '₵1,200'  },
-  { type: 'deposited', amount: '₵2,500'  },
-  { type: 'deposited', amount: '₵5,000'  },
-  { type: 'deposited', amount: '₵300'    },
+  // purchases — exact products from the catalog
+  { type: 'purchased', item: 'PlayStation 5 Pro',    amount: '₵120'   },
+  { type: 'purchased', item: 'Xbox Series X Cyber',  amount: '₵250'   },
+  { type: 'purchased', item: 'Nintendo Switch OLED', amount: '₵500'   },
+  { type: 'purchased', item: 'Steam Deck OLED 1TB',  amount: '₵1,200' },
+  { type: 'purchased', item: 'Asus ROG Ally X',      amount: '₵2,700' },
+  { type: 'purchased', item: 'PS5 Digital Slim',     amount: '₵7,000' },
+  // deposits — realistic amounts
+  { type: 'deposited', amount: '₵120'   },
+  { type: 'deposited', amount: '₵250'   },
+  { type: 'deposited', amount: '₵500'   },
+  { type: 'deposited', amount: '₵1,200' },
+  { type: 'deposited', amount: '₵2,700' },
+  { type: 'deposited', amount: '₵7,000' },
   // withdrawals
-  { type: 'withdrew',  amount: '₵80'     },
-  { type: 'withdrew',  amount: '₵250'    },
-  { type: 'withdrew',  amount: '₵600'    },
-  { type: 'withdrew',  amount: '₵1,000'  },
+  { type: 'withdrew',  amount: '₵80'    },
+  { type: 'withdrew',  amount: '₵150'   },
+  { type: 'withdrew',  amount: '₵300'   },
+  { type: 'withdrew',  amount: '₵600'   },
 ];
 
 const TIMESTAMPS = [
