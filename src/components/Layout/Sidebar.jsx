@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Wallet, TrendingUp, BarChart3, Package, Users, ArrowDownCircle, ArrowUpCircle, List, Settings, LogOut, Zap, Share2 } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Wallet, TrendingUp, BarChart3, Package, Users, ArrowDownCircle, ArrowUpCircle, List, Settings, LogOut, Share2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import logo from '../../assets/hmalm01.svg';
 
 const userNav = [
   { to: '/user/dashboard',    icon: LayoutDashboard, label: 'Dashboard'          },
@@ -40,9 +41,7 @@ export function Sidebar({ isOpen, onClose }) {
       >
         <div className="p-5 border-b border-[#2a2a3a]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#00d4ff]/20 flex items-center justify-center">
-              <Zap size={18} className="text-[#00d4ff]" />
-            </div>
+            <img src={logo} alt="NEXUS GG" className="w-8 h-8 invert" />
             <span className="text-xl font-black tracking-wider text-[#f0f0ff]">
               NEXUS<span className="text-[#00d4ff]">GG</span>
             </span>

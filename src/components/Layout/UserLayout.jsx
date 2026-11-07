@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingBag, TrendingUp, Share2, UserCircle,
-  LogOut, Zap,
+  LogOut,
 } from 'lucide-react';
+import logo from '../../assets/hmalm01.svg';
 import { useAuth } from '../../context/AuthContext';
 
 const TAB_NAV = [
@@ -34,9 +35,7 @@ export function UserLayout({ children }) {
       {/* Top Header */}
       <header className="flex items-center justify-between px-4 pt-safe-top py-3 bg-[#111118] border-b border-[#2a2a3a] flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-[#00d4ff]/20 flex items-center justify-center">
-            <Zap size={15} className="text-[#00d4ff]" />
-          </div>
+          <img src={logo} alt="NEXUS GG" className="w-7 h-7 invert" />
           <span className="text-base font-black tracking-wider text-[#f0f0ff]">
             NEXUS<span className="text-[#00d4ff]">GG</span>
           </span>

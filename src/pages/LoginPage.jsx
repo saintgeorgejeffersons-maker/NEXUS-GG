@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Gamepad2, Mail, Phone } from 'lucide-react';
+import { Eye, EyeOff, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/hmalm01.svg';
 
 const inputClass =
   'w-full bg-[#1a1a24] border border-[#2a2a3a] rounded-lg px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-all duration-200';
@@ -43,9 +44,7 @@ export function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         {/* Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#00d4ff]/10 border border-[#00d4ff]/30 mb-4">
-            <Gamepad2 size={32} className="text-[#00d4ff]" />
-          </div>
+          <img src={logo} alt="NEXUS GG" className="w-16 h-16 mx-auto mb-4 invert" />
           <h1 className="text-3xl font-black tracking-wider text-[#f0f0ff]">
             NEXUS<span className="text-[#00d4ff]">GG</span>
           </h1>

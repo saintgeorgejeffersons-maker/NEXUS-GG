@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Gamepad2, ChevronDown } from 'lucide-react';
+import { Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/hmalm01.svg';
 
 const inputClass =
   'w-full bg-[#1a1a24] border border-[#2a2a3a] rounded-xl px-4 py-3.5 text-[#f0f0ff] text-sm placeholder-[#555570] focus:outline-none focus:border-[#00d4ff] transition-all duration-200';
@@ -60,9 +61,7 @@ export function RegisterPage() {
       <div className="relative z-10 w-full max-w-md py-8">
         {/* Brand */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#00d4ff]/10 border border-[#00d4ff]/30 mb-3">
-            <Gamepad2 size={28} className="text-[#00d4ff]" />
-          </div>
+          <img src={logo} alt="NEXUS GG" className="w-14 h-14 mx-auto mb-3 invert" />
           <h1 className="text-2xl font-black tracking-wider text-[#f0f0ff]">
             NEXUS<span className="text-[#00d4ff]">GG</span>
           </h1>

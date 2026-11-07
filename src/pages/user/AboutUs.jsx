@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Gamepad2, Shield, TrendingUp, Users, Zap, Mail, Phone, Globe } from 'lucide-react';
+import { ArrowLeft, Shield, TrendingUp, Users, Zap, Mail, Phone, Globe } from 'lucide-react';
 import { getSettings } from '../../lib/db';
+import logo from '../../assets/hmalm01.svg';
 
 export function AboutUs() {
   const navigate = useNavigate();
@@ -58,9 +59,7 @@ export function AboutUs() {
 
       {/* Hero */}
       <div className="text-center py-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#00d4ff]/10 border border-[#00d4ff]/30 mb-4 mx-auto">
-          <Gamepad2 size={30} className="text-[#00d4ff]" />
-        </div>
+        <img src={logo} alt="NEXUS GG" className="w-16 h-16 mx-auto mb-4 invert" />
         <h1 className="text-2xl font-black text-[#f0f0ff] mb-1">{content.about_title}</h1>
         <p className="text-[#00d4ff] text-sm font-semibold">{content.about_tagline}</p>
       </div>
