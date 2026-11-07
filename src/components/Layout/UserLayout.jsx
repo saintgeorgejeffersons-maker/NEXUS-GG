@@ -7,6 +7,7 @@ import {
 import logo from '../../assets/hmalm01.svg';
 import { useAuth } from '../../context/AuthContext';
 import { SocialProofToast } from '../ui/SocialProofToast';
+import { SupportWidget } from '../ui/SupportWidget';
 
 const TAB_NAV = [
   { to: '/user/dashboard',    icon: LayoutDashboard, label: 'Home'      },
@@ -86,6 +87,9 @@ export function UserLayout({ children }) {
 
       {/* Social proof toasts */}
       <SocialProofToast />
+
+      {/* Support widget */}
+      <SupportWidget />
     </div>
   );
 }

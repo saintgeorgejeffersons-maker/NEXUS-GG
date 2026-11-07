@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Save, Smartphone, Percent, ArrowDownCircle, ArrowUpCircle, Info } from 'lucide-react';
+import { Save, Smartphone, Percent, ArrowDownCircle, ArrowUpCircle, Info, MessageCircle } from 'lucide-react';
 import { getSettings, upsertSetting } from '../../lib/db';
 
 const NETWORKS = ['MTN', 'Vodafone', 'AirtelTigo'];
@@ -32,6 +32,8 @@ export function Settings() {
     about_feat3_desc:  '',
     about_feat4_title: '',
     about_feat4_desc:  '',
+    support_whatsapp:  '',
+    support_telegram:  '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -64,6 +66,8 @@ export function Settings() {
         about_feat3_desc:  s.about_feat3_desc  ?? 'You actively control when your console enters the lounge rental pool to earn daily returns.',
         about_feat4_title: s.about_feat4_title ?? 'Low Entry Barrier',
         about_feat4_desc:  s.about_feat4_desc  ?? 'Start acquiring fractional console shares in PS5s, Xbox, or SIM rigs from as low as GHS 150 / $10.',
+        support_whatsapp:  s.support_whatsapp  ?? '',
+        support_telegram:  s.support_telegram  ?? '',
       });
       setLoading(false);
     });
@@ -114,6 +118,8 @@ export function Settings() {
         upsertSetting('about_feat3_desc',  form.about_feat3_desc.trim()),
         upsertSetting('about_feat4_title', form.about_feat4_title.trim()),
         upsertSetting('about_feat4_desc',  form.about_feat4_desc.trim()),
+        upsertSetting('support_whatsapp',  form.support_whatsapp.trim()),
+        upsertSetting('support_telegram',  form.support_telegram.trim()),
       ]);
       setSuccess('Settings saved successfully.');
       setTimeout(() => setSuccess(''), 3000);
@@ -361,6 +367,47 @@ export function Settings() {
           className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
           <Save size={16} />
           {saving ? 'Saving...' : 'Save About Us'}
+        </button>
+      </div>
+
+      {/* Support Channels */}
+      <div className="glass-card p-6 space-y-5">
+        <div className="flex items-center gap-2 mb-2">
+          <MessageCircle size={18} className="text-[#00d4ff]" />
+          <h3 className="text-base font-semibold text-[#f0f0ff]">Support Channels</h3>
+        </div>
+        <p className="text-xs text-[#8888aa] -mt-3">These links power the floating support widget visible to all users. Leave blank to hide a channel.</p>
+
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">WhatsApp Link</label>
+          <input
+            type="url"
+            placeholder="e.g. https://wa.me/233241234567"
+            value={form.support_whatsapp}
+            onChange={(e) => setForm((f) => ({ ...f, support_whatsapp: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">Format: https://wa.me/&lt;countrycode&gt;&lt;number&gt;</p>
+        </div>
+
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Telegram Link</label>
+          <input
+            type="url"
+            placeholder="e.g. https://t.me/nexusgg_support"
+            value={form.support_telegram}
+            onChange={(e) => setForm((f) => ({ ...f, support_telegram: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">Format: https://t.me/&lt;username&gt;</p>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+          <Save size={16} />
+          {saving ? 'Saving...' : 'Save Support Links'}
         </button>
       </div>
 
