@@ -4,6 +4,14 @@ import { getSettings } from '../../lib/db';
 
 const STORAGE_KEY = 'nexusgg_support_widget_pos';
 const FAB_SIZE = 44;
+const TAB_BAR_H = 72; // tab bar + safe area buffer
+
+function getMaxY() {
+  // Try to measure the actual tab bar
+  const nav = document.querySelector('nav.fixed.bottom-0');
+  if (nav) return nav.getBoundingClientRect().top - FAB_SIZE - 8;
+  return window.innerHeight - FAB_SIZE - TAB_BAR_H;
+}
 
 function getAppBounds() {
   const appWidth = Math.min(448, window.innerWidth);
@@ -13,7 +21,7 @@ function getAppBounds() {
 
 function getDefaultPos() {
   const { appRight } = getAppBounds();
-  return { x: appRight - FAB_SIZE - 16, y: window.innerHeight - FAB_SIZE - 80 };
+  return { x: appRight - FAB_SIZE - 16, y: getMaxY() - 8 };
 }
 function TelegramIcon({ size = 18 }) {
   return (
@@ -39,7 +47,7 @@ function getSavedPos() {
       const { appLeft, appRight } = getAppBounds();
       return {
         x: Math.min(Math.max(appLeft, p.x), appRight - FAB_SIZE),
-        y: Math.min(Math.max(0, p.y), window.innerHeight - FAB_SIZE - 64),
+        y: Math.min(Math.max(0, p.y), getMaxY()),
       };
     }
   } catch (_) {}
@@ -94,8 +102,8 @@ export function SupportWidget() {
     const appLeft   = (window.innerWidth - appWidth) / 2;
     const appRight  = appLeft + appWidth;
 
-    const newX = Math.min(Math.max(appLeft, dragRef.current.originX + dx), appRight  - FAB_SIZE);
-    const newY = Math.min(Math.max(0,       dragRef.current.originY + dy), window.innerHeight - FAB_SIZE - 64);
+    const newX = Math.min(Math.max(appLeft, dragRef.current.originX + dx), appRight - FAB_SIZE);
+    const newY = Math.min(Math.max(0,       dragRef.current.originY + dy), getMaxY());
     setPos({ x: newX, y: newY });
   }, []);
 
@@ -111,7 +119,7 @@ export function SupportWidget() {
       const snappedX = current.x + FAB_SIZE / 2 < center
         ? appLeft + 8                  // snap to left edge
         : appRight - FAB_SIZE - 8;     // snap to right edge
-      const snapped = { x: snappedX, y: current.y };
+      const snapped = { x: snappedX, y: Math.min(current.y, getMaxY()) };
       try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapped)); } catch (_) {}
       return snapped;
     });
