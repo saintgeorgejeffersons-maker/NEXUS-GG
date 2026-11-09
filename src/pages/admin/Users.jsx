@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Search, Wallet, TrendingUp, Trash2, KeyRound, Eye, EyeOff, X, Users as UsersIcon, ArrowDownCircle, ArrowUpCircle, ShoppingCart } from 'lucide-react';
-import { getAllProfiles, getAllInvestments, deleteUserAccount, adminResetPassword, getUserInvestments, getUserTransactions, getReferralStats } from '../../lib/db';
+import { getAllProfiles, getAllInvestments, deleteUserAccount, adminResetPassword, getUserInvestments, getUserTransactions } from '../../lib/db';
 import { Modal } from '../../components/ui/Modal';
+import { supabase } from '../../lib/supabase';
 
 export function Users() {
   const [users, setUsers] = useState([]);
@@ -63,12 +64,15 @@ export function Users() {
     setDetailUser(u);
     setDetailData(null);
     setDetailLoading(true);
-    const [invs, txs, refStats] = await Promise.all([
+    const [invs, txs, referralsRes] = await Promise.all([
       getUserInvestments(u.id),
       getUserTransactions(u.id),
-      getReferralStats(u.id),
+      supabase
+        .from('referrals')
+        .select('referred_id, referred:profiles!referred_id(full_name, email, mobile, created_at)')
+        .eq('referrer_id', u.id),
     ]);
-    setDetailData({ invs, txs, refStats });
+    setDetailData({ invs, txs, referrals: referralsRes.data ?? [] });
     setDetailLoading(false);
   }
 
@@ -265,13 +269,13 @@ export function Users() {
             {/* Referred Users */}
             <div>
               <p className="text-xs font-bold text-[#8888aa] uppercase tracking-wide mb-2">
-                Referred Users ({detailData.refStats.referrals?.length ?? 0})
+                Referred Users ({detailData.referrals?.length ?? 0})
               </p>
-              {!detailData.refStats.referrals?.length ? (
+              {!detailData.referrals?.length ? (
                 <p className="text-[#8888aa] text-xs">No referred users yet.</p>
               ) : (
                 <div className="space-y-2">
-                  {detailData.refStats.referrals.map((r) => (
+                  {detailData.referrals.map((r) => (
                     <div key={r.referred_id} className="flex justify-between items-center bg-[#0a0a0f] rounded-xl px-3 py-2">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-[#7c3aed]/20 flex items-center justify-center text-xs font-bold text-[#a78bfa]">
@@ -279,7 +283,7 @@ export function Users() {
                         </div>
                         <div>
                           <p className="text-[#f0f0ff] font-medium">{r.referred?.full_name ?? '—'}</p>
-                          <p className="text-xs text-[#8888aa]">{r.referred?.email ?? '—'}</p>
+                          <p className="text-xs text-[#8888aa]">{r.referred?.mobile || r.referred?.email || '—'}</p>
                         </div>
                       </div>
                       <p className="text-xs text-[#8888aa]">
