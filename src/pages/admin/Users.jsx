@@ -64,16 +64,21 @@ export function Users() {
     setDetailUser(u);
     setDetailData(null);
     setDetailLoading(true);
-    const [invs, txs, referralsRes] = await Promise.all([
-      getUserInvestments(u.id),
-      getUserTransactions(u.id),
-      supabase
-        .from('referrals')
-        .select('referred_id, referred:profiles!referred_id(full_name, email, mobile, created_at)')
-        .eq('referrer_id', u.id),
-    ]);
-    setDetailData({ invs, txs, referrals: referralsRes.data ?? [] });
-    setDetailLoading(false);
+    try {
+      const [invs, txs, referralsRes] = await Promise.all([
+        getUserInvestments(u.id),
+        getUserTransactions(u.id),
+        supabase
+          .from('referrals')
+          .select('referred_id, referred:profiles!referred_id(full_name, email, mobile, created_at)')
+          .eq('referrer_id', u.id),
+      ]);
+      setDetailData({ invs: invs ?? [], txs: txs ?? [], referrals: referralsRes.data ?? [] });
+    } catch (_) {
+      setDetailData({ invs: [], txs: [], referrals: [] });
+    } finally {
+      setDetailLoading(false);
+    }
   }
 
   async function handleResetPassword() {
@@ -220,8 +225,8 @@ export function Users() {
         </div>
       </div>
       {/* User Detail Modal */}
-      <Modal isOpen={!!detailUser} onClose={() => setDetailUser(null)} title="User Details">
-        {detailLoading || !detailData ? (
+      <Modal isOpen={!!detailUser} onClose={() => { setDetailUser(null); setDetailData(null); }} title="User Details">
+        {detailLoading || !detailData || !detailUser ? (
           <div className="flex items-center justify-center h-32 text-[#8888aa]">Loading...</div>
         ) : (
           <div className="space-y-5 text-sm">
