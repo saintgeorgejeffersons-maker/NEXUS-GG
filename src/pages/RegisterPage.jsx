@@ -47,12 +47,24 @@ export function RegisterPage() {
     if (form.password !== form.confirmPassword) { setError('Passwords do not match.'); return; }
     if (!form.referralCode.trim()) { setError('A referral code is required to register.'); return; }
 
+    // Verify the referral code exists in the DB
+    setLoading(true);
+    const { data: refCheck } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('referral_code', form.referralCode.trim().toUpperCase())
+      .maybeSingle();
+    if (!refCheck) {
+      setError('Invalid referral code. Please check and try again.');
+      setLoading(false);
+      return;
+    }
+
     // Use provided email or generate a placeholder from phone number
     const email = form.email.trim()
       ? form.email.trim()
       : `${form.mobile.replace(/\D/g, '')}@nexusgg.app`;
 
-    setLoading(true);
     const res = await register(form.name, email, `+233${form.mobile.replace(/^0/, '')}`, form.password, form.referralCode);
     setLoading(false);
     if (res.success) navigate('/user/dashboard');
