@@ -2,7 +2,7 @@
 import {
   ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart,
   Clock, Copy, Check, Users, Plus, Minus,
-  Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight, Info,
+  Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight, Info, CreditCard,
 } from 'lucide-react';import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -62,6 +62,7 @@ export function Profile() {
 
   // Bank / MoMo details
   const [momoForm, setMomoForm] = useState({ momo_network: '', momo_number: '', momo_account_name: '' });
+  const [showMomo, setShowMomo] = useState(false);
   const [editingMomo, setEditingMomo] = useState(false);
   const [momoSaving, setMomoSaving] = useState(false);
   const [momoMsg, setMomoMsg] = useState('');
@@ -399,75 +400,23 @@ export function Profile() {
       </Section>
 
       {/* ── Bank Details (MoMo) ── */}
-      <Section title="Bank Details">
-        <div className="space-y-3 pb-2">
-          {momoMsg && <p className="text-[#00ff88] text-sm">{momoMsg}</p>}
-          {editingMomo ? (
-            <>
-              {/* Network selector */}
-              <div>
-                <label className="text-xs text-[#8888aa] mb-1.5 block">Mobile Network</label>
-                <div className="flex gap-2">
-                  {['MTN', 'Telecel', 'AirtelTigo'].map((n) => (
-                    <button key={n} type="button"
-                      onClick={() => setMomoForm((f) => ({ ...f, momo_network: n }))}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
-                        momoForm.momo_network === n
-                          ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]'
-                          : 'border-[#2a2a3a] text-[#8888aa]'
-                      }`}>
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-xs text-[#8888aa] mb-1 block">MoMo Number</label>
-                <input className={inputClass} type="tel" placeholder="e.g. 0241234567"
-                  value={momoForm.momo_number}
-                  onChange={(e) => setMomoForm((f) => ({ ...f, momo_number: e.target.value }))} />
-              </div>
-              <div>
-                <label className="text-xs text-[#8888aa] mb-1 block">Account Name</label>
-                <input className={inputClass} type="text" placeholder="Name on MoMo account"
-                  value={momoForm.momo_account_name}
-                  onChange={(e) => setMomoForm((f) => ({ ...f, momo_account_name: e.target.value }))} />
-              </div>
-              {momoError && <p className="text-red-400 text-sm">{momoError}</p>}
-              <div className="flex gap-2">
-                <button onClick={handleSaveMomo} disabled={momoSaving}
-                  className="flex-1 py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-1.5">
-                  <Save size={14} /> {momoSaving ? 'Saving...' : 'Save'}
-                </button>
-                <button onClick={() => { setEditingMomo(false); setMomoError(''); }}
-                  className="flex-1 py-3 rounded-xl border border-[#2a2a3a] text-[#8888aa] font-bold text-sm flex items-center justify-center gap-1.5">
-                  <X size={14} /> Cancel
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="space-y-0 divide-y divide-[#2a2a3a]/50">
-                {[
-                  { label: 'Network',      value: profile?.momo_network      || '—' },
-                  { label: 'MoMo Number',  value: profile?.momo_number       || '—' },
-                  { label: 'Account Name', value: profile?.momo_account_name || '—' },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex justify-between items-center py-2">
-                    <span className="text-xs text-[#8888aa]">{label}</span>
-                    <span className="text-sm text-[#f0f0ff] font-medium">{value}</span>
-                  </div>
-                ))}
-              </div>
-              <button onClick={() => setEditingMomo(true)}
-                className="w-full py-3 rounded-xl border border-[#2a2a3a] text-[#8888aa] font-bold text-sm flex items-center justify-center gap-1.5 hover:text-[#f0f0ff] transition-colors">
-                <Edit3 size={14} /> {profile?.momo_number ? 'Edit Details' : 'Add Details'}
-              </button>
-            </>
-          )}
+      <button
+        onClick={() => { setEditingMomo(false); setMomoError(''); setMomoMsg(''); setShowMomo(true); }}
+        className="w-full flex items-center justify-between py-3 border-b border-[#2a2a3a]"
+      >
+        <div className="flex items-center gap-3">
+          <CreditCard size={18} className="text-[#00ff88]" />
+          <div className="text-left">
+            <p className="text-sm font-bold text-[#f0f0ff]">Bank Details</p>
+            <p className="text-xs text-[#8888aa]">
+              {profile?.momo_network && profile?.momo_number
+                ? `${profile.momo_network} · ${profile.momo_number}`
+                : 'Tap to add MoMo details'}
+            </p>
+          </div>
         </div>
-      </Section>
-
+        <ArrowRight size={18} className="text-[#8888aa]" />
+      </button>
       {/* ── Deposit Requests ── */}
       {depositRequests.length > 0 && (
         <Section title={`Deposit Requests (${depositRequests.length})`}>
@@ -593,6 +542,112 @@ export function Profile() {
           )}
         </div>
       </Modal>
+
+      {/* ── MoMo Card Modal ── */}
+      <Modal isOpen={showMomo} onClose={() => { setShowMomo(false); setEditingMomo(false); setMomoError(''); setMomoMsg(''); }} title="Bank Details">
+        <div className="space-y-5">
+
+          {/* Debit card visual */}
+          <div style={{
+            background: 'linear-gradient(135deg, #0d2137 0%, #0a1628 50%, #0d1f0a 100%)',
+            border: '1px solid rgba(0,255,136,0.25)',
+            borderRadius: 16, padding: '20px 22px',
+            position: 'relative', overflow: 'hidden', minHeight: 160,
+          }}>
+            <div style={{ position:'absolute', top:-30, right:-30, width:100, height:100, borderRadius:'50%', background:'rgba(0,255,136,0.08)' }} />
+            <div style={{ position:'absolute', bottom:-20, left:-20, width:80, height:80, borderRadius:'50%', background:'rgba(0,212,255,0.06)' }} />
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:24 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <CreditCard size={18} style={{ color:'#00ff88' }} />
+                <span style={{ fontSize:11, fontWeight:700, color:'#00ff88', letterSpacing:2, textTransform:'uppercase' }}>Mobile Money</span>
+              </div>
+              <span style={{
+                fontSize:11, fontWeight:800, color:'#0a0a0f',
+                background: profile?.momo_network === 'MTN' ? '#ffcc00'
+                  : profile?.momo_network === 'Telecel' ? '#e63946'
+                  : profile?.momo_network === 'AirtelTigo' ? '#e8541a' : '#2a2a3a',
+                padding:'3px 10px', borderRadius:20,
+              }}>
+                {profile?.momo_network || 'No Network'}
+              </span>
+            </div>
+            <p style={{ fontFamily:'monospace', fontSize:20, fontWeight:900, color:'#f0f0ff', letterSpacing:3, marginBottom:12 }}>
+              {profile?.momo_number
+                ? profile.momo_number.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')
+                : '•••• ••• ••••'}
+            </p>
+            <p style={{ fontSize:12, color:'#8888aa', textTransform:'uppercase', letterSpacing:1 }}>
+              {profile?.momo_account_name || 'ACCOUNT HOLDER'}
+            </p>
+          </div>
+
+          {/* Edit form */}
+          {editingMomo ? (
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-[#8888aa] mb-1.5 block">Mobile Network</label>
+                <div className="flex gap-2">
+                  {[
+                    { name: 'MTN',        color: '#ffcc00' },
+                    { name: 'Telecel',    color: '#e63946' },
+                    { name: 'AirtelTigo', color: '#e8541a' },
+                  ].map(({ name, color }) => (
+                    <button key={name} type="button"
+                      onClick={() => setMomoForm((f) => ({ ...f, momo_network: name }))}
+                      style={{ borderColor: momoForm.momo_network === name ? color : undefined,
+                               color: momoForm.momo_network === name ? color : undefined }}
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                        momoForm.momo_network === name ? '' : 'border-[#2a2a3a] text-[#8888aa]'
+                      }`}>
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-[#8888aa] mb-1 block">MoMo Number</label>
+                <input className={inputClass} type="tel" placeholder="e.g. 0241234567"
+                  value={momoForm.momo_number}
+                  onChange={(e) => setMomoForm((f) => ({ ...f, momo_number: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-xs text-[#8888aa] mb-1 block">Account Name</label>
+                <input className={inputClass} type="text" placeholder="Name on MoMo account"
+                  value={momoForm.momo_account_name}
+                  onChange={(e) => setMomoForm((f) => ({ ...f, momo_account_name: e.target.value }))} />
+              </div>
+              {momoError && <p className="text-red-400 text-sm bg-red-900/20 rounded-xl px-3 py-2">{momoError}</p>}
+              {momoMsg   && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-xl px-3 py-2">{momoMsg}</p>}
+              <div className="flex gap-2">
+                <button onClick={handleSaveMomo} disabled={momoSaving}
+                  className="flex-1 py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-1.5">
+                  <Save size={14} /> {momoSaving ? 'Saving...' : 'Save'}
+                </button>
+                <button onClick={() => { setEditingMomo(false); setMomoError(''); }}
+                  className="flex-1 py-3 rounded-xl border border-[#2a2a3a] text-[#8888aa] font-bold text-sm flex items-center justify-center gap-1.5">
+                  <X size={14} /> Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setMomoForm({
+                  momo_network:      profile?.momo_network      ?? '',
+                  momo_number:       profile?.momo_number       ?? '',
+                  momo_account_name: profile?.momo_account_name ?? '',
+                });
+                setEditingMomo(true);
+              }}
+              className="w-full py-3 rounded-xl border border-[#2a2a3a] text-[#8888aa] font-bold text-sm flex items-center justify-center gap-1.5 hover:text-[#f0f0ff] transition-colors">
+              <Edit3 size={14} /> {profile?.momo_number ? 'Edit Details' : 'Add Details'}
+            </button>
+          )}
+        </div>
+      </Modal>
+
     </div>
+  );
+}
   );
 }
