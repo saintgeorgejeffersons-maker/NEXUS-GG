@@ -45,7 +45,7 @@ export function RegisterPage() {
     if (!form.password)        { setError('Password is required.'); return; }
     if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     if (form.password !== form.confirmPassword) { setError('Passwords do not match.'); return; }
-    if (!isFirstUser && !form.referralCode.trim()) { setError('A referral code is required to register.'); return; }
+    if (!form.referralCode.trim()) { setError('A referral code is required to register.'); return; }
 
     // Use provided email or generate a placeholder from phone number
     const email = form.email.trim()
@@ -168,7 +168,7 @@ export function RegisterPage() {
               <input
                 className={inputClass}
                 type="text"
-                placeholder={isFirstUser ? 'Enter referral code (optional)' : 'Enter referral code'}
+                placeholder="Enter referral code"
                 value={form.referralCode}
                 onChange={(e) => set('referralCode', e.target.value)}
               />
