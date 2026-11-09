@@ -32,15 +32,15 @@ const inputClass = 'w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded-xl px-4 
 function Section({ title, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="glass-card rounded-2xl overflow-hidden">
+    <div className="border-b border-[#2a2a3a]">
       <button
-        className="w-full flex items-center justify-between px-4 py-4"
+        className="w-full flex items-center justify-between py-4"
         onClick={() => setOpen((o) => !o)}
       >
         <p className="text-sm font-bold text-[#f0f0ff]">{title}</p>
         {open ? <ChevronUp size={16} className="text-[#8888aa]" /> : <ChevronDown size={16} className="text-[#8888aa]" />}
       </button>
-      {open && <div className="border-t border-[#2a2a3a]">{children}</div>}
+      {open && <div className="pb-2">{children}</div>}
     </div>
   );
 }
@@ -194,7 +194,7 @@ export function Profile() {
     <div className="space-y-4">
 
       {/* ── Avatar + name ── */}
-      <div className="glass-card rounded-2xl p-5 flex items-center gap-4">
+      <div className="flex items-center gap-4 py-2">
         <div className="w-16 h-16 rounded-2xl bg-[#7c3aed]/20 flex items-center justify-center flex-shrink-0">
           <span className="text-2xl font-black text-[#7c3aed]">{initials}</span>
         </div>
@@ -238,12 +238,10 @@ export function Profile() {
       {/* ── Transaction History button ── */}
       <button
         onClick={() => navigate('/user/transactions')}
-        className="w-full glass-card rounded-2xl p-4 flex items-center justify-between"
+        className="w-full flex items-center justify-between py-3 border-b border-[#2a2a3a]"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#00d4ff]/10 flex items-center justify-center">
-            <TrendingUp size={18} className="text-[#00d4ff]" />
-          </div>
+          <TrendingUp size={18} className="text-[#00d4ff]" />
           <div className="text-left">
             <p className="text-sm font-bold text-[#f0f0ff]">Transaction History</p>
             <p className="text-xs text-[#8888aa]">View all your transactions</p>
@@ -255,12 +253,10 @@ export function Profile() {
       {/* ── About Us button ── */}
       <button
         onClick={() => navigate('/user/about')}
-        className="w-full glass-card rounded-2xl p-4 flex items-center justify-between"
+        className="w-full flex items-center justify-between py-3 border-b border-[#2a2a3a]"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#7c3aed]/10 flex items-center justify-center">
-            <Info size={18} className="text-[#7c3aed]" />
-          </div>
+          <Info size={18} className="text-[#7c3aed]" />
           <div className="text-left">
             <p className="text-sm font-bold text-[#f0f0ff]">About Us</p>
             <p className="text-xs text-[#8888aa]">Learn more about NEXUS GG</p>
@@ -447,7 +443,7 @@ export function Profile() {
       {/* ── Withdraw Modal ── */}
       <Modal isOpen={showWithdraw} onClose={() => setShowWithdraw(false)} title="Withdraw Funds">
         <div className="space-y-4">
-          <div className="p-3 rounded-xl bg-[#0a0a0f] border border-[#2a2a3a]">
+          <div className="py-2 border-b border-[#2a2a3a]">
             <p className="text-xs text-[#8888aa]">Available Balance</p>
             <p className="text-xl font-black text-[#f0f0ff]">₵{balance.toFixed(2)}</p>
           </div>
