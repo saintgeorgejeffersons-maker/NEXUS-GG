@@ -306,8 +306,8 @@ export function Profile() {
       </button>
 
       {/* ── Edit Profile ── */}
-      <Section title="Edit Profile">
-        <div className="p-4 space-y-3">
+      <div className="space-y-3 py-4 border-b border-[#2a2a3a]">
+        <p className="text-sm font-bold text-[#f0f0ff]">Edit Profile</p>
           {profileMsg && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-xl px-3 py-2">{profileMsg}</p>}
           {editingProfile ? (
             <>
@@ -365,12 +365,11 @@ export function Profile() {
               </button>
             </>
           )}
-        </div>
-      </Section>
+      </div>
 
       {/* ── Change Password ── */}
-      <Section title="Change Password">
-        <div className="p-4 space-y-3">
+      <div className="space-y-3 py-4 border-b border-[#2a2a3a]">
+        <p className="text-sm font-bold text-[#f0f0ff]">Change Password</p>
           {pwMsg && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-xl px-3 py-2">{pwMsg}</p>}
           {editingPassword ? (
             <>
@@ -396,8 +395,7 @@ export function Profile() {
               <Lock size={14} /> Change Password
             </button>
           )}
-        </div>
-      </Section>
+      </div>
 
       {/* ── Bank Details (MoMo) ── */}
       <button
@@ -419,10 +417,11 @@ export function Profile() {
       </button>
       {/* ── Deposit Requests ── */}
       {depositRequests.length > 0 && (
-        <Section title={`Deposit Requests (${depositRequests.length})`}>
+        <div className="space-y-1 py-4 border-b border-[#2a2a3a]">
+          <p className="text-sm font-bold text-[#f0f0ff] mb-2">Deposit Requests ({depositRequests.length})</p>
           <div className="divide-y divide-[#2a2a3a]/50">
             {depositRequests.map((req) => (
-              <div key={req.id} className="flex items-center justify-between px-4 py-3">
+              <div key={req.id} className="flex items-center justify-between py-3">
                 <div>
                   <p className="text-sm font-semibold text-[#f0f0ff]">₵{Number(req.amount).toFixed(2)}</p>
                   <p className="text-xs text-[#8888aa]">{new Date(req.created_at).toLocaleDateString()}</p>
@@ -433,15 +432,16 @@ export function Profile() {
               </div>
             ))}
           </div>
-        </Section>
+        </div>
       )}
 
       {/* ── Withdrawal Requests ── */}
       {withdrawalRequests.length > 0 && (
-        <Section title={`Withdrawal Requests (${withdrawalRequests.length})`}>
+        <div className="space-y-1 py-4 border-b border-[#2a2a3a]">
+          <p className="text-sm font-bold text-[#f0f0ff] mb-2">Withdrawal Requests ({withdrawalRequests.length})</p>
           <div className="divide-y divide-[#2a2a3a]/50">
             {withdrawalRequests.map((req) => (
-              <div key={req.id} className="flex items-center justify-between px-4 py-3">
+              <div key={req.id} className="flex items-center justify-between py-3">
                 <div>
                   <p className="text-sm font-semibold text-[#f0f0ff]">₵{Number(req.amount).toFixed(2)}</p>
                   <p className="text-xs text-[#8888aa]">{new Date(req.created_at).toLocaleDateString()}</p>
@@ -452,7 +452,7 @@ export function Profile() {
               </div>
             ))}
           </div>
-        </Section>
+        </div>
       )}
 
       {/* ── Deposit Modal ── */}
