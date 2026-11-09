@@ -130,11 +130,13 @@ export function AuthProvider({ children }) {
     let email = identifier;
 
     if (!identifier.includes('@')) {
-      // It's a mobile number — find the matching email in profiles
+      // Normalize mobile: strip spaces, leading +233 or 0, then re-add +233
+      const digits = identifier.replace(/\s+/g, '').replace(/^\+233/, '').replace(/^0/, '');
+      const normalized = `+233${digits}`;
       const { data, error } = await supabase
         .from('profiles')
         .select('email')
-        .eq('mobile', identifier)
+        .eq('mobile', normalized)
         .single();
       if (error || !data) return { success: false, error: 'No account found with that mobile number.' };
       email = data.email;
