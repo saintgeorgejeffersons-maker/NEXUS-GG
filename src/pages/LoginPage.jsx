@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Phone } from 'lucide-react';
+import { Eye, EyeOff, Mail, Phone, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/hmalm01.svg';
 
@@ -81,8 +81,15 @@ export function LoginPage() {
               <input className={inputClass} type="email" placeholder="Email address"
                 value={form.email} onChange={(e) => set('email', e.target.value)} />
             ) : (
-              <input className={inputClass} type="tel" placeholder="Mobile number"
-                value={form.mobile} onChange={(e) => set('mobile', e.target.value)} />
+              <div className="flex gap-2">
+                <div className="flex items-center gap-1.5 px-3 py-3 rounded-lg bg-[#1a1a24] border border-[#2a2a3a] text-sm text-[#f0f0ff] flex-shrink-0 cursor-default select-none">
+                  <span>🇬🇭</span>
+                  <span className="font-medium">+233</span>
+                  <ChevronDown size={13} className="text-[#8888aa]" />
+                </div>
+                <input className={inputClass} type="tel" placeholder="Enter phone number"
+                  value={form.mobile} onChange={(e) => set('mobile', e.target.value)} />
+              </div>
             )}
 
             <div className="relative">
