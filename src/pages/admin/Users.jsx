@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Search, Wallet, TrendingUp, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
-import { getAllProfiles, getAllInvestments, deleteUserAccount, adminResetPassword } from '../../lib/db';
+import { Search, Wallet, TrendingUp, Trash2, KeyRound, Eye, EyeOff, X, Users as UsersIcon, ArrowDownCircle, ArrowUpCircle, ShoppingCart } from 'lucide-react';
+import { getAllProfiles, getAllInvestments, deleteUserAccount, adminResetPassword, getUserInvestments, getUserTransactions, getReferralStats } from '../../lib/db';
 import { Modal } from '../../components/ui/Modal';
 
 export function Users() {
@@ -18,6 +18,11 @@ export function Users() {
   const [resetSaving, setResetSaving] = useState(false);
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState('');
+
+  // User detail modal state
+  const [detailUser, setDetailUser] = useState(null);
+  const [detailData, setDetailData] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   async function load() {
     const [profiles, invs] = await Promise.all([getAllProfiles(), getAllInvestments()]);
@@ -52,6 +57,19 @@ export function Users() {
     setNewPassword('');
     setResetError('');
     setResetSuccess('');
+  }
+
+  async function openDetail(u) {
+    setDetailUser(u);
+    setDetailData(null);
+    setDetailLoading(true);
+    const [invs, txs, refStats] = await Promise.all([
+      getUserInvestments(u.id),
+      getUserTransactions(u.id),
+      getReferralStats(u.id),
+    ]);
+    setDetailData({ invs, txs, refStats });
+    setDetailLoading(false);
   }
 
   async function handleResetPassword() {
@@ -131,7 +149,7 @@ export function Users() {
                 </tr>
               ) : (
                 filtered.map((u) => (
-                  <tr key={u.id} className="hover:bg-white/5 transition-colors">
+                  <tr key={u.id} className="hover:bg-white/5 transition-colors cursor-pointer" onClick={() => openDetail(u)}>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-[#00d4ff]/20 flex items-center justify-center text-xs font-bold text-[#00d4ff] flex-shrink-0">
@@ -157,7 +175,7 @@ export function Users() {
                     <td className="px-5 py-3 text-[#8888aa]">
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         {/* Reset Password */}
                         <button
@@ -197,6 +215,112 @@ export function Users() {
           </table>
         </div>
       </div>
+      {/* User Detail Modal */}
+      <Modal isOpen={!!detailUser} onClose={() => setDetailUser(null)} title="User Details">
+        {detailLoading || !detailData ? (
+          <div className="flex items-center justify-center h-32 text-[#8888aa]">Loading...</div>
+        ) : (
+          <div className="space-y-5 text-sm">
+
+            {/* Profile Info */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Full Name',   value: detailUser.full_name },
+                { label: 'Mobile',      value: detailUser.mobile || '—' },
+                { label: 'Email',       value: detailUser.email },
+                { label: 'Joined',      value: new Date(detailUser.created_at).toLocaleDateString() },
+                { label: 'Referral Code', value: detailUser.referral_code || '—' },
+                { label: 'Wallet Balance', value: `₵${Number(detailUser.wallet_balance).toFixed(2)}` },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-[#0a0a0f] rounded-xl p-3">
+                  <p className="text-xs text-[#8888aa] mb-0.5">{label}</p>
+                  <p className="text-[#f0f0ff] font-semibold break-all">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Active Investments */}
+            <div>
+              <p className="text-xs font-bold text-[#8888aa] uppercase tracking-wide mb-2">Active Investments ({detailData.invs.length})</p>
+              {detailData.invs.length === 0 ? (
+                <p className="text-[#8888aa] text-xs">No active investments.</p>
+              ) : (
+                <div className="space-y-2">
+                  {detailData.invs.map((inv) => (
+                    <div key={inv.id} className="flex justify-between items-center bg-[#0a0a0f] rounded-xl px-3 py-2">
+                      <div>
+                        <p className="text-[#f0f0ff] font-medium">{inv.product_name}</p>
+                        <p className="text-xs text-[#8888aa]">Day {inv.duration_days - inv.days_remaining} of {inv.duration_days}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[#00ff88] font-bold">+₵{inv.daily_return}/day</p>
+                        <p className="text-xs text-[#8888aa]">Earned: ₵{Number(inv.total_earned).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Referred Users */}
+            <div>
+              <p className="text-xs font-bold text-[#8888aa] uppercase tracking-wide mb-2">
+                Referred Users ({detailData.refStats.referrals?.length ?? 0})
+              </p>
+              {!detailData.refStats.referrals?.length ? (
+                <p className="text-[#8888aa] text-xs">No referred users yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {detailData.refStats.referrals.map((r) => (
+                    <div key={r.referred_id} className="flex justify-between items-center bg-[#0a0a0f] rounded-xl px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-[#7c3aed]/20 flex items-center justify-center text-xs font-bold text-[#a78bfa]">
+                          {r.referred?.full_name?.charAt(0).toUpperCase() ?? '?'}
+                        </div>
+                        <div>
+                          <p className="text-[#f0f0ff] font-medium">{r.referred?.full_name ?? '—'}</p>
+                          <p className="text-xs text-[#8888aa]">{r.referred?.email ?? '—'}</p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#8888aa]">
+                        {r.referred?.created_at ? new Date(r.referred.created_at).toLocaleDateString() : '—'}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Transactions */}
+            <div>
+              <p className="text-xs font-bold text-[#8888aa] uppercase tracking-wide mb-2">Recent Transactions</p>
+              {detailData.txs.length === 0 ? (
+                <p className="text-[#8888aa] text-xs">No transactions yet.</p>
+              ) : (
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {detailData.txs.slice(0, 10).map((tx) => (
+                    <div key={tx.id} className="flex justify-between items-center px-3 py-2 rounded-xl bg-[#0a0a0f]">
+                      <div className="flex items-center gap-2">
+                        {tx.type === 'deposit'             && <ArrowDownCircle size={13} className="text-[#00ff88]" />}
+                        {tx.type === 'withdrawal'          && <ArrowUpCircle size={13} className="text-red-400" />}
+                        {tx.type === 'purchase'            && <ShoppingCart size={13} className="text-[#00d4ff]" />}
+                        {tx.type === 'return'              && <TrendingUp size={13} className="text-[#00ff88]" />}
+                        {tx.type === 'referral_commission' && <UsersIcon size={13} className="text-[#a78bfa]" />}
+                        <p className="text-[#8888aa] text-xs truncate max-w-[140px]">{tx.description}</p>
+                      </div>
+                      <p className={`text-xs font-bold ${Number(tx.amount) >= 0 ? 'text-[#00ff88]' : 'text-red-400'}`}>
+                        {Number(tx.amount) >= 0 ? '+' : ''}₵{Math.abs(Number(tx.amount)).toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+        )}
+      </Modal>
+
       {/* Reset Password Modal */}
       <Modal isOpen={!!resetUser} onClose={closeResetModal} title="Reset User Password">
         <div className="space-y-4">
