@@ -60,6 +60,13 @@ export function Profile() {
   const [withdrawalFeePct, setWithdrawalFeePct] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  // Bank / MoMo details
+  const [momoForm, setMomoForm] = useState({ momo_network: '', momo_number: '', momo_account_name: '' });
+  const [editingMomo, setEditingMomo] = useState(false);
+  const [momoSaving, setMomoSaving] = useState(false);
+  const [momoMsg, setMomoMsg] = useState('');
+  const [momoError, setMomoError] = useState('');
+
   // Modals
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
@@ -88,6 +95,11 @@ export function Profile() {
     if (!profile?.id) return;
     setBalance(Number(profile.wallet_balance));
     setProfileForm({ full_name: profile.full_name ?? '', mobile: profile.mobile ?? '' });
+    setMomoForm({
+      momo_network:      profile.momo_network      ?? '',
+      momo_number:       profile.momo_number       ?? '',
+      momo_account_name: profile.momo_account_name ?? '',
+    });
     Promise.all([
       getUserDepositRequests(profile.id),
       getUserWithdrawalRequests(profile.id),
@@ -160,6 +172,33 @@ export function Profile() {
       setProfileError('Failed to update profile.');
     } finally {
       setProfileSaving(false);
+    }
+  }
+
+  // ── MoMo / Bank details ─────────────────────────────────
+  async function handleSaveMomo() {
+    if (!momoForm.momo_network)             { setMomoError('Please select a network.'); return; }
+    if (!momoForm.momo_number.trim())        { setMomoError('MoMo number is required.'); return; }
+    if (!momoForm.momo_account_name.trim())  { setMomoError('Account name is required.'); return; }
+    setMomoSaving(true); setMomoError('');
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          momo_network:      momoForm.momo_network,
+          momo_number:       momoForm.momo_number.trim(),
+          momo_account_name: momoForm.momo_account_name.trim(),
+        })
+        .eq('id', profile.id);
+      if (error) throw error;
+      await refreshProfile();
+      setMomoMsg('Bank details saved!');
+      setEditingMomo(false);
+      setTimeout(() => setMomoMsg(''), 3000);
+    } catch (e) {
+      setMomoError('Failed to save details.');
+    } finally {
+      setMomoSaving(false);
     }
   }
 
@@ -355,6 +394,76 @@ export function Profile() {
               className="w-full py-3 rounded-xl border border-[#2a2a3a] text-[#8888aa] font-bold text-sm flex items-center justify-center gap-1.5 hover:text-[#f0f0ff] transition-colors">
               <Lock size={14} /> Change Password
             </button>
+          )}
+        </div>
+      </Section>
+
+      {/* ── Bank Details (MoMo) ── */}
+      <Section title="Bank Details">
+        <div className="space-y-3 pb-2">
+          {momoMsg && <p className="text-[#00ff88] text-sm">{momoMsg}</p>}
+          {editingMomo ? (
+            <>
+              {/* Network selector */}
+              <div>
+                <label className="text-xs text-[#8888aa] mb-1.5 block">Mobile Network</label>
+                <div className="flex gap-2">
+                  {['MTN', 'Telecel', 'AirtelTigo'].map((n) => (
+                    <button key={n} type="button"
+                      onClick={() => setMomoForm((f) => ({ ...f, momo_network: n }))}
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-all ${
+                        momoForm.momo_network === n
+                          ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]'
+                          : 'border-[#2a2a3a] text-[#8888aa]'
+                      }`}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-[#8888aa] mb-1 block">MoMo Number</label>
+                <input className={inputClass} type="tel" placeholder="e.g. 0241234567"
+                  value={momoForm.momo_number}
+                  onChange={(e) => setMomoForm((f) => ({ ...f, momo_number: e.target.value }))} />
+              </div>
+              <div>
+                <label className="text-xs text-[#8888aa] mb-1 block">Account Name</label>
+                <input className={inputClass} type="text" placeholder="Name on MoMo account"
+                  value={momoForm.momo_account_name}
+                  onChange={(e) => setMomoForm((f) => ({ ...f, momo_account_name: e.target.value }))} />
+              </div>
+              {momoError && <p className="text-red-400 text-sm">{momoError}</p>}
+              <div className="flex gap-2">
+                <button onClick={handleSaveMomo} disabled={momoSaving}
+                  className="flex-1 py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm disabled:opacity-50 flex items-center justify-center gap-1.5">
+                  <Save size={14} /> {momoSaving ? 'Saving...' : 'Save'}
+                </button>
+                <button onClick={() => { setEditingMomo(false); setMomoError(''); }}
+                  className="flex-1 py-3 rounded-xl border border-[#2a2a3a] text-[#8888aa] font-bold text-sm flex items-center justify-center gap-1.5">
+                  <X size={14} /> Cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-0 divide-y divide-[#2a2a3a]/50">
+                {[
+                  { label: 'Network',      value: profile?.momo_network      || '—' },
+                  { label: 'MoMo Number',  value: profile?.momo_number       || '—' },
+                  { label: 'Account Name', value: profile?.momo_account_name || '—' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between items-center py-2">
+                    <span className="text-xs text-[#8888aa]">{label}</span>
+                    <span className="text-sm text-[#f0f0ff] font-medium">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setEditingMomo(true)}
+                className="w-full py-3 rounded-xl border border-[#2a2a3a] text-[#8888aa] font-bold text-sm flex items-center justify-center gap-1.5 hover:text-[#f0f0ff] transition-colors">
+                <Edit3 size={14} /> {profile?.momo_number ? 'Edit Details' : 'Add Details'}
+              </button>
+            </>
           )}
         </div>
       </Section>

@@ -212,6 +212,9 @@ export function Users() {
                 { label: 'Joined',         value: new Date(detailUser.created_at).toLocaleDateString() },
                 { label: 'Referral Code',  value: detailUser.referral_code || '—' },
                 { label: 'Wallet Balance', value: `₵${Number(detailUser.wallet_balance).toFixed(2)}` },
+                { label: 'MoMo Network',   value: detailUser.momo_network || '—' },
+                { label: 'MoMo Number',    value: detailUser.momo_number || '—' },
+                { label: 'Account Name',   value: detailUser.momo_account_name || '—' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between items-center py-2.5">
                   <p className="text-[#8888aa]">{label}</p>
