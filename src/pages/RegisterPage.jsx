@@ -164,9 +164,7 @@ export function RegisterPage() {
 
             {/* Referral Code */}
             <div>
-              <label className={labelClass}>
-                Referral Code{isFirstUser && <span className="text-[#8888aa] font-normal text-xs ml-1">(Optional — first account)</span>}
-              </label>
+              <label className={labelClass}>Referral Code</label>
               <input
                 className={inputClass}
                 type="text"
