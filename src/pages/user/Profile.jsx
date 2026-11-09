@@ -649,5 +649,3 @@ export function Profile() {
     </div>
   );
 }
-  );
-}
