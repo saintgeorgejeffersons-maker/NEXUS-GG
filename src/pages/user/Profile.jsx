@@ -528,7 +528,7 @@ export function Profile() {
             <p className="text-xs text-[#8888aa]">Available Balance</p>
             <p className="text-xl font-black text-[#f0f0ff]">₵{balance.toFixed(2)}</p>
           </div>
-          <p className="text-xs text-[#8888aa]">Minimum withdrawal: ₵{minWithdrawal}. Reviewed by admin before processing.</p>
+          <p className="text-xs text-[#8888aa]">Minimum withdrawal: ₵{minWithdrawal}.</p>
           <input type="number" placeholder={`Min ₵${minWithdrawal}`} value={amount}
             onChange={(e) => setAmount(e.target.value)} className={inputClass} />
 
