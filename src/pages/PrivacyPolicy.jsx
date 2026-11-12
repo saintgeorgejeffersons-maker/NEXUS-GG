@@ -1,22 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
-export function PrivacyPolicy() {
-  const navigate = useNavigate();
-
+export function PRIVACY_CONTENT() {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] px-4 py-6 max-w-2xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl border border-[#2a2a3a] flex items-center justify-center text-[#8888aa] hover:text-[#f0f0ff] transition-colors"
-        >
-          <ArrowLeft size={18} />
-        </button>
-        <p className="text-base font-black text-[#f0f0ff]">Privacy Policy</p>
-      </div>
-
-      <div className="space-y-6 text-sm text-[#c0c0d0] leading-relaxed">
+    <div className="space-y-6 text-sm text-[#c0c0d0] leading-relaxed">
         <p className="text-xs text-[#8888aa]">Last updated: November 2026</p>
 
         <section className="space-y-2">
@@ -81,6 +68,21 @@ export function PrivacyPolicy() {
 
         <p className="text-xs text-[#8888aa] pt-4 border-t border-[#2a2a3a]">© {new Date().getFullYear()} NEXUS GG. All rights reserved.</p>
       </div>
+  );
+}
+
+export function PrivacyPolicy() {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-[#0a0a0f] px-4 py-6 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate(-1)}
+          className="w-9 h-9 rounded-xl border border-[#2a2a3a] flex items-center justify-center text-[#8888aa] hover:text-[#f0f0ff] transition-colors">
+          <ArrowLeft size={18} />
+        </button>
+        <p className="text-base font-black text-[#f0f0ff]">Privacy Policy</p>
+      </div>
+      <PRIVACY_CONTENT />
     </div>
   );
 }
