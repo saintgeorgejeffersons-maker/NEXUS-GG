@@ -173,8 +173,8 @@ export function RegisterPage() {
                     <span className="font-medium">+233</span>
                     <ChevronDown size={13} className="text-[#8888aa]" />
                   </div>
-                  <input className={inputClass} type="tel" placeholder="Enter phone number"
-                    value={form.mobile} onChange={(e) => set('mobile', e.target.value.replace(/\D/g, ''))} />
+                  <input className={inputClass} type="tel" placeholder="Enter phone number" maxLength={9}
+                    value={form.mobile} onChange={(e) => set('mobile', e.target.value.replace(/\D/g, '').slice(0, 9))} />
                 </div>
               </div>
 
