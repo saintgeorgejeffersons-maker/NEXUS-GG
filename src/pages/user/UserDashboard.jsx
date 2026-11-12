@@ -43,7 +43,7 @@ export function UserDashboard() {
     <div className="space-y-5">
       {/* Greeting */}
       <div className="pt-1">
-        <p className="text-xs text-[#8888aa]">Welcome back 👋</p>
+        <p className="text-xs text-[#8888aa]">Welcome back</p>
         <p className="text-xl font-black text-[#f0f0ff] truncate">{profile?.full_name ?? 'Investor'}</p>
       </div>
 

@@ -111,7 +111,7 @@ export function RegisterPage() {
               <div className="flex gap-2">
                 {/* Country prefix — hardcoded Ghana */}
                 <div className="flex items-center gap-1.5 px-3 py-3.5 rounded-xl bg-[#1a1a24] border border-[#2a2a3a] text-sm text-[#f0f0ff] flex-shrink-0 cursor-default select-none">
-                  <span>🇬🇭</span>
+                  <span>GH</span>
                   <span className="font-medium">+233</span>
                   <ChevronDown size={13} className="text-[#8888aa]" />
                 </div>
