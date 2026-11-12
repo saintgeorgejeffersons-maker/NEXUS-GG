@@ -185,25 +185,37 @@ export function SupportWidget() {
       }}
     >
       {/* Primary FAB */}
-      <button
-        aria-label={open ? 'Close support menu' : 'Open support menu'}
-        aria-expanded={open}
-        onMouseDown={(e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); }}
-        onTouchStart={(e) => { startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
-        onClick={() => { if (!dragRef.current.moved) setOpen((v) => !v); }}
-        style={{
-          ...fabBase,
-          background: open ? '#1a1a24' : '#0b0f19',
-          border: `1.5px solid ${open ? '#00ff88' : '#2a2a3a'}`,
-          color: open ? '#00ff88' : '#8888aa',
-          boxShadow: open
-            ? '0 0 20px rgba(0,255,136,0.25), 0 4px 16px rgba(0,0,0,0.6)'
-            : '0 2px 12px rgba(0,0,0,0.5)',
-          cursor: dragging ? 'grabbing' : 'grab',
-        }}
-      >
-        {open ? <X size={18} /> : <Headphones size={18} />}
-      </button>
+      <div style={{ position: 'relative', width: FAB_SIZE, height: FAB_SIZE }}>
+        {/* Pulsing ring — only when closed */}
+        {!open && (
+          <span style={{
+            position: 'absolute', inset: -4, borderRadius: '50%',
+            border: '2px solid rgba(0,255,136,0.5)',
+            animation: 'nexus-pulse 2s ease-out infinite',
+            pointerEvents: 'none',
+          }} />
+        )}
+        <button
+          aria-label={open ? 'Close support menu' : 'Open support menu'}
+          aria-expanded={open}
+          onMouseDown={(e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); }}
+          onTouchStart={(e) => { startDrag(e.touches[0].clientX, e.touches[0].clientY); }}
+          onClick={() => { if (!dragRef.current.moved) setOpen((v) => !v); }}
+          style={{
+            ...fabBase,
+            width: FAB_SIZE, height: FAB_SIZE,
+            background: open ? '#1a1a24' : '#0b0f19',
+            border: `2px solid ${open ? '#00ff88' : '#00ff88'}`,
+            color: open ? '#00ff88' : '#00ff88',
+            boxShadow: open
+              ? '0 0 20px rgba(0,255,136,0.35), 0 4px 16px rgba(0,0,0,0.6)'
+              : '0 0 14px rgba(0,255,136,0.4), 0 2px 12px rgba(0,0,0,0.5)',
+            cursor: dragging ? 'grabbing' : 'grab',
+          }}
+        >
+          {open ? <X size={18} /> : <Headphones size={18} />}
+        </button>
+      </div>
 
       {/* WhatsApp */}
       {links.whatsapp && (
