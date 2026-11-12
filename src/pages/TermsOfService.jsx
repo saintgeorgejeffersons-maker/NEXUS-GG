@@ -34,6 +34,7 @@ export function TERMS_CONTENT() {
             <li>Past performance does not guarantee future returns.</li>
             <li>Investment durations are fixed as stated at the time of purchase.</li>
             <li>Daily earnings must be claimed manually within the platform each day.</li>
+            <li>Failure to claim daily earnings on time may result in those earnings being forfeited or reduced, as configured by the platform administrator.</li>
           </ul>
         </section>
 

@@ -8,7 +8,7 @@ export function PRIVACY_CONTENT() {
 
         <section className="space-y-2">
           <p className="text-base font-bold text-[#f0f0ff]">1. Introduction</p>
-          <p>NEXUS GG ("we", "us", or "our") is committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our platform.</p>
+          <p>NEXUS GG is committed to protecting your personal information. This Privacy Policy explains how your data is collected, used, and safeguarded when you use the platform.</p>
         </section>
 
         <section className="space-y-2">
@@ -24,7 +24,7 @@ export function PRIVACY_CONTENT() {
         </section>
 
         <section className="space-y-2">
-          <p className="text-base font-bold text-[#f0f0ff]">3. How We Use Your Information</p>
+          <p className="text-base font-bold text-[#f0f0ff]">3. How Your Information Is Used</p>
           <p>Your information is used to:</p>
           <ul className="space-y-1 pl-4">
             <li>Process investments and facilitate daily yield payouts</li>
@@ -38,17 +38,17 @@ export function PRIVACY_CONTENT() {
 
         <section className="space-y-2">
           <p className="text-base font-bold text-[#f0f0ff]">4. Data Sharing</p>
-          <p>We do not sell your personal data. We may share limited data with trusted third-party service providers (such as payment processors) solely to facilitate our services. All third parties are bound by confidentiality obligations.</p>
+          <p>Your personal data is not sold. Limited data may be shared with trusted third-party service providers (such as payment processors) solely to facilitate platform services. All third parties are bound by confidentiality obligations.</p>
         </section>
 
         <section className="space-y-2">
           <p className="text-base font-bold text-[#f0f0ff]">5. Data Security</p>
-          <p>We implement industry-standard security measures to protect your data, including encryption and secure access controls. However, no system is completely immune to risks, and we encourage you to use strong passwords and keep your login details confidential.</p>
+          <p>Industry-standard security measures are implemented to protect your data, including encryption and secure access controls. No system is completely immune to risks — use strong passwords and keep your login details confidential.</p>
         </section>
 
         <section className="space-y-2">
           <p className="text-base font-bold text-[#f0f0ff]">6. Data Retention</p>
-          <p>We retain your personal data for as long as your account is active or as required by law. You may request deletion of your account and associated data by contacting our support team.</p>
+          <p>Personal data is retained for as long as your account is active or as required by law. You may request deletion of your account and associated data by contacting the support team.</p>
         </section>
 
         <section className="space-y-2">
@@ -58,11 +58,11 @@ export function PRIVACY_CONTENT() {
 
         <section className="space-y-2">
           <p className="text-base font-bold text-[#f0f0ff]">8. Changes to This Policy</p>
-          <p>We may update this Privacy Policy periodically. Continued use of the platform after changes constitutes acceptance of the updated policy.</p>
+          <p>This Privacy Policy may be updated periodically. Continued use of the platform after changes constitutes acceptance of the updated policy.</p>
         </section>
 
         <section className="space-y-2">
-          <p className="text-base font-bold text-[#f0f0ff]">9. Contact Us</p>
+          <p className="text-base font-bold text-[#f0f0ff]">9. Contact</p>
           <p>For privacy-related questions or concerns, please contact us through the support widget available on the platform.</p>
         </section>
 
