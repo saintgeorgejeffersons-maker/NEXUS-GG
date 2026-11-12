@@ -19,6 +19,12 @@ export function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isFirstUser, setIsFirstUser] = useState(false);
+
+  // Legal acceptance
+  const [termsRead, setTermsRead] = useState(false);
+  const [privacyRead, setPrivacyRead] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -46,6 +52,7 @@ export function RegisterPage() {
     if (form.password.length < 6) { setError('Password must be at least 6 characters.'); return; }
     if (form.password !== form.confirmPassword) { setError('Passwords do not match.'); return; }
     if (!form.referralCode.trim()) { setError('A referral code is required to register.'); return; }
+    if (!accepted) { setError('Please read and accept the Terms of Service and Privacy Policy to continue.'); return; }
 
     // Verify the referral code exists in the DB
     setLoading(true);
@@ -204,6 +211,62 @@ export function RegisterPage() {
               {' '}and{' '}
               <Link to="/privacy" className="text-[#00d4ff] hover:underline">Privacy Policy</Link>
             </p>
+            {/* Legal acceptance */}
+            <div className="space-y-2 pt-1">
+              {/* Terms link */}
+              <div className="flex items-center justify-between py-2.5 border border-[#2a2a3a] rounded-xl px-3">
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full flex-shrink-0 border-2 flex items-center justify-center ${termsRead ? 'border-[#00ff88] bg-[#00ff88]/20' : 'border-[#2a2a3a]'}`}>
+                    {termsRead && <div className="w-2 h-2 rounded-full bg-[#00ff88]" />}
+                  </div>
+                  <span className="text-xs text-[#8888aa]">Read Terms of Service</span>
+                </div>
+                <Link
+                  to="/terms" target="_blank"
+                  onClick={() => setTermsRead(true)}
+                  className="text-xs text-[#00d4ff] font-semibold hover:underline flex-shrink-0"
+                >
+                  Read
+                </Link>
+              </div>
+
+              {/* Privacy link */}
+              <div className="flex items-center justify-between py-2.5 border border-[#2a2a3a] rounded-xl px-3">
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full flex-shrink-0 border-2 flex items-center justify-center ${privacyRead ? 'border-[#00ff88] bg-[#00ff88]/20' : 'border-[#2a2a3a]'}`}>
+                    {privacyRead && <div className="w-2 h-2 rounded-full bg-[#00ff88]" />}
+                  </div>
+                  <span className="text-xs text-[#8888aa]">Read Privacy Policy</span>
+                </div>
+                <Link
+                  to="/privacy" target="_blank"
+                  onClick={() => setPrivacyRead(true)}
+                  className="text-xs text-[#00d4ff] font-semibold hover:underline flex-shrink-0"
+                >
+                  Read
+                </Link>
+              </div>
+
+              {/* Accept checkbox — only enabled after both are read */}
+              <label className={`flex items-start gap-3 cursor-pointer ${!termsRead || !privacyRead ? 'opacity-40 pointer-events-none' : ''}`}>
+                <div
+                  onClick={() => { if (termsRead && privacyRead) setAccepted((v) => !v); }}
+                  className={`mt-0.5 w-5 h-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                    accepted ? 'border-[#00d4ff] bg-[#00d4ff]' : 'border-[#2a2a3a] bg-transparent'
+                  }`}
+                >
+                  {accepted && (
+                    <svg width="11" height="8" viewBox="0 0 11 8" fill="none">
+                      <path d="M1 4L4 7L10 1" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+                <span className="text-xs text-[#8888aa] leading-relaxed">
+                  I have read and agree to the Terms of Service and Privacy Policy
+                </span>
+              </label>
+            </div>
+
           </form>
 
           <p className="text-center text-sm text-[#8888aa]">
