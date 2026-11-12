@@ -47,7 +47,6 @@ export function TermsOfService() {
             <li>Past performance does not guarantee future returns.</li>
             <li>Investment durations are fixed as stated at the time of purchase.</li>
             <li>Daily earnings must be claimed manually within the platform each day.</li>
-            <li>Missed daily claims may be subject to a reduced payout percentage as configured by the platform administrator.</li>
           </ul>
         </section>
 
@@ -69,14 +68,7 @@ export function TermsOfService() {
 
         <section className="space-y-2">
           <p className="text-base font-bold text-[#f0f0ff]">8. Prohibited Activities</p>
-          <p>You agree not to:</p>
-          <ul className="space-y-1 pl-4">
-            <li>Use the platform for any unlawful purpose</li>
-            <li>Attempt to manipulate, hack, or reverse-engineer the platform</li>
-            <li>Create multiple accounts to abuse the referral system</li>
-            <li>Provide false information during registration or transactions</li>
-            <li>Interfere with other users' access to the platform</li>
-          </ul>
+          <p>You agree not to use the platform for any unlawful, fraudulent, or abusive purpose, including but not limited to creating fake accounts, manipulating the referral system, or interfering with other users' access to the platform.</p>
         </section>
 
         <section className="space-y-2">
