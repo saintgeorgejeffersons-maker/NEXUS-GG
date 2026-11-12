@@ -197,6 +197,13 @@ export function RegisterPage() {
             >
               {loading ? 'Creating account...' : 'Register Now'}
             </button>
+
+            <p className="text-center text-xs text-[#8888aa]">
+              By registering you agree to our{' '}
+              <Link to="/terms" className="text-[#00d4ff] hover:underline">Terms of Service</Link>
+              {' '}and{' '}
+              <Link to="/privacy" className="text-[#00d4ff] hover:underline">Privacy Policy</Link>
+            </p>
           </form>
 
           <p className="text-center text-sm text-[#8888aa]">

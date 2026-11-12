@@ -2,7 +2,7 @@
 import {
   ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart,
   Clock, Copy, Check, Users, Plus, Minus,
-  Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight, Info, CreditCard,
+  Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight, Info, CreditCard, FileText, Shield,
 } from 'lucide-react';import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -301,6 +301,29 @@ export function Profile() {
             <p className="text-sm font-bold text-[#f0f0ff]">About Us</p>
             <p className="text-xs text-[#8888aa]">Learn more about NEXUS GG</p>
           </div>
+        </div>
+        <ArrowRight size={18} className="text-[#8888aa]" />
+      </button>
+
+      {/* ── Legal ── */}
+      <button
+        onClick={() => navigate('/terms')}
+        className="w-full flex items-center justify-between py-3 border-b border-[#2a2a3a]"
+      >
+        <div className="flex items-center gap-3">
+          <FileText size={18} className="text-[#8888aa]" />
+          <p className="text-sm font-bold text-[#f0f0ff]">Terms of Service</p>
+        </div>
+        <ArrowRight size={18} className="text-[#8888aa]" />
+      </button>
+
+      <button
+        onClick={() => navigate('/privacy')}
+        className="w-full flex items-center justify-between py-3 border-b border-[#2a2a3a]"
+      >
+        <div className="flex items-center gap-3">
+          <Shield size={18} className="text-[#8888aa]" />
+          <p className="text-sm font-bold text-[#f0f0ff]">Privacy Policy</p>
         </div>
         <ArrowRight size={18} className="text-[#8888aa]" />
       </button>

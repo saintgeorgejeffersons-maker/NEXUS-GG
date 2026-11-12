@@ -11,6 +11,8 @@ import { Transactions as AdminTransactions } from './pages/admin/Transactions';
 import { ActiveInvestments } from './pages/user/ActiveInvestments';
 import { Referral } from './pages/user/Referral';
 import { AboutUs } from './pages/user/AboutUs';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfService } from './pages/TermsOfService';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { Inventory } from './pages/admin/Inventory';
 import { Users } from './pages/admin/Users';
@@ -57,6 +59,10 @@ function AppRoutes() {
       <Route path="/myspot/withdrawals"  element={<ProtectedRoute role="admin"><Withdrawals /></ProtectedRoute>} />
       <Route path="/myspot/transactions" element={<ProtectedRoute role="admin"><AdminTransactions /></ProtectedRoute>} />
       <Route path="/myspot/settings"     element={<ProtectedRoute role="admin"><Settings /></ProtectedRoute>} />
+
+      {/* Public legal pages */}
+      <Route path="/privacy"  element={<PrivacyPolicy />} />
+      <Route path="/terms"    element={<TermsOfService />} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
