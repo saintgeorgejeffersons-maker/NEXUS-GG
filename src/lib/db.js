@@ -340,6 +340,30 @@ export async function getAllWithdrawalRequests() {
   return data;
 }
 
+// ── REFERRAL DEPOSIT CHECK ────────────────────────────────
+// Returns how many of a user's referrals have at least one approved deposit
+export async function countReferralsWithApprovedDeposit(userId) {
+  // Get all referred user IDs
+  const { data: referrals } = await supabase
+    .from('referrals')
+    .select('referred_id')
+    .eq('referrer_id', userId);
+  if (!referrals || referrals.length === 0) return 0;
+
+  const referredIds = referrals.map((r) => r.referred_id);
+
+  // Count how many have an approved deposit request
+  const { data: deposits } = await supabase
+    .from('deposit_requests')
+    .select('user_id')
+    .in('user_id', referredIds)
+    .eq('status', 'approved');
+
+  if (!deposits) return 0;
+  // Distinct users
+  return new Set(deposits.map((d) => d.user_id)).size;
+}
+
 export async function updateWithdrawalRequestStatus(id, status) {
   const { data, error } = await supabase
     .from('withdrawal_requests')

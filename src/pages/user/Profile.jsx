@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   createDepositRequest, getUserDepositRequests,
   getSettings, createWithdrawalRequest, getUserWithdrawalRequests,
+  countReferralsWithApprovedDeposit,
 } from '../../lib/db';
 
 // ── Constants ────────────────────────────────────────────
@@ -138,6 +139,17 @@ export function Profile() {
     if (val < minWithdrawal) { setTxError(`Minimum withdrawal is ₵${minWithdrawal}.`); return; }
     if (val > balance) { setTxError('Insufficient balance.'); return; }
     setTxError('');
+
+    // Check if this is a 2nd+ withdrawal — requires 2 referrals with approved deposits
+    const approvedWithdrawals = withdrawalRequests.filter((r) => r.status === 'approved').length;
+    if (approvedWithdrawals >= 1) {
+      const qualifiedReferrals = await countReferralsWithApprovedDeposit(profile.id);
+      if (qualifiedReferrals < 2) {
+        setTxError('To make a second withdrawal, you need at least 2 referrals who have made a successful deposit.');
+        return;
+      }
+    }
+
     try {
       await createWithdrawalRequest(profile.id, val);
       const wreqs = await getUserWithdrawalRequests(profile.id);
