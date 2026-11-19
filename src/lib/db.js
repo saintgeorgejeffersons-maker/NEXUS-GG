@@ -303,14 +303,27 @@ export async function getAllProfiles() {
 }
 
 // ── DEPOSIT REQUESTS ──────────────────────────────────────
-export async function createDepositRequest(userId, amount, reference) {
+export async function createDepositRequest(userId, amount, momoId, momoSnapshot) {
   const { data, error } = await supabase
     .from('deposit_requests')
-    .insert({ user_id: userId, amount, status: 'pending', reference })
+    .insert({ user_id: userId, amount, status: 'pending', assigned_momo_id: momoId, assigned_momo_snapshot: momoSnapshot })
     .select()
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function getPendingDepositRequest(userId) {
+  const { data, error } = await supabase
+    .from('deposit_requests')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data; // null if none
 }
 
 export async function getUserDepositRequests(userId) {
@@ -599,6 +612,35 @@ export async function deleteTransaction(id) {
 // ── DELETE USER ACCOUNT ───────────────────────────────────
 export async function deleteUserAccount(userId) {
   const { error } = await supabase.rpc('delete_user_account', { target_user_id: userId });
+  if (error) throw error;
+}
+
+// ── MOMO ACCOUNTS ─────────────────────────────────────────
+export async function getMomoAccounts() {
+  const { data, error } = await supabase
+    .from('momo_accounts')
+    .select('*')
+    .eq('active', true)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export async function addMomoAccount(network, number, accountName) {
+  const { data, error } = await supabase
+    .from('momo_accounts')
+    .insert({ network, number, account_name: accountName })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteMomoAccount(id) {
+  const { error } = await supabase
+    .from('momo_accounts')
+    .update({ active: false })
+    .eq('id', id);
   if (error) throw error;
 }
 

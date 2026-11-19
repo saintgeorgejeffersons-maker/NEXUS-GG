@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Save, Smartphone, Percent, ArrowDownCircle, ArrowUpCircle, Info, MessageCircle } from 'lucide-react';
-import { getSettings, upsertSetting } from '../../lib/db';
+import { Save, Smartphone, Percent, ArrowDownCircle, ArrowUpCircle, Info, MessageCircle, Trash2, Plus } from 'lucide-react';
+import { getSettings, upsertSetting, getMomoAccounts, addMomoAccount, deleteMomoAccount } from '../../lib/db';
 
 const NETWORKS = ['MTN', 'Vodafone', 'AirtelTigo'];
 
@@ -9,9 +9,6 @@ const inputClass =
 
 export function Settings() {
   const [form, setForm] = useState({
-    momo_number: '',
-    momo_name: '',
-    momo_network: 'MTN',
     referral_commission_l1_pct: '',
     referral_commission_l2_pct: '',
     referral_commission_l3_pct: '',
@@ -42,13 +39,23 @@ export function Settings() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [momoAccounts, setMomoAccounts] = useState([]);
+  const [momoLoading, setMomoLoading] = useState(true);
+  const [addForm, setAddForm] = useState({ network: 'MTN', number: '', accountName: '' });
+  const [addError, setAddError] = useState('');
+  const [addLoading, setAddLoading] = useState(false);
+
+  async function loadMomoAccounts() {
+    try {
+      const list = await getMomoAccounts();
+      setMomoAccounts(list);
+    } catch { /* ignore */ }
+    setMomoLoading(false);
+  }
 
   useEffect(() => {
     getSettings().then((s) => {
       setForm({
-        momo_number:  s.momo_number  ?? '',
-        momo_name:    s.momo_name    ?? '',
-        momo_network: s.momo_network ?? 'MTN',
         referral_commission_l1_pct: s.referral_commission_l1_pct ?? '10',
         referral_commission_l2_pct: s.referral_commission_l2_pct ?? '5',
         referral_commission_l3_pct: s.referral_commission_l3_pct ?? '2',
@@ -77,11 +84,13 @@ export function Settings() {
       });
       setLoading(false);
     });
+    getMomoAccounts().then((list) => {
+      setMomoAccounts(list);
+      setMomoLoading(false);
+    }).catch(() => { setMomoLoading(false); });
   }, []);
 
   async function handleSave() {
-    if (!form.momo_number.trim()) { setError('Mobile money number is required.'); return; }
-    if (!form.momo_name.trim())   { setError('Account name is required.'); return; }
     if (Number(form.referral_commission_l1_pct) < 0 || Number(form.referral_commission_l1_pct) > 100) {
       setError('L1 commission must be between 0 and 100%.'); return;
     }
@@ -107,9 +116,6 @@ export function Settings() {
     setSaving(true);
     try {
       await Promise.all([
-        upsertSetting('momo_number',  form.momo_number.trim()),
-        upsertSetting('momo_name',    form.momo_name.trim()),
-        upsertSetting('momo_network', form.momo_network),
         upsertSetting('referral_commission_l1_pct', String(form.referral_commission_l1_pct)),
         upsertSetting('referral_commission_l2_pct', String(form.referral_commission_l2_pct)),
         upsertSetting('referral_commission_l3_pct', String(form.referral_commission_l3_pct)),
@@ -157,61 +163,99 @@ export function Settings() {
       <div className="glass-card p-6 space-y-5">
         <div className="flex items-center gap-2 mb-2">
           <Smartphone size={18} className="text-[#00d4ff]" />
-          <h3 className="text-base font-semibold text-[#f0f0ff]">Mobile Money Details</h3>
+          <h3 className="text-base font-semibold text-[#f0f0ff]">Mobile Money Numbers</h3>
         </div>
 
-        {/* Network */}
-        <div>
-          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Network</label>
-          <div className="flex gap-2">
-            {NETWORKS.map((n) => (
-              <button key={n}
-                onClick={() => setForm((f) => ({ ...f, momo_network: n }))}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-all ${
-                  form.momo_network === n
-                    ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]'
-                    : 'border-[#2a2a3a] text-[#8888aa] hover:text-[#f0f0ff]'
-                }`}>
-                {n}
-              </button>
+        {momoLoading ? (
+          <p className="text-sm text-[#8888aa]">Loading...</p>
+        ) : momoAccounts.length === 0 ? (
+          <p className="text-sm text-[#8888aa] py-2">No MoMo numbers added yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {momoAccounts.map((acc) => (
+              <div key={acc.id} className="flex items-center justify-between p-3 rounded-xl border border-[#2a2a3a] bg-[#0a0a0f]">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold px-2 py-1 rounded-full bg-[#00d4ff]/10 text-[#00d4ff]">{acc.network}</span>
+                  <div>
+                    <p className="text-sm font-semibold text-[#f0f0ff]">{acc.number}</p>
+                    <p className="text-xs text-[#8888aa]">{acc.account_name}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      await deleteMomoAccount(acc.id);
+                      await loadMomoAccounts();
+                    } catch { /* ignore */ }
+                  }}
+                  className="p-2 rounded-lg text-red-400 hover:bg-red-900/20 transition-all">
+                  <Trash2 size={15} />
+                </button>
+              </div>
             ))}
           </div>
+        )}
+
+        <div className="pt-2 border-t border-[#2a2a3a] space-y-3">
+          <p className="text-xs text-[#8888aa] font-semibold uppercase tracking-wide">Add Number</p>
+          <div>
+            <label className="text-xs text-[#8888aa] font-medium mb-2 block">Network</label>
+            <div className="flex gap-2">
+              {NETWORKS.map((n) => (
+                <button key={n}
+                  onClick={() => setAddForm((f) => ({ ...f, network: n }))}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-all ${
+                    addForm.network === n
+                      ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]'
+                      : 'border-[#2a2a3a] text-[#8888aa] hover:text-[#f0f0ff]'
+                  }`}>
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-[#8888aa] font-medium mb-2 block">Number</label>
+            <input
+              type="text"
+              placeholder="e.g. 0241234567"
+              value={addForm.number}
+              onChange={(e) => setAddForm((f) => ({ ...f, number: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-[#8888aa] font-medium mb-2 block">Account Name</label>
+            <input
+              type="text"
+              placeholder="e.g. Nexus GG"
+              value={addForm.accountName}
+              onChange={(e) => setAddForm((f) => ({ ...f, accountName: e.target.value }))}
+              className={inputClass}
+            />
+          </div>
+          {addError && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{addError}</p>}
+          <button
+            onClick={async () => {
+              if (!addForm.number.trim()) { setAddError('Number is required.'); return; }
+              if (!addForm.accountName.trim()) { setAddError('Account name is required.'); return; }
+              setAddError('');
+              setAddLoading(true);
+              try {
+                await addMomoAccount(addForm.network, addForm.number.trim(), addForm.accountName.trim());
+                setAddForm({ network: 'MTN', number: '', accountName: '' });
+                await loadMomoAccounts();
+              } catch {
+                setAddError('Failed to add number. Please try again.');
+              }
+              setAddLoading(false);
+            }}
+            disabled={addLoading}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+            <Plus size={16} />
+            {addLoading ? 'Adding...' : 'Add Number'}
+          </button>
         </div>
-
-        {/* Number */}
-        <div>
-          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Mobile Money Number</label>
-          <input
-            type="text"
-            placeholder="e.g. 0241234567"
-            value={form.momo_number}
-            onChange={(e) => setForm((f) => ({ ...f, momo_number: e.target.value }))}
-            className={inputClass}
-          />
-        </div>
-
-        {/* Name */}
-        <div>
-          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Account Name</label>
-          <input
-            type="text"
-            placeholder="e.g. Nexus GG"
-            value={form.momo_name}
-            onChange={(e) => setForm((f) => ({ ...f, momo_name: e.target.value }))}
-            className={inputClass}
-          />
-        </div>
-
-        {error && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{error}</p>}
-        {success && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-lg px-3 py-2">{success}</p>}
-
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
-          <Save size={16} />
-          {saving ? 'Saving...' : 'Save Payment Details'}
-        </button>
       </div>
 
       {/* Referral Settings */}
@@ -287,6 +331,9 @@ export function Settings() {
           />
           <p className="text-xs text-[#8888aa] mt-1">Percentage of daily earnings paid when a user claims missed days.</p>
         </div>
+
+        {error && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{error}</p>}
+        {success && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-lg px-3 py-2">{success}</p>}
 
         <button
           onClick={handleSave}
@@ -466,26 +513,6 @@ export function Settings() {
         </button>
       </div>
 
-      {/* Preview */}
-      <div className="glass-card p-5">        <p className="text-xs font-semibold text-[#8888aa] uppercase tracking-wide mb-3">Preview: what users will see</p>
-        <div className="p-4 rounded-lg bg-[#00d4ff]/5 border border-[#00d4ff]/20 space-y-2">
-          <p className="text-xs font-semibold text-[#00d4ff] uppercase tracking-wide mb-2">Send payment to</p>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <p className="text-xs text-[#8888aa]">Network</p>
-              <p className="text-[#f0f0ff] font-semibold">{form.momo_network || '—'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-[#8888aa]">Number</p>
-              <p className="text-[#f0f0ff] font-semibold">{form.momo_number || '—'}</p>
-            </div>
-            <div className="col-span-2">
-              <p className="text-xs text-[#8888aa]">Account Name</p>
-              <p className="text-[#f0f0ff] font-semibold">{form.momo_name || '—'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

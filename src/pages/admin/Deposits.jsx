@@ -105,7 +105,7 @@ export function Deposits() {
               <tr className="text-left text-[#8888aa] border-b border-[#2a2a3a]">
                 <th className="px-5 py-3">User</th>
                 <th className="px-5 py-3">Amount</th>
-                <th className="px-5 py-3">Reference</th>
+                <th className="px-5 py-3">MoMo / Ref</th>
                 <th className="px-5 py-3">Requested</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3">Actions</th>
@@ -136,9 +136,21 @@ export function Deposits() {
                       ₵{Number(req.amount).toFixed(2)}
                     </td>
                     <td className="px-5 py-3">
-                      <span className="font-mono text-sm text-[#a78bfa] bg-[#7c3aed]/10 px-2 py-1 rounded-lg">
-                        {req.reference ?? '—'}
-                      </span>
+                      {req.assigned_momo_snapshot ? (
+                        <div>
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#00d4ff]/10 text-[#00d4ff] mr-1.5">
+                            {req.assigned_momo_snapshot.network}
+                          </span>
+                          <span className="text-sm text-[#f0f0ff] font-semibold">{req.assigned_momo_snapshot.number}</span>
+                          <p className="text-xs text-[#8888aa] mt-0.5">{req.assigned_momo_snapshot.account_name}</p>
+                        </div>
+                      ) : req.reference ? (
+                        <span className="font-mono text-sm text-[#a78bfa] bg-[#7c3aed]/10 px-2 py-1 rounded-lg">
+                          {req.reference}
+                        </span>
+                      ) : (
+                        <span className="text-[#8888aa]">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3 text-[#8888aa]">
                       {new Date(req.created_at).toLocaleDateString()}{' '}

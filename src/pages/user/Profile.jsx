@@ -1,7 +1,7 @@
 ;import { useState, useEffect } from 'react';
 import {
   ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart,
-  Clock, Copy, Check, Users, Plus, Minus,
+  Clock, Users, Plus, Minus,
   Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight, Info, CreditCard, FileText, Shield,
 } from 'lucide-react';import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   createDepositRequest, getUserDepositRequests,
   getSettings, createWithdrawalRequest, getUserWithdrawalRequests,
-  countReferralsWithApprovedDeposit,
+  countReferralsWithApprovedDeposit, getPendingDepositRequest, getMomoAccounts,
 } from '../../lib/db';
 
 // ── Constants ────────────────────────────────────────────
@@ -21,11 +21,6 @@ const STATUS_STYLE = {
 };
 
 const DEPOSIT_PRESETS = [120, 200, 500, 1000];
-
-function generateReference() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  return 'NXS-' + Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-}
 
 const inputClass = 'w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded-xl px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-colors';
 
@@ -55,7 +50,6 @@ export function Profile() {
   const [balance, setBalance] = useState(0);
   const [depositRequests, setDepositRequests] = useState([]);
   const [withdrawalRequests, setWithdrawalRequests] = useState([]);
-  const [momoSettings, setMomoSettings] = useState(null);
   const [minDeposit, setMinDeposit] = useState(120);
   const [minWithdrawal, setMinWithdrawal] = useState(50);
   const [withdrawalFeePct, setWithdrawalFeePct] = useState(0);
@@ -73,10 +67,10 @@ export function Profile() {
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [amount, setAmount] = useState('');
-  const [reference, setReference] = useState('');
-  const [copied, setCopied] = useState(false);
   const [txError, setTxError] = useState('');
   const [txSuccess, setTxSuccess] = useState('');
+  const [pendingRequest, setPendingRequest] = useState(null);
+  const [pendingChecked, setPendingChecked] = useState(false);
 
   // Profile editing
   const [editingProfile, setEditingProfile] = useState(false);
@@ -109,7 +103,6 @@ export function Profile() {
     ]).then(([reqs, wreqs, settings]) => {
       setDepositRequests(reqs);
       setWithdrawalRequests(wreqs);
-      setMomoSettings(settings);
       setMinDeposit(Number(settings.min_deposit_amount ?? 120));
       setMinWithdrawal(Number(settings.min_withdrawal_amount ?? 50));
       setWithdrawalFeePct(Number(settings.withdrawal_fee_pct ?? 0));
@@ -124,12 +117,18 @@ export function Profile() {
     if (val < minDeposit) { setTxError(`Minimum deposit is ₵${minDeposit}.`); return; }
     setTxError('');
     try {
-      await createDepositRequest(profile.id, val, reference);
+      const accounts = await getMomoAccounts();
+      if (!accounts || accounts.length === 0) {
+        setTxError('No payment numbers available. Please contact support.');
+        return;
+      }
+      const picked = accounts[Math.floor(Math.random() * accounts.length)];
+      const snapshot = { network: picked.network, number: picked.number, account_name: picked.account_name };
+      const req = await createDepositRequest(profile.id, val, picked.id, snapshot);
+      setPendingRequest(req);
       const reqs = await getUserDepositRequests(profile.id);
       setDepositRequests(reqs);
-      setTxSuccess(`Deposit request for ₵${val.toFixed(2)} submitted.`);
-      setAmount('');
-      setTimeout(() => { setTxSuccess(''); setShowDeposit(false); }, 2500);
+      setTxSuccess('');
     } catch (_) { setTxError('Failed to submit deposit. Please try again.'); }
   }
 
@@ -162,10 +161,20 @@ export function Profile() {
 
   function openDeposit() {
     setAmount(''); setTxError(''); setTxSuccess('');
-    setReference(generateReference()); setCopied(false);
+    setPendingChecked(false);
+    setPendingRequest(null);
     setShowDeposit(true);
   }
   function openWithdraw() { setAmount(''); setTxError(''); setTxSuccess(''); setShowWithdraw(true); }
+
+  // Check for a pending deposit when the deposit modal opens
+  useEffect(() => {
+    if (!showDeposit || !profile?.id) return;
+    getPendingDepositRequest(profile.id).then((req) => {
+      setPendingRequest(req);
+      setPendingChecked(true);
+    });
+  }, [showDeposit, profile?.id]);
 
   // ── Profile edit ────────────────────────────────────────
   async function handleSaveProfile() {
@@ -493,42 +502,55 @@ export function Profile() {
       {/* ── Deposit Modal ── */}
       <Modal isOpen={showDeposit} onClose={() => setShowDeposit(false)} title="Request Deposit">
         <div className="space-y-4">
-          {momoSettings && (
-            <div className="p-4 rounded-xl bg-[#00d4ff]/5 border border-[#00d4ff]/20">
-              <p className="text-xs font-bold text-[#00d4ff] uppercase tracking-wide mb-3">Send payment to</p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><p className="text-xs text-[#8888aa]">Network</p><p className="text-[#f0f0ff] font-bold">{momoSettings.momo_network}</p></div>
-                <div><p className="text-xs text-[#8888aa]">Number</p><p className="text-[#f0f0ff] font-bold">{momoSettings.momo_number}</p></div>
-                <div className="col-span-2"><p className="text-xs text-[#8888aa]">Account Name</p><p className="text-[#f0f0ff] font-bold">{momoSettings.momo_name}</p></div>
+          {!pendingChecked ? (
+            <p className="text-sm text-[#8888aa] text-center py-4">Checking pending requests...</p>
+          ) : pendingRequest ? (
+            /* ── Pending request view ── */
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-yellow-900/20 border border-yellow-700/30">
+                <p className="text-sm font-bold text-yellow-400 mb-1">Pending Deposit</p>
+                <p className="text-xs text-[#8888aa]">You have a pending deposit of ₵{Number(pendingRequest.amount).toFixed(2)}. Send payment to the number below and wait for approval.</p>
               </div>
+              {pendingRequest.assigned_momo_snapshot && (
+                <div className="p-4 rounded-xl bg-[#00d4ff]/5 border border-[#00d4ff]/20">
+                  <p className="text-xs font-bold text-[#00d4ff] uppercase tracking-wide mb-3">Send payment to</p>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-xs text-[#8888aa]">Network</p>
+                      <p className="text-[#f0f0ff] font-bold">{pendingRequest.assigned_momo_snapshot.network}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#8888aa]">Number</p>
+                      <p className="text-[#f0f0ff] font-black text-lg tracking-wider">{pendingRequest.assigned_momo_snapshot.number}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-xs text-[#8888aa]">Account Name</p>
+                      <p className="text-[#f0f0ff] font-bold">{pendingRequest.assigned_momo_snapshot.account_name}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-[#8888aa] text-center">You cannot start a new deposit while one is pending.</p>
             </div>
-          )}
-          <div className="p-3 rounded-xl bg-[#7c3aed]/10 border border-[#7c3aed]/30">
-            <p className="text-xs text-[#8888aa] mb-2">Use this reference when sending</p>
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-mono text-lg font-black text-[#a78bfa] tracking-widest">{reference}</span>
-              <button onClick={() => { navigator.clipboard.writeText(reference); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#7c3aed]/20 text-[#a78bfa]">
-                {copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
+          ) : (
+            /* ── New deposit form ── */
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 gap-2">
+                {DEPOSIT_PRESETS.map((p) => (
+                  <button key={p} onClick={() => setAmount(p.toString())}
+                    className={`py-2 rounded-xl text-sm font-semibold border transition-all ${
+                      amount === p.toString() ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]' : 'border-[#2a2a3a] text-[#8888aa]'
+                    }`}>₵{p}</button>
+                ))}
+              </div>
+              <input type="number" placeholder={`Min ₵${minDeposit}`} value={amount}
+                onChange={(e) => setAmount(e.target.value)} className={inputClass} />
+              {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-xl px-3 py-2">{txError}</p>}
+              <button onClick={handleDeposit} className="w-full py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm">
+                Submit Deposit Request
               </button>
+              <p className="text-xs text-[#8888aa] text-center">A MoMo number will be assigned to you after submitting.</p>
             </div>
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            {DEPOSIT_PRESETS.map((p) => (
-              <button key={p} onClick={() => setAmount(p.toString())}
-                className={`py-2 rounded-xl text-sm font-semibold border transition-all ${
-                  amount === p.toString() ? 'border-[#00d4ff] bg-[#00d4ff]/10 text-[#00d4ff]' : 'border-[#2a2a3a] text-[#8888aa]'
-                }`}>₵{p}</button>
-            ))}
-          </div>
-          <input type="number" placeholder={`Min ₵${minDeposit}`} value={amount}
-            onChange={(e) => setAmount(e.target.value)} className={inputClass} />
-          {txError && <p className="text-red-400 text-sm bg-red-900/20 rounded-xl px-3 py-2">{txError}</p>}
-          {txSuccess && <p className="text-yellow-400 text-sm bg-yellow-900/20 rounded-xl px-3 py-2">{txSuccess}</p>}
-          {!txSuccess && (
-            <button onClick={handleDeposit} className="w-full py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm">
-              Submit Deposit Request
-            </button>
           )}
         </div>
       </Modal>
