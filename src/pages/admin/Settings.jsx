@@ -12,7 +12,9 @@ export function Settings() {
     momo_number: '',
     momo_name: '',
     momo_network: 'MTN',
-    referral_commission_pct: '',
+    referral_commission_l1_pct: '',
+    referral_commission_l2_pct: '',
+    referral_commission_l3_pct: '',
     referral_bonus_amount: '',
     missed_earnings_pct: '',
     min_deposit_amount: '',
@@ -47,7 +49,9 @@ export function Settings() {
         momo_number:  s.momo_number  ?? '',
         momo_name:    s.momo_name    ?? '',
         momo_network: s.momo_network ?? 'MTN',
-        referral_commission_pct: s.referral_commission_pct ?? '10',
+        referral_commission_l1_pct: s.referral_commission_l1_pct ?? '10',
+        referral_commission_l2_pct: s.referral_commission_l2_pct ?? '5',
+        referral_commission_l3_pct: s.referral_commission_l3_pct ?? '2',
         referral_bonus_amount:   s.referral_bonus_amount   ?? '50',
         missed_earnings_pct:     s.missed_earnings_pct     ?? '50',
         min_deposit_amount:      s.min_deposit_amount      ?? '120',
@@ -78,8 +82,14 @@ export function Settings() {
   async function handleSave() {
     if (!form.momo_number.trim()) { setError('Mobile money number is required.'); return; }
     if (!form.momo_name.trim())   { setError('Account name is required.'); return; }
-    if (Number(form.referral_commission_pct) < 0 || Number(form.referral_commission_pct) > 100) {
-      setError('Commission must be between 0 and 100%.'); return;
+    if (Number(form.referral_commission_l1_pct) < 0 || Number(form.referral_commission_l1_pct) > 100) {
+      setError('L1 commission must be between 0 and 100%.'); return;
+    }
+    if (Number(form.referral_commission_l2_pct) < 0 || Number(form.referral_commission_l2_pct) > 100) {
+      setError('L2 commission must be between 0 and 100%.'); return;
+    }
+    if (Number(form.referral_commission_l3_pct) < 0 || Number(form.referral_commission_l3_pct) > 100) {
+      setError('L3 commission must be between 0 and 100%.'); return;
     }
     if (Number(form.referral_bonus_amount) < 0) {
       setError('Bonus amount must be 0 or more.'); return;
@@ -100,7 +110,9 @@ export function Settings() {
         upsertSetting('momo_number',  form.momo_number.trim()),
         upsertSetting('momo_name',    form.momo_name.trim()),
         upsertSetting('momo_network', form.momo_network),
-        upsertSetting('referral_commission_pct', String(form.referral_commission_pct)),
+        upsertSetting('referral_commission_l1_pct', String(form.referral_commission_l1_pct)),
+        upsertSetting('referral_commission_l2_pct', String(form.referral_commission_l2_pct)),
+        upsertSetting('referral_commission_l3_pct', String(form.referral_commission_l3_pct)),
         upsertSetting('referral_bonus_amount',   String(form.referral_bonus_amount)),
         upsertSetting('missed_earnings_pct',     String(form.missed_earnings_pct)),
         upsertSetting('min_deposit_amount',      String(form.min_deposit_amount)),
@@ -210,17 +222,43 @@ export function Settings() {
         </div>
 
         <div>
-          <label className="text-xs text-[#8888aa] font-medium mb-2 block">Commission % (0–100)</label>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">L1 Commission % (0-100)</label>
           <input
             type="number"
             min="0"
             max="100"
             placeholder="e.g. 10"
-            value={form.referral_commission_pct}
-            onChange={(e) => setForm((f) => ({ ...f, referral_commission_pct: e.target.value }))}
+            value={form.referral_commission_l1_pct}
+            onChange={(e) => setForm((f) => ({ ...f, referral_commission_l1_pct: e.target.value }))}
             className={inputClass}
           />
-          <p className="text-xs text-[#8888aa] mt-1">Percentage of daily earnings paid to the referrer on each claim.</p>
+          <p className="text-xs text-[#8888aa] mt-1">Paid to the direct referrer (level 1) on each daily claim.</p>
+        </div>
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">L2 Commission % (0-100)</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            placeholder="e.g. 5"
+            value={form.referral_commission_l2_pct}
+            onChange={(e) => setForm((f) => ({ ...f, referral_commission_l2_pct: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">Paid to the level-2 referrer (the referrer's referrer) on each daily claim.</p>
+        </div>
+        <div>
+          <label className="text-xs text-[#8888aa] font-medium mb-2 block">L3 Commission % (0-100)</label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            placeholder="e.g. 2"
+            value={form.referral_commission_l3_pct}
+            onChange={(e) => setForm((f) => ({ ...f, referral_commission_l3_pct: e.target.value }))}
+            className={inputClass}
+          />
+          <p className="text-xs text-[#8888aa] mt-1">Paid to the level-3 referrer on each daily claim.</p>
         </div>
 
         <div>

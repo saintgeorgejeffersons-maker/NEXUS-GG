@@ -147,14 +147,64 @@ export async function applyReferralBonus(referredUserId) {
     .eq('referred_id', referredUserId);
 }
 
-export async function payReferralCommission(referredUserId, dailyReturn) {
-  const { error } = await supabase.rpc('pay_referral_commission', {
-    p_referred_user_id: referredUserId,
-    p_daily_return: dailyReturn,
-  });
-  if (error) {
-    console.error('RPC pay_referral_commission failed:', error);
-    throw error;
+export async function payReferralCommission(claimingUserId, dailyReturn) {
+  try {
+    const settings = await getSettings();
+    const l1Pct = Number(settings.referral_commission_l1_pct ?? 10);
+    const l2Pct = Number(settings.referral_commission_l2_pct ?? 5);
+    const l3Pct = Number(settings.referral_commission_l3_pct ?? 2);
+
+    const { data: claimingProfile } = await supabase
+      .from('profiles')
+      .select('referred_by')
+      .eq('id', claimingUserId)
+      .single();
+    const l1ReferrerId = claimingProfile?.referred_by ?? null;
+    if (!l1ReferrerId) return;
+
+    const { data: l1Profile } = await supabase
+      .from('profiles')
+      .select('referred_by')
+      .eq('id', l1ReferrerId)
+      .single();
+    const l2ReferrerId = l1Profile?.referred_by ?? null;
+
+    let l3ReferrerId = null;
+    if (l2ReferrerId) {
+      const { data: l2Profile } = await supabase
+        .from('profiles')
+        .select('referred_by')
+        .eq('id', l2ReferrerId)
+        .single();
+      l3ReferrerId = l2Profile?.referred_by ?? null;
+    }
+
+    const levels = [
+      { referrerId: l1ReferrerId, pct: l1Pct, label: 'L1' },
+      { referrerId: l2ReferrerId, pct: l2Pct, label: 'L2' },
+      { referrerId: l3ReferrerId, pct: l3Pct, label: 'L3' },
+    ];
+
+    for (const { referrerId, pct, label } of levels) {
+      if (!referrerId) continue;
+      const commission = Math.round((Number(dailyReturn) * pct) / 100 * 100) / 100;
+      if (commission <= 0) continue;
+      try {
+        const referrer = await getProfile(referrerId);
+        const newBalance = Number(referrer.wallet_balance) + commission;
+        await updateWalletBalance(referrerId, newBalance);
+        await createTransaction({
+          user_id: referrerId,
+          type: 'referral_commission',
+          description: `${label} referral commission from ${claimingUserId}`,
+          amount: commission,
+        });
+      } catch (levelErr) {
+        console.error(`payReferralCommission ${label} error:`, levelErr);
+      }
+    }
+  } catch (err) {
+    console.error('payReferralCommission error:', err);
   }
 }
 

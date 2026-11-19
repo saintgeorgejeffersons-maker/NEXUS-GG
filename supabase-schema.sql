@@ -417,3 +417,10 @@ $$;
 
 -- Grant execute to authenticated users (called via RPC from the client)
 GRANT EXECUTE ON FUNCTION public.pay_referral_commission(uuid, numeric) TO authenticated;
+
+-- REFERRAL 3-LEVEL COMMISSION MIGRATION
+-- Replace single commission % with three level-specific percentages
+INSERT INTO public.settings (key, value) VALUES ('referral_commission_l1_pct', '10') ON CONFLICT (key) DO NOTHING;
+INSERT INTO public.settings (key, value) VALUES ('referral_commission_l2_pct', '5') ON CONFLICT (key) DO NOTHING;
+INSERT INTO public.settings (key, value) VALUES ('referral_commission_l3_pct', '2') ON CONFLICT (key) DO NOTHING;
+-- Keep old key for backward compat but new code uses l1/l2/l3 keys
