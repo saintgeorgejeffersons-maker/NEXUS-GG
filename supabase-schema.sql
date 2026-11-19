@@ -424,3 +424,53 @@ INSERT INTO public.settings (key, value) VALUES ('referral_commission_l1_pct', '
 INSERT INTO public.settings (key, value) VALUES ('referral_commission_l2_pct', '5') ON CONFLICT (key) DO NOTHING;
 INSERT INTO public.settings (key, value) VALUES ('referral_commission_l3_pct', '2') ON CONFLICT (key) DO NOTHING;
 -- Keep old key for backward compat but new code uses l1/l2/l3 keys
+
+-- ============================================================
+-- MIGRATION: multi-MoMo accounts
+-- ============================================================
+
+-- Table: momo_accounts
+CREATE TABLE IF NOT EXISTS public.momo_accounts (
+  id bigserial primary key,
+  network text not null,
+  number text not null,
+  account_name text not null,
+  active boolean not null default true,
+  created_at timestamptz default now()
+);
+
+-- RLS
+alter table public.momo_accounts enable row level security;
+
+create policy "Authenticated users can view active momo accounts"
+  on public.momo_accounts for select
+  using (auth.role() = 'authenticated' and active = true);
+
+create policy "Admins can manage momo accounts"
+  on public.momo_accounts for all
+  using (
+    exists (
+      select 1 from public.profiles
+      where id = auth.uid() and role = 'admin'
+    )
+  );
+
+-- New columns on deposit_requests
+alter table public.deposit_requests
+  add column if not exists assigned_momo_id bigint references public.momo_accounts(id) on delete set null;
+
+alter table public.deposit_requests
+  add column if not exists assigned_momo_snapshot jsonb;
+
+-- Seed placeholder row if momo_accounts is empty
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.momo_accounts LIMIT 1) THEN
+    INSERT INTO public.momo_accounts (network, number, account_name)
+    SELECT
+      COALESCE((SELECT value FROM public.settings WHERE key = 'momo_network'), 'MTN'),
+      COALESCE((SELECT value FROM public.settings WHERE key = 'momo_number'), '0000000000'),
+      COALESCE((SELECT value FROM public.settings WHERE key = 'momo_name'), 'Nexus GG');
+  END IF;
+END;
+$$;
