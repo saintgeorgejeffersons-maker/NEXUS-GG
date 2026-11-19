@@ -285,11 +285,15 @@ export async function getAdminMetrics() {
     .filter((t) => t.type === 'deposit')
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
+  const totalWithdrawals = txs
+    .filter((t) => t.type === 'withdrawal')
+    .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
+
   const totalPaidOut = txs
     .filter((t) => t.type === 'return' || t.type === 'withdrawal')
     .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0);
 
-  return { totalUsers, activeInvestments, totalDeposits, totalPaidOut };
+  return { totalUsers, activeInvestments, totalDeposits, totalWithdrawals, totalPaidOut };
 }
 
 // ── ALL PROFILES (admin) ──────────────────────────────────

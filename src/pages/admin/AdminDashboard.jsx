@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TrendingUp, Users, Package, DollarSign } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, Users, Package } from 'lucide-react';
 import { StatCard } from '../../components/ui/StatCard';
 import { Badge } from '../../components/ui/Badge';
 import { getAdminMetrics, getProducts, getAllTransactions } from '../../lib/db';
@@ -33,18 +33,18 @@ export function AdminDashboard() {
     <div className="space-y-6">
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard icon={DollarSign} label="Total Deposits"
+        <StatCard icon={ArrowDownCircle} label="Total Deposits"
           value={`₵${Number(metrics?.totalDeposits ?? 0).toLocaleString()}`}
           accent="#00ff88" />
+        <StatCard icon={ArrowUpCircle} label="Total Withdrawals"
+          value={`₵${Number(metrics?.totalWithdrawals ?? 0).toLocaleString()}`}
+          accent="#ef4444" />
         <StatCard icon={Users} label="Total Users"
           value={metrics?.totalUsers ?? 0}
           accent="#00d4ff" />
         <StatCard icon={Package} label="Active Investments"
           value={metrics?.activeInvestments ?? 0}
           accent="#7c3aed" />
-        <StatCard icon={TrendingUp} label="Total Paid Out"
-          value={`₵${Number(metrics?.totalPaidOut ?? 0).toLocaleString()}`}
-          accent="#ff6b35" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
