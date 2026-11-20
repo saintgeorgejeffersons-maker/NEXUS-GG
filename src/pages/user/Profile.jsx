@@ -500,7 +500,7 @@ export function Profile() {
       )}
 
       {/* ── Deposit Modal ── */}
-      <Modal isOpen={showDeposit} onClose={() => setShowDeposit(false)} title="Request Deposit">
+      <Modal isOpen={showDeposit} onClose={() => setShowDeposit(false)} title="Request Deposit" preventClose={!!(pendingChecked && pendingRequest)}>
         <div className="space-y-4">
           {!pendingChecked ? (
             <p className="text-sm text-[#8888aa] text-center py-4">Checking pending requests...</p>
@@ -550,6 +550,12 @@ export function Profile() {
                 </div>
               )}
               <p className="text-xs text-[#8888aa] text-center pt-1">Send the exact amount and use the reference when prompted.</p>
+              <button
+                onClick={() => setShowDeposit(false)}
+                className="w-full py-3 rounded-xl bg-[#00ff88] text-black font-bold text-sm mt-1 hover:bg-[#00e57a] transition-colors"
+              >
+                I'm done making payment
+              </button>
             </div>
           ) : (
             /* ── New deposit form ── */
