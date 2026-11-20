@@ -506,48 +506,50 @@ export function Profile() {
             <p className="text-sm text-[#8888aa] text-center py-4">Checking pending requests...</p>
           ) : pendingRequest ? (
             /* ── Pending request view ── */
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-yellow-900/20 border border-yellow-700/30">
-                <p className="text-sm font-bold text-yellow-400 mb-1">Pending Deposit</p>
-                <p className="text-xs text-[#8888aa]">You have a pending deposit of ₵{Number(pendingRequest.amount).toFixed(2)}. Send payment to the number below and wait for approval.</p>
+            <div className="space-y-3">
+              {/* Amount banner */}
+              <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#1a1a2e] border border-[#2a2a3a]">
+                <span className="text-sm text-[#8888aa]">Amount due</span>
+                <span className="text-xl font-black text-[#00ff88]">₵{Number(pendingRequest.amount).toFixed(2)}</span>
               </div>
+
               {pendingRequest.assigned_momo_snapshot && (
-                <div className="p-4 rounded-xl bg-[#00d4ff]/5 border border-[#00d4ff]/20">
-                  <p className="text-xs font-bold text-[#00d4ff] uppercase tracking-wide mb-3">Send payment to</p>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-xs text-[#8888aa]">Network</p>
-                      <p className="text-[#f0f0ff] font-bold">{pendingRequest.assigned_momo_snapshot.network}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#8888aa]">Number</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-[#f0f0ff] font-black text-lg tracking-wider">{pendingRequest.assigned_momo_snapshot.number}</p>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(pendingRequest.assigned_momo_snapshot.number);
-                            setTxSuccess('Number copied!');
-                            setTimeout(() => setTxSuccess(''), 2000);
-                          }}
-                          className="text-[#00d4ff] hover:text-[#00ff88] transition-colors"
-                          title="Copy number"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-xs text-[#8888aa]">Account Name</p>
-                      <p className="text-[#f0f0ff] font-bold">{pendingRequest.assigned_momo_snapshot.account_name}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-xs text-[#8888aa]">Reference</p>
-                      <p className="text-[#f0f0ff] font-bold tracking-wider">DEP-{pendingRequest.id}</p>
-                    </div>
+                <div className="rounded-xl border border-[#2a2a3a] overflow-hidden">
+                  {/* Network bar */}
+                  <div className="flex items-center justify-between px-4 py-2 bg-[#ffffff08]">
+                    <span className="text-xs text-[#8888aa]">Network</span>
+                    <span className="text-sm font-semibold text-[#f0f0ff]">{pendingRequest.assigned_momo_snapshot.network}</span>
+                  </div>
+                  <div className="h-px bg-[#2a2a3a]" />
+                  {/* Number row */}
+                  <div className="flex items-center justify-between px-4 py-3 bg-[#ffffff05]">
+                    <span className="text-2xl font-black tracking-widest text-[#f0f0ff]">{pendingRequest.assigned_momo_snapshot.number}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(pendingRequest.assigned_momo_snapshot.number);
+                        setTxSuccess('Copied!');
+                        setTimeout(() => setTxSuccess(''), 2000);
+                      }}
+                      className="ml-3 px-3 py-1.5 rounded-lg bg-[#00d4ff]/10 text-[#00d4ff] text-xs font-semibold hover:bg-[#00d4ff]/20 transition-colors"
+                    >
+                      {txSuccess === 'Copied!' ? '✓ Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  <div className="h-px bg-[#2a2a3a]" />
+                  {/* Name row */}
+                  <div className="flex items-center justify-between px-4 py-2 bg-[#ffffff08]">
+                    <span className="text-xs text-[#8888aa]">Account name</span>
+                    <span className="text-sm font-semibold text-[#f0f0ff]">{pendingRequest.assigned_momo_snapshot.account_name}</span>
+                  </div>
+                  <div className="h-px bg-[#2a2a3a]" />
+                  {/* Reference row */}
+                  <div className="flex items-center justify-between px-4 py-2 bg-[#ffffff08]">
+                    <span className="text-xs text-[#8888aa]">Reference</span>
+                    <span className="text-sm font-mono font-semibold text-[#8888aa]">DEP-{pendingRequest.id}</span>
                   </div>
                 </div>
               )}
-              <p className="text-xs text-[#8888aa] text-center">You cannot start a new deposit while one is pending.</p>
+              <p className="text-xs text-[#8888aa] text-center pt-1">Send the exact amount and use the reference when prompted.</p>
             </div>
           ) : (
             /* ── New deposit form ── */
