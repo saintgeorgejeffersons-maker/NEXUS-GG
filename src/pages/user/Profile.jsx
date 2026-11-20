@@ -545,7 +545,19 @@ export function Profile() {
                   {/* Reference row */}
                   <div className="flex items-center justify-between px-4 py-2 bg-[#ffffff08]">
                     <span className="text-xs text-[#8888aa]">Reference</span>
-                    <span className="text-sm font-mono font-semibold text-[#8888aa]">DEP-{pendingRequest.id}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-mono font-semibold text-[#8888aa]">DEP-{pendingRequest.id}</span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`DEP-${pendingRequest.id}`);
+                          setTxSuccess('Ref copied!');
+                          setTimeout(() => setTxSuccess(''), 2000);
+                        }}
+                        className="px-3 py-1 rounded-lg bg-[#ffffff08] text-[#8888aa] text-xs font-semibold hover:bg-[#ffffff15] transition-colors"
+                      >
+                        {txSuccess === 'Ref copied!' ? '✓ Copied' : 'Copy'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
