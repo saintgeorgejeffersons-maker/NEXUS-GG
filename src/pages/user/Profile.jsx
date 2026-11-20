@@ -521,11 +521,28 @@ export function Profile() {
                     </div>
                     <div>
                       <p className="text-xs text-[#8888aa]">Number</p>
-                      <p className="text-[#f0f0ff] font-black text-lg tracking-wider">{pendingRequest.assigned_momo_snapshot.number}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[#f0f0ff] font-black text-lg tracking-wider">{pendingRequest.assigned_momo_snapshot.number}</p>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(pendingRequest.assigned_momo_snapshot.number);
+                            setTxSuccess('Number copied!');
+                            setTimeout(() => setTxSuccess(''), 2000);
+                          }}
+                          className="text-[#00d4ff] hover:text-[#00ff88] transition-colors"
+                          title="Copy number"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                        </button>
+                      </div>
                     </div>
                     <div className="col-span-2">
                       <p className="text-xs text-[#8888aa]">Account Name</p>
                       <p className="text-[#f0f0ff] font-bold">{pendingRequest.assigned_momo_snapshot.account_name}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-xs text-[#8888aa]">Reference</p>
+                      <p className="text-[#f0f0ff] font-bold tracking-wider">DEP-{pendingRequest.id}</p>
                     </div>
                   </div>
                 </div>
