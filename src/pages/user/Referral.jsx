@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { generateReferralCode, updateReferralCode, getReferralStats } from '../../lib/db';
-import { Copy, Check, Users, TrendingUp, CheckCircle, Edit3, RefreshCw, AlertCircle, Share2 } from 'lucide-react';
+import { Copy, Check, Users, TrendingUp, CheckCircle, Edit3, AlertCircle } from 'lucide-react';
 
 const inputClass =
   'w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded-xl px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-all';
@@ -187,8 +187,7 @@ export function Referral() {
               </a>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-            </div>
+
           </>
         )}
       </div>

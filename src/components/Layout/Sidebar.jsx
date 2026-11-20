@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Wallet, TrendingUp, BarChart3, Package, Users, ArrowDownCircle, ArrowUpCircle, List, Settings, LogOut, Share2 } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, TrendingUp, BarChart3, Package, Users, ArrowDownCircle, ArrowUpCircle, List, Settings, LogOut, Share2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/hmalm01.svg';
 
@@ -8,7 +8,6 @@ const userNav = [
   { to: '/user/catalog',      icon: ShoppingBag,     label: 'Store'              },
   { to: '/user/investments',  icon: TrendingUp,      label: 'Active Investments' },
   { to: '/user/referrals',    icon: Share2,          label: 'Referrals'          },
-  { to: '/user/wallet',       icon: Wallet,          label: 'Wallet'             },
 ];
 
 const adminNav = [

@@ -1,9 +1,10 @@
-;import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ArrowUpCircle, ArrowDownCircle, TrendingUp, ShoppingCart,
   Clock, Users, Plus, Minus,
-  Edit3, Save, X, Lock, ChevronDown, ChevronUp, ArrowRight, Info, CreditCard, FileText, Shield,
-} from 'lucide-react';import { Modal } from '../../components/ui/Modal';
+  Edit3, Save, X, Lock, ArrowRight, Info, CreditCard, FileText, Shield,
+} from 'lucide-react';
+import { Modal } from '../../components/ui/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -25,22 +26,6 @@ const DEPOSIT_PRESETS = [120, 200, 500, 1000];
 const inputClass = 'w-full bg-[#0a0a0f] border border-[#2a2a3a] rounded-xl px-4 py-3 text-[#f0f0ff] text-sm placeholder-[#8888aa] focus:outline-none focus:border-[#00d4ff] transition-colors';
 
 // ── Collapsible section wrapper ───────────────────────────
-function Section({ title, children, defaultOpen = false }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border-b border-[#2a2a3a]">
-      <button
-        className="w-full flex items-center justify-between py-4"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <p className="text-sm font-bold text-[#f0f0ff]">{title}</p>
-        {open ? <ChevronUp size={16} className="text-[#8888aa]" /> : <ChevronDown size={16} className="text-[#8888aa]" />}
-      </button>
-      {open && <div className="pb-2">{children}</div>}
-    </div>
-  );
-}
-
 // ── Main component ────────────────────────────────────────
 export function Profile() {
   const { user, profile, refreshProfile } = useAuth();

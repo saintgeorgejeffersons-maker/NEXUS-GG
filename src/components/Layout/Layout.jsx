@@ -6,7 +6,6 @@ import { useLocation } from 'react-router-dom';
 const PAGE_TITLES = {
   '/user/dashboard': 'Dashboard',
   '/user/catalog': 'Gaming Catalog',
-  '/user/wallet': 'Wallet',
   '/myspot/dashboard':    'Admin Dashboard',
   '/myspot/inventory':    'Products',
   '/myspot/users':        'Users',

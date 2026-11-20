@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, ShoppingCart, Wallet, ArrowRight, Coins } from 'lucide-react';
+import { TrendingUp, ShoppingCart, ArrowRight, Coins } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getUserInvestments, getUserTransactions } from '../../lib/db';
 
