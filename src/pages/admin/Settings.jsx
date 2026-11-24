@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Save, Smartphone, Percent, ArrowDownCircle, ArrowUpCircle, Info, MessageCircle, Trash2, Plus } from 'lucide-react';
+import { Save, Smartphone, Percent, ArrowDownCircle, ArrowUpCircle, Info, MessageCircle, Trash2, Plus, Bell } from 'lucide-react';
 import { getSettings, upsertSetting, getMomoAccounts, addMomoAccount, deleteMomoAccount } from '../../lib/db';
 
 const NETWORKS = ['MTN', 'Vodafone', 'AirtelTigo'];
@@ -9,6 +9,7 @@ const inputClass =
 
 export function Settings() {
   const [form, setForm] = useState({
+    popup_notification: '',
     referral_commission_l1_pct: '',
     referral_commission_l2_pct: '',
     referral_commission_l3_pct: '',
@@ -39,6 +40,9 @@ export function Settings() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifSuccess, setNotifSuccess] = useState('');
+  const [notifError, setNotifError] = useState('');
   const [momoAccounts, setMomoAccounts] = useState([]);
   const [momoLoading, setMomoLoading] = useState(true);
   const [addForm, setAddForm] = useState({ network: 'MTN', number: '', accountName: '' });
@@ -56,6 +60,7 @@ export function Settings() {
   useEffect(() => {
     getSettings().then((s) => {
       setForm({
+        popup_notification:          s.popup_notification          ?? '',
         referral_commission_l1_pct: s.referral_commission_l1_pct ?? '10',
         referral_commission_l2_pct: s.referral_commission_l2_pct ?? '5',
         referral_commission_l3_pct: s.referral_commission_l3_pct ?? '2',
@@ -158,6 +163,62 @@ export function Settings() {
       <div>
         <h2 className="text-xl font-bold text-[#f0f0ff]">Settings</h2>
         <p className="text-sm text-[#8888aa]">Configure payment details shown to users on deposit.</p>
+      </div>
+
+      {/* Popup Notification */}
+      <div className="glass-card p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Bell size={18} className="text-[#00d4ff]" />
+          <h3 className="text-base font-semibold text-[#f0f0ff]">Popup Notification</h3>
+        </div>
+        <p className="text-xs text-[#8888aa] -mt-2">This message will pop up for every user each time they open their dashboard. Delete it to stop showing it.</p>
+        <textarea
+          rows={4}
+          placeholder="Type your notification message here..."
+          value={form.popup_notification}
+          onChange={(e) => setForm((f) => ({ ...f, popup_notification: e.target.value }))}
+          className={`${inputClass} resize-none`}
+        />
+        {notifError && <p className="text-red-400 text-sm bg-red-900/20 rounded-lg px-3 py-2">{notifError}</p>}
+        {notifSuccess && <p className="text-[#00ff88] text-sm bg-green-900/20 rounded-lg px-3 py-2">{notifSuccess}</p>}
+        <div className="flex gap-3">
+          <button
+            onClick={async () => {
+              setNotifError(''); setNotifSuccess('');
+              if (!form.popup_notification.trim()) { setNotifError('Please type a message first.'); return; }
+              setNotifSaving(true);
+              try {
+                await upsertSetting('popup_notification', form.popup_notification.trim());
+                setNotifSuccess('Notification saved. Users will see it on their next visit.');
+                setTimeout(() => setNotifSuccess(''), 4000);
+              } catch { setNotifError('Failed to save. Please try again.'); }
+              setNotifSaving(false);
+            }}
+            disabled={notifSaving}
+            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all disabled:opacity-50">
+            <Save size={16} />
+            {notifSaving ? 'Saving...' : 'Save'}
+          </button>
+          {form.popup_notification.trim() && (
+            <button
+              onClick={async () => {
+                setNotifError(''); setNotifSuccess('');
+                setNotifSaving(true);
+                try {
+                  await upsertSetting('popup_notification', '');
+                  setForm((f) => ({ ...f, popup_notification: '' }));
+                  setNotifSuccess('Notification deleted. Users will no longer see it.');
+                  setTimeout(() => setNotifSuccess(''), 4000);
+                } catch { setNotifError('Failed to delete. Please try again.'); }
+                setNotifSaving(false);
+              }}
+              disabled={notifSaving}
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-red-500/40 text-red-400 font-bold text-sm hover:bg-red-900/20 transition-all disabled:opacity-50">
+              <Trash2 size={16} />
+              Delete
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="glass-card p-6 space-y-5">

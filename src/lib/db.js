@@ -321,6 +321,16 @@ export async function getSettings() {
   return Object.fromEntries(data.map((row) => [row.key, row.value]));
 }
 
+export async function getPopupNotification() {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', 'popup_notification')
+    .single();
+  if (error) return null;
+  return data?.value?.trim() || null;
+}
+
 export async function upsertSetting(key, value) {
   const { error } = await supabase
     .from('settings')

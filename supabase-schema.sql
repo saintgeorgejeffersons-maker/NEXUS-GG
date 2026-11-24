@@ -474,3 +474,9 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- POPUP NOTIFICATION MIGRATION
+INSERT INTO public.settings (key, value) VALUES ('popup_notification', '') ON CONFLICT (key) DO NOTHING;
+
+-- POPUP NOTIFICATION MIGRATION
+INSERT INTO public.settings (key, value) VALUES ('popup_notification', '') ON CONFLICT (key) DO NOTHING;

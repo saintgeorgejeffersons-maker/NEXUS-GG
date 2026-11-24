@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TrendingUp, ShoppingCart, ArrowRight, Coins } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getUserInvestments, getUserTransactions } from '../../lib/db';
+import { getUserInvestments, getUserTransactions, getPopupNotification } from '../../lib/db';
+import { Modal } from '../../components/ui/Modal';
 
 const TX_META = {
   deposit:             { color: '#00ff88', sign: '+' },
@@ -18,15 +19,19 @@ export function UserDashboard() {
   const [investments, setInvestments] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState('');
+  const [showNotif, setShowNotif] = useState(false);
 
   useEffect(() => {
     if (!profile?.id) return;
     Promise.all([
       getUserInvestments(profile.id),
       getUserTransactions(profile.id),
-    ]).then(([inv, txs]) => {
+      getPopupNotification(),
+    ]).then(([inv, txs, notif]) => {
       setInvestments(inv);
       setTransactions(txs);
+      if (notif) { setNotification(notif); setShowNotif(true); }
       setLoading(false);
     });
   }, [profile?.id]);
@@ -41,6 +46,18 @@ export function UserDashboard() {
 
   return (
     <div className="space-y-5">
+      {/* Popup Notification Modal */}
+      <Modal isOpen={showNotif} onClose={() => setShowNotif(false)} title="Notice">
+        <div className="space-y-4">
+          <p className="text-sm text-[#f0f0ff] leading-relaxed whitespace-pre-wrap">{notification}</p>
+          <button
+            onClick={() => setShowNotif(false)}
+            className="w-full py-3 rounded-xl bg-[#00d4ff] text-black font-bold text-sm hover:opacity-90 transition-all"
+          >
+            Got it
+          </button>
+        </div>
+      </Modal>
       {/* Greeting */}
       <div className="pt-1">
         <p className="text-xs text-[#8888aa]">Welcome back</p>
